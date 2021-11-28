@@ -1,4 +1,4 @@
-package com.devdkk.hackernewsclient.ui.theme
+package it.devddk.hackernewsclient.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

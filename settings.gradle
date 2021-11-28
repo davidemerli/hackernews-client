@@ -7,3 +7,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = "HackerNews Client"
 include ':app'
+include ':app:domain'
+include ':domain'
