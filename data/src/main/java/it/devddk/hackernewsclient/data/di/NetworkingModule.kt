@@ -1,9 +1,13 @@
 package it.devddk.hackernewsclient.data.di
 
+import com.google.firebase.FirebaseOptions
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.ktx.initialize
 import it.devddk.hackernewsclient.data.BuildConfig
 import it.devddk.hackernewsclient.data.networking.WeatherApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 import retrofit2.Converter
 import retrofit2.Retrofit
@@ -31,4 +35,7 @@ val networkingModule = module {
             .build()
     }
     single { get<Retrofit>().create(WeatherApi::class.java) }
+    single {
+        val options = FirebaseOptions.Builder().setDatabaseUrl(BuildConfig.SERVER_URL).build()
+        Firebase.initialize(androidContext(), options = options) }
 }
