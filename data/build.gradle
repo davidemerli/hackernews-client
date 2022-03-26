@@ -10,8 +10,6 @@ android {
     defaultConfig {
         minSdk Integer.parseInt(ANDROID_MIN_SDK_VERSION)
         targetSdk Integer.parseInt(ANDROID_TARGET_SDK_VERSION)
-        versionCode Integer.parseInt(VERSION_CODE)
-        versionName VERSION_NAME
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -35,7 +33,7 @@ dependencies {
     implementation project(':domain')
 
     implementation 'androidx.core:core-ktx:1.7.0'
-    implementation 'androidx.appcompat:appcompat:1.4.0'
+    implementation 'androidx.appcompat:appcompat:1.4.1'
 
     // json parsing
     implementation "com.google.code.gson:gson:$gsonVersion"
