@@ -5,20 +5,15 @@ import java.time.LocalDateTime
 
 data class PollItem(
     override val id: Int,
-    override val type: ItemType,
-    override val deleted: Boolean,
+    override val deleted: Boolean = false,
     override val by: User?,
     override val time: LocalDateTime,
-    override val dead: Boolean,
-    override val kids: List<BaseItem>?,
-    val parts : List<PollOptItem>?,
-    val descendants : Int,
-    val score : Int,
-    val title : String,
-
-
-
-
-    ) : BaseItem {
-
+    override val dead: Boolean = false,
+    override val title: String,
+    override val score: Int,
+    override val descendants: Int,
+    override val kids: List<CommentItem>,
+    val parts : List<PollOptItem>,
+    ) : BaseItem, CommentableItem, MainItem {
+    override val type: ItemType = ItemType.POLL
 }

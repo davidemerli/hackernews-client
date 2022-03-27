@@ -9,10 +9,11 @@ data class JobItem(
     override val by: User,
     override val time: LocalDateTime,
     override val dead: Boolean = false,
-    override val kids: List<BaseItem>? = null,
+    override val title: String,
+    override val score: Int,
     val text : String,
-    val url : String,
-    val title : String
-) : BaseItem, ParentItem {
+    val url : String
+) : BaseItem, MainItem {
     override val type = ItemType.JOB
+    override val descendants: Int = 0
 }

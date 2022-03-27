@@ -1,5 +1,5 @@
 package it.devddk.hackernewsclient.domain.model.items
 
-interface ParentItem {
-    val kids : List<ChildItem>
+interface CommentableItem {
+    val kids : List<CommentItem>
 }

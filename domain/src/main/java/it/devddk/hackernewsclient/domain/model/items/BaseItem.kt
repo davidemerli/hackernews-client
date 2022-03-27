@@ -8,9 +8,7 @@ interface BaseItem{
     val type: ItemType
     val deleted: Boolean
     val by: User?
-    val time: LocalDateTime
+    val time: LocalDateTime?
     val dead: Boolean
-    val kids: List<BaseItem>?
-
 }
 

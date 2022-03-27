@@ -9,9 +9,10 @@ data class CommentItem(
     override val by: User,
     override val time: LocalDateTime,
     override val dead: Boolean = false,
-    override val kids: List<BaseItem>? = null,
-    override val parent: BaseItem
-) : BaseItem, ChildItem {
+    override val kids: List<CommentItem>,
+    val parent: BaseItem,
+    val text : String
+) : BaseItem, CommentableItem {
     override val type: ItemType = ItemType.COMMENT
 
 }

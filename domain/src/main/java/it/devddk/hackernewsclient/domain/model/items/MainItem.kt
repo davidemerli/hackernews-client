@@ -1,9 +1,7 @@
 package it.devddk.hackernewsclient.domain.model.items
 
-interface RootItem {
+interface MainItem {
     val title : String
-    val url : String?
     val score : Int
-
-
+    val descendants : Int
 }
