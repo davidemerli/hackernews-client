@@ -13,7 +13,11 @@ data class StoryItem(
     override val title: String,
     override val score: Int,
     override val descendants: Int,
-    val url : String
+    val url : String = "",
+    val text : String = ""
 ) : BaseItem, MainItem, CommentableItem {
     override val type: ItemType = ItemType.STORY
+
+    val isAskHN : Boolean
+        get() = text.isNotEmpty()
 }

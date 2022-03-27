@@ -6,7 +6,6 @@ import it.devddk.hackernewsclient.data.networking.WeatherApi
 import it.devddk.hackernewsclient.data.networking.base.getData
 import it.devddk.hackernewsclient.domain.model.Result
 import it.devddk.hackernewsclient.domain.model.WeatherInfo
-import it.devddk.hackernewsclient.domain.repository.WeatherRepository
 
 class WeatherRepositoryImpl(
     private val weatherApi: WeatherApi,
