@@ -9,11 +9,11 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.HackerNewsClient">
+        android:theme="@style/Theme.HackerNewsClient"
+        android:name="it.devddk.hackernewsclient.HNReaderApplication">
         <activity
             android:name="it.devddk.hackernewsclient.MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.HackerNewsClient.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

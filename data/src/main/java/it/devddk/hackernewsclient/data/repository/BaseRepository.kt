@@ -1,10 +1,12 @@
-package it.devddk.hackernewsclient.data.repository.weather
+package it.devddk.hackernewsclient.data.repository
 
+
+/*
 import it.devddk.hackernewsclient.data.common.coroutine.CoroutineContextProvider
 import it.devddk.hackernewsclient.data.common.utils.Connectivity
 import it.devddk.hackernewsclient.data.database.DB_ENTRY_ERROR
+import it.devddk.hackernewsclient.data.networking.DomainMapper
 import it.devddk.hackernewsclient.data.networking.GENERAL_NETWORK_ERROR
-import it.devddk.hackernewsclient.data.networking.base.DomainMapper
 import it.devddk.hackernewsclient.domain.model.Failure
 import it.devddk.hackernewsclient.domain.model.HttpError
 import it.devddk.hackernewsclient.domain.model.Result
@@ -54,3 +56,4 @@ abstract class BaseRepository<T : Any, R : DomainMapper<T>> : KoinComponent {
         }
     }
 }
+*/

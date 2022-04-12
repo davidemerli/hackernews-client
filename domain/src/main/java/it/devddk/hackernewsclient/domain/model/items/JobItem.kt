@@ -1,19 +1,24 @@
 package it.devddk.hackernewsclient.domain.model.items
 
 import it.devddk.hackernewsclient.domain.model.User
+import it.devddk.hackernewsclient.domain.model.utils.Expandable
 import java.time.LocalDateTime
+
+interface IJobItem : IBaseItem {
+    val title: String?
+    val score: Int?
+    val url: String?
+}
 
 data class JobItem(
     override val id: Int,
     override val deleted: Boolean = false,
-    override val by: User,
-    override val time: LocalDateTime,
+    override val by: Expandable<String, User>?,
+    override val time: LocalDateTime?,
     override val dead: Boolean = false,
-    override val title: String,
-    override val score: Int,
-    val text : String,
-    val url : String
-) : BaseItem, MainItem {
+    override val title: String?,
+    override val score: Int?,
+    override val url : String?
+) : IJobItem {
     override val type = ItemType.JOB
-    override val descendants: Int = 0
 }
