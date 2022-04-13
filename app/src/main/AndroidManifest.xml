@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     package="it.devddk.hackernewsclient">
 
     <!-- TODO: check if 'android:allowBackup' is worth changing -->
@@ -12,14 +11,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.HackerNewsClient"
         android:name="it.devddk.hackernewsclient.HNReaderApplication">
-
-        <!-- disabling automatic initialization for all components and dependencies -->
-        <!-- https://stackoverflow.com/a/65456866 -->
-        <!-- fixes Unable to get provider androidx.startup.InitializationProvider -->
-        <provider
-            android:name="androidx.startup.InitializationProvider"
-            android:authorities="${applicationId}.androidx-startup"
-            tools:node="remove" />
 
         <activity
             android:name="it.devddk.hackernewsclient.MainActivity"
