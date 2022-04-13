@@ -9,8 +9,6 @@ android {
     defaultConfig {
         minSdk Integer.parseInt(ANDROID_MIN_SDK_VERSION)
         targetSdk Integer.parseInt(ANDROID_TARGET_SDK_VERSION)
-        versionCode Integer.parseInt(VERSION_CODE)
-        versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
