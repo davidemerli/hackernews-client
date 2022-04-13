@@ -1,14 +1,10 @@
 package it.devddk.hackernewsclient.data.di
 
-import com.google.firebase.FirebaseApp
-import com.google.firebase.FirebaseOptions
-import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import it.devddk.hackernewsclient.data.BuildConfig
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 import retrofit2.Converter
 import retrofit2.converter.gson.GsonConverterFactory
@@ -25,14 +21,6 @@ val networkingModule = module {
         }.build()
     }
     single {
-        FirebaseApp.initializeApp(androidContext())
-        val options = FirebaseApp.getInstance().options
-        print(options)
-        FirebaseOptions.Builder(options).setDatabaseUrl("hacker-news").build()
-        System.out.println("peppe")
-        val second = FirebaseApp.initializeApp(androidContext(), options, "aaaa")
-        val secondDb = FirebaseDatabase.getInstance(second)
-        secondDb.setPersistenceEnabled(true)
-        return@single secondDb.reference
+        Firebase.database("https://hacker-news.firebaseio.com/").getReference("v0")
     }
 }
