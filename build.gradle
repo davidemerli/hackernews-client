@@ -13,6 +13,7 @@ buildscript {
         mockitoVersion = MOCKITO_VERSION
         mockitoKotlinVersion = MOCKITO_KOTLIN_VERSION
         mockkVersion = MOCKK_VERSION
+        material3Version = MATERIAL3_VERSION
     }
     repositories {
         google()
@@ -33,5 +34,3 @@ buildscript {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
-
-apply plugin: 'com.google.gms.google-services'
