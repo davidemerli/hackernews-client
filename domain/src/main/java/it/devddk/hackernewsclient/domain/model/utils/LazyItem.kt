@@ -19,7 +19,7 @@ class Expandable<out Compressed : Any, Expanded> private constructor(
             Expandable(id, null)
 
         fun <Id : Any, Expanded : Identifiable<Id>> expanded(expanded: Expanded): Expandable<Id, Expanded> =
-            Expandable(expanded.identificator, expanded)
+            Expandable(expanded.id, expanded)
 
         fun <Compressed : Any, Expanded> expanded(
             compressed: Compressed,

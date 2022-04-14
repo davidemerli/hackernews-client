@@ -50,7 +50,6 @@ dependencies {
 
     //TODO remove this
     implementation 'com.google.firebase:firebase-database-ktx:20.0.4'
-
 }
 
 apply plugin: 'com.google.gms.google-services'

@@ -8,53 +8,53 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.tooling.preview.Preview
-import it.devddk.hackernewsclient.domain.interaction.item.GetNewStoriesUseCase
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.get
 import it.devddk.hackernewsclient.domain.model.utils.NewStories
 import it.devddk.hackernewsclient.ui.theme.HackerNewsClientTheme
-import kotlinx.coroutines.runBlocking
-import org.koin.android.ext.android.inject
+import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import org.koin.core.component.KoinComponent
-import timber.log.Timber
-import java.lang.Exception
 
 class MainActivity : ComponentActivity(), KoinComponent {
 
-    val getNewStories : GetNewStoriesUseCase by inject()
+    lateinit var viewModel : HomePageViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        runBlocking {
-            val c = getNewStories(NewStories).getOrThrow()
-            Timber.e("Ciaooo")
-            if(c.isEmpty()) {
-                Timber.e("Empty")
-            }
-            c.forEach {
-                Timber.i("bee ${it.title}")
-            }
-        }
+        viewModel = ViewModelProvider(this).get()
+        viewModel.requestArticles()
 
         setContent {
             HackerNewsClientTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    Greeting("Android")
+                    ListOfStuff()
                 }
             }
         }
     }
 
     @Composable
-    fun Greeting(name: String) {
-        Text(text = "Hello $name!")
+    fun ListOfStuff() {
+
+        val list  = viewModel.articles.observeAsState().value
+
+        Column {
+            list?.map { x -> Text(x.title ?: "AAAA") }
+        }
     }
 
     @Preview(showBackground = true)
     @Composable
     fun DefaultPreview(name: String = "peppe") {
         HackerNewsClientTheme {
-            Greeting("Android")
+            Column {
+                Text("Titolo 1")
+                Text("Titolo 2")
+            }
         }
     }
 

@@ -1,24 +1,30 @@
 package it.devddk.hackernewsclient.data.repository.item
 
 import com.google.firebase.database.DatabaseReference
-import it.devddk.hackernewsclient.data.common.utils.ResponseConversionException
 import it.devddk.hackernewsclient.data.networking.model.ItemResponse
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.repository.ItemRepository
 import kotlinx.coroutines.tasks.await
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.koin.core.qualifier.named
+import timber.log.Timber
 import java.lang.Exception
 
-class ItemRepositoryImpl() : ItemRepository, KoinComponent {
+class ItemRepositoryImpl : ItemRepository, KoinComponent {
 
-    val dbRef: DatabaseReference by inject()
+    private val items: DatabaseReference by inject(named("item"))
 
     override suspend fun getItemById(itemId: Int): Result<Item> {
-        return runCatching {
-            val snap = dbRef.child("item").get().await()
+        return try {
+            val snap = items.child(itemId.toString()).get().await()
             val data = snap.getValue(ItemResponse::class.java)
-            checkNotNull(data?.mapToDomainModel()) { "Received null item" }
+            val result = checkNotNull(data?.mapToDomainModel()) { "Received null item" }
+            Result.success(result)
+        } catch (e: Exception) {
+            Timber.e("Item $itemId could not be retrieved. Cause ${e.message}")
+            Timber.d(e)
+            Result.failure(e)
         }
     }
 }

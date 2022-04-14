@@ -2,30 +2,34 @@ package it.devddk.hackernewsclient.domain.interaction.item
 
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.utils.CollectionQueryType
+import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.domain.repository.ItemRepository
 import it.devddk.hackernewsclient.domain.repository.StoryRepository
+import it.devddk.hackernewsclient.domain.utils.skipped
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import timber.log.Timber
 
 interface GetNewStoriesUseCase {
-    suspend operator fun invoke(query : CollectionQueryType) : Result<List<Item>>
+    suspend operator fun invoke(
+        query: CollectionQueryType,
+        limit: Int = 0,
+    ): Result<Map<ItemId, Result<Item>>>
 }
 
 class GetNewStoriesUseCaseImpl : GetNewStoriesUseCase, KoinComponent {
 
-    val itemRepository : ItemRepository by inject()
-    val storyRepository : StoryRepository by inject()
+    val itemRepository: ItemRepository by inject()
+    val storyRepository: StoryRepository by inject()
 
-    override suspend fun invoke(query : CollectionQueryType): Result<List<Item>> {
+    override suspend fun invoke(
+        query: CollectionQueryType,
+        limit: Int,
+    ): Result<Map<ItemId, Result<Item>>> {
         return storyRepository.getStories(query).mapCatching { stories ->
-            stories.mapNotNull {
-                val item = itemRepository.getItemById(it).getOrNull()
-                if(item == null) {
-                    Timber.w("Failed to get item $it")
-                }
-                return@mapNotNull item
-            }
+            return@mapCatching stories.mapIndexed { index, id ->
+                if (index > limit) id to Result.skipped()
+                else id to itemRepository.getItemById(id)
+            }.toMap()
         }
     }
 }

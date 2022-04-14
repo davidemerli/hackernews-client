@@ -1,16 +1,20 @@
 package it.devddk.hackernewsclient.data.repository.item
 
 import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.GenericTypeIndicator
+import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.utils.*
 import it.devddk.hackernewsclient.domain.repository.StoryRepository
 import kotlinx.coroutines.tasks.await
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import timber.log.Timber
 
 class StoryRepositoryImpl : StoryRepository, KoinComponent {
 
-    val dbRef: DatabaseReference by inject()
+
+    val root: DatabaseReference by inject(named("root"))
 
     override suspend fun getStories(query: CollectionQueryType): Result<List<ItemId>> {
         return runCatching {
@@ -22,7 +26,8 @@ class StoryRepositoryImpl : StoryRepository, KoinComponent {
                 ShowStories -> "showstories"
                 TopStories -> "topstories"
             }
-            val value = dbRef.child(what).get().await().getValue(List::class.java) as List<ItemId>?
+            val value = root.child(what).get().await()
+                .getValue(object : GenericTypeIndicator<List<ItemId>>() {})
             checkNotNull(value) {
                 Timber.e("Story repository returned null for query $query")
                 "Story repository returned null for query $query"
