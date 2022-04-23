@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">Visualizzatore di Hacker-Notizie</string>
+    <string name="now">proprio adesso</string>
+    <string name="long_ago">tanto tempo fa</string>
+    <string name="author">di %s</string>
+    <string name="author_unknown">[autore sconosciuto]</string>
+    <string name="time_unknown">[orario sconosciuto]</string>
+    <string name="title_unknown">[Nessun Titolo]</string>
+    <plurals name="minutes_ago">
+        <item quantity="one">%d minuto fa</item>
+        <item quantity="other">%d minuti fa</item>
+    </plurals>
+    <plurals name="hours_ago">
+        <item quantity="one">%d ora fa</item>
+        <item quantity="other">%d ore fa</item>
+    </plurals>
+    <plurals name="days_ago">
+        <item quantity="one">%d giorno fa</item>
+        <item quantity="other">%d giorni fa</item>
+    </plurals>
+    <plurals name="weeks_ago">
+        <item quantity="one">%d settimana fa</item>
+        <item quantity="other">%d settimane fa</item>
+    </plurals>
+    <plurals name="years_ago">
+        <item quantity="one">%d anno fa</item>
+        <item quantity="other">%d anni fa</item>
+    </plurals>
+</resources>

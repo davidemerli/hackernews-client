@@ -1,3 +1,29 @@
 <resources>
     <string name="app_name">HackerNews Client</string>
+    <string name="now">right now</string>
+    <string name="long_ago">a long time ago</string>
+    <string name="author">by %s</string>
+    <string name="author_unknown">by [unknown]</string>
+    <string name="time_unknown">[time unknown]</string>
+    <string name="title_unknown">[Nessun Titolo]</string>
+    <plurals name="minutes_ago">
+        <item quantity="one">%d minute ago</item>
+        <item quantity="other">%d minutes ago</item>
+    </plurals>
+    <plurals name="hours_ago">
+        <item quantity="one">%d hour ago</item>
+        <item quantity="other">%d hours ago</item>
+    </plurals>
+    <plurals name="days_ago">
+        <item quantity="one">%d day ago</item>
+        <item quantity="other">%d days ago</item>
+    </plurals>
+    <plurals name="weeks_ago">
+        <item quantity="one">%d week ago</item>
+        <item quantity="other">%d weeks ago</item>
+    </plurals>
+    <plurals name="years_ago">
+        <item quantity="one">%d year ago</item>
+        <item quantity="other">%d years ago</item>
+    </plurals>
 </resources>
