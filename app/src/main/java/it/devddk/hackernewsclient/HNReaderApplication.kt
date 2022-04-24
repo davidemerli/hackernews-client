@@ -12,6 +12,7 @@ import timber.log.Timber
 
 
 class HNReaderApplication : Application() {
+
     override fun onCreate() {
         super.onCreate()
         startKoin {
@@ -31,13 +32,13 @@ class HNReaderApplication : Application() {
 
     inner class DevelopmentTree : Timber.Tree() {
         override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-            if(priority == Log.VERBOSE || priority == Log.DEBUG) {
-                return;
+            if (priority == Log.VERBOSE || priority == Log.DEBUG) {
+                return
             }
 
             Log.println(priority, tag, message)
 
-            if(t != null) {
+            if (t != null) {
                 Log.println(priority, tag, t.stackTraceToString())
             }
         }

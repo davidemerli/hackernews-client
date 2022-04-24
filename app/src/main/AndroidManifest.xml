@@ -4,16 +4,17 @@
 
     <!-- TODO: check if 'android:allowBackup' is worth changing -->
     <application
+        android:name="it.devddk.hackernewsclient.HNReaderApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:name="it.devddk.hackernewsclient.HNReaderApplication">
+        android:supportsRtl="true">
 
         <activity
             android:name="it.devddk.hackernewsclient.MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@android:style/Theme.NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
