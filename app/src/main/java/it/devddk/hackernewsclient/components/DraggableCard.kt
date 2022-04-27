@@ -94,7 +94,6 @@ fun DraggableCard(
                     offsetX.value = newValue.x
                 }
             },
-        contentColor = cardBgColor,
         shape = RoundedCornerShape(0.dp),
         elevation = CardDefaults.cardElevation(cardElevation),
         content = { Text(card.title ?: "") }
@@ -150,7 +149,6 @@ fun DraggableCardSimple(
                     }
                 }
             },
-        contentColor = cardBgColor,
         shape = RoundedCornerShape(0.dp),
         elevation = CardDefaults.cardElevation(cardElevation),
         content = { Text(card.title ?: "") }

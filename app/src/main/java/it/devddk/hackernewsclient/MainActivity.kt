@@ -70,7 +70,7 @@ class MainActivity : ComponentActivity(), KoinComponent {
     @OptIn(ExperimentalMaterial3Api::class)
     fun Test2() {
         val scrollState = rememberScrollState()
-        val list = viewModel.articles.observeAsState().value;
+        val list = viewModel.articles.observeAsState().value
 
         Scaffold(
             topBar = {
@@ -92,9 +92,6 @@ class MainActivity : ComponentActivity(), KoinComponent {
             Column(Modifier.verticalScroll(scrollState)) {
                 list?.forEach {
                     NewsItem(it)
-                    Spacer(Modifier
-                        .height(2.dp)
-                        .fillMaxWidth())
                 }
             }
         }
