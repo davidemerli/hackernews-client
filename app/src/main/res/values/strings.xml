@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">HackerNews Client</string>
+    <string name="app_name">HackerNews</string>
     <string name="now">right now</string>
     <string name="long_ago">a long time ago</string>
     <string name="author">by %s</string>

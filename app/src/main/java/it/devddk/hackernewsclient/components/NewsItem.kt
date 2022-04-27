@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
@@ -36,7 +37,7 @@ fun getDomainName(url: String): String {
 @Composable
 fun NewsItem(item: Item) {
     val context = LocalContext.current
-    val roundedShape = RoundedCornerShape(4.dp)
+    val roundedShape = RoundedCornerShape(8.dp)
 
     val userString = remember(item) {
         val userId = item.by?.id
@@ -56,23 +57,28 @@ fun NewsItem(item: Item) {
         .background(MaterialTheme.colorScheme.surface)
         .wrapContentHeight()
         .fillMaxWidth()
-        .padding(horizontal = 4.dp, vertical = 2.dp),
+        .padding(horizontal = 8.dp, vertical = 2.dp),
         shape = roundedShape
     ) {
         Row(Modifier
             .padding(4.dp)
             .height(IntrinsicSize.Min) // to allow for column with comment count to be aligned correctly to the bottom
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                Modifier.fillMaxHeight(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
                 Box(Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(Color.Cyan)
+                    .fillMaxHeight()
                 )
                 Text(
                     "${points.toString()} pt",
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     ),
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(4.dp)
@@ -91,9 +97,10 @@ fun NewsItem(item: Item) {
                 }
                 Text(
                     item.title ?: "title_fail",
-
-
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        lineHeight = 20.sp
+                ),
                 )
                 Row {
                     Text(
@@ -105,20 +112,23 @@ fun NewsItem(item: Item) {
                 }
             }
             Row(
-                modifier = Modifier.fillMaxHeight(),
-                verticalAlignment = Alignment.Bottom
+                modifier = Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.End
             ) {
                 Text(
                     "$comments",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray),
-                    modifier = Modifier.padding(end = 4.dp, bottom = 6.dp)
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.primary
+                    ),
+                    modifier = Modifier.padding(end = 6.dp, bottom = 5.dp)
                 )
                 // icon with width of 48dp
                 Icon(
                     Icons.Filled.Email,
                     contentDescription = "Comments",
-                    modifier = Modifier.padding(bottom = 4.dp),
-                    tint = Color.Gray,
+                    modifier = Modifier.padding(end = 8.dp, bottom = 4.dp),
+                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
         }

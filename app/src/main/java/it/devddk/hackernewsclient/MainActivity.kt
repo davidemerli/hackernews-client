@@ -72,6 +72,7 @@ class MainActivity : ComponentActivity(), KoinComponent {
         val scrollState = rememberScrollState()
         val list = viewModel.articles.observeAsState().value
 
+
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
