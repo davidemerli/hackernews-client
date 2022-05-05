@@ -3,9 +3,9 @@ package it.devddk.hackernewsclient
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -31,7 +31,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.get
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import it.devddk.hackernewsclient.components.NewsItem
-import it.devddk.hackernewsclient.components.NewsItemTall
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.StoryItem
 import it.devddk.hackernewsclient.domain.model.utils.Expandable
@@ -40,6 +39,7 @@ import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import java.time.LocalDateTime
+import androidx.compose.foundation.lazy.items as lazyItems
 
 class MainActivity : ComponentActivity(), KoinComponent {
 
@@ -132,33 +132,41 @@ class MainActivity : ComponentActivity(), KoinComponent {
                 },
                 containerColor = MaterialTheme.colorScheme.background,
             ) {
-                Column(
-                    Modifier
-                        .verticalScroll(scrollState)
-                        .padding(top = 64.dp)
+                LazyColumn(
+                    Modifier.padding(top = 64.dp)
                 ) {
-                    Row(Modifier
-                        .horizontalScroll(rowScrollState)
-                        .padding(horizontal = 8.dp)) {
-                        list?.forEach {
-                            Box(Modifier.size(272.dp)) {
-                                NewsItemTall(it)
-                            }
-                            Spacer(modifier = Modifier.size(4.dp))
-                        }
-                    }
-                    list?.forEach {
-                        NewsItem(it)
-                        Divider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
-                            thickness = 0.5.dp
-                        )
+                    list?.let { articles ->
+                        lazyItems(items = articles, itemContent = { item ->
+                            NewsItem(item)
+                            Divider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
+                                thickness = 0.5.dp
+                            )
+                        })
                     }
                 }
+
+//                    Row(Modifier
+//                        .horizontalScroll(rowScrollState)
+//                        .padding(horizontal = 8.dp)) {
+//                        list?.forEach {
+//                            Box(Modifier.size(272.dp)) {
+//                                NewsItemTall(it)
+//                            }
+//                            Spacer(modifier = Modifier.size(4.dp))
+//                        }
+//                    }
+//                    list?.forEach {
+//                        NewsItem(it)
+//                        Divider(
+//                            modifier = Modifier.padding(horizontal = 16.dp),
+//                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
+//                            thickness = 0.5.dp
+//                        )
+//                    }
             }
         }
-
     }
 
     @Composable
