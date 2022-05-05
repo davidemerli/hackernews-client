@@ -12,24 +12,16 @@ import org.koin.core.component.inject
 interface GetNewStoriesUseCase {
     suspend operator fun invoke(
         query: CollectionQueryType,
-        limit: Int = 0,
-    ): Result<Map<ItemId, Result<Item>>>
+    ): Result<List<ItemId>>
 }
 
 class GetNewStoriesUseCaseImpl : GetNewStoriesUseCase, KoinComponent {
 
-    val itemRepository: ItemRepository by inject()
-    val storyRepository: StoryRepository by inject()
+    private val storyRepository: StoryRepository by inject()
 
     override suspend fun invoke(
         query: CollectionQueryType,
-        limit: Int,
-    ): Result<Map<ItemId, Result<Item>>> {
-        return storyRepository.getStories(query).mapCatching { stories ->
-            return@mapCatching stories.mapIndexed { index, id ->
-                if (index > limit) id to Result.skipped()
-                else id to itemRepository.getItemById(id)
-            }.toMap()
-        }
+    ): Result<List<ItemId>> {
+        return storyRepository.getStories(query)
     }
 }
