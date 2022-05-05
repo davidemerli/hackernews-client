@@ -3,7 +3,9 @@ package it.devddk.hackernewsclient
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -21,11 +23,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.get
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import it.devddk.hackernewsclient.components.NewsItem
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.StoryItem
@@ -35,6 +39,7 @@ import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import java.time.LocalDateTime
+import androidx.compose.foundation.lazy.items as lazyItems
 
 class MainActivity : ComponentActivity(), KoinComponent {
 
@@ -70,30 +75,96 @@ class MainActivity : ComponentActivity(), KoinComponent {
     @OptIn(ExperimentalMaterial3Api::class)
     fun Test2() {
         val scrollState = rememberScrollState()
+        val rowScrollState = rememberScrollState()
         val list = viewModel.articles.observeAsState().value
 
+        val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+        val scope = rememberCoroutineScope()
 
-        Scaffold(
-            topBar = {
-                CenterAlignedTopAppBar(
-                    title = { Text(stringResource(R.string.app_name)) },
-                    navigationIcon = { Icon(Icons.Rounded.Menu, "Menu") },
-                    actions = {
-                        IconButton(onClick = { }) {
-                            Icon(Icons.Rounded.Search, "Search")
-                        }
-                        IconButton(onClick = { }) {
-                            Icon(Icons.Rounded.AccountCircle, "Notifications")
-                        }
-                    }
+        val systemUiController = rememberSystemUiController()
+        val useDarkIcons = !isSystemInDarkTheme()
+
+        systemUiController.setStatusBarColor(
+            color = Color.Red,
+            darkIcons = useDarkIcons
+        )
+
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            gesturesEnabled = drawerState.isOpen,
+            drawerContent = {
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.app_name)) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+                    onClick = {},
+                    selected = false
                 )
-            },
-            containerColor = MaterialTheme.colorScheme.background,
-        ) {
-            Column(Modifier.verticalScroll(scrollState)) {
-                list?.forEach {
-                    NewsItem(it)
+                NavigationDrawerItem(
+                    label = { Text("OWO") },
+                    selected = true,
+                    onClick = { /*TODO*/ },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+
+            }) {
+            Scaffold(
+                topBar = {
+                    CenterAlignedTopAppBar(
+                        title = { Text(stringResource(R.string.app_name)) },
+                        navigationIcon = {
+                            IconButton(
+                                onClick = {
+                                    scope.launch { drawerState.open() }
+                                }
+                            ) {
+                                Icon(Icons.Rounded.Menu, "Menu")
+                            }
+                        },
+                        actions = {
+                            IconButton(onClick = { }) {
+                                Icon(Icons.Rounded.Search, "Search")
+                            }
+                            IconButton(onClick = { }) {
+                                Icon(Icons.Rounded.AccountCircle, "Notifications")
+                            }
+                        },
+                    )
+                },
+                containerColor = MaterialTheme.colorScheme.background,
+            ) {
+                LazyColumn(
+                    Modifier.padding(top = 64.dp)
+                ) {
+                    list?.let { articles ->
+                        lazyItems(items = articles, itemContent = { item ->
+                            NewsItem(item)
+                            Divider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
+                                thickness = 0.5.dp
+                            )
+                        })
+                    }
                 }
+
+//                    Row(Modifier
+//                        .horizontalScroll(rowScrollState)
+//                        .padding(horizontal = 8.dp)) {
+//                        list?.forEach {
+//                            Box(Modifier.size(272.dp)) {
+//                                NewsItemTall(it)
+//                            }
+//                            Spacer(modifier = Modifier.size(4.dp))
+//                        }
+//                    }
+//                    list?.forEach {
+//                        NewsItem(it)
+//                        Divider(
+//                            modifier = Modifier.padding(horizontal = 16.dp),
+//                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
+//                            thickness = 0.5.dp
+//                        )
+//                    }
             }
         }
     }

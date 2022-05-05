@@ -59,8 +59,10 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.4.1'
 
+    implementation "com.google.accompanist:accompanist-systemuicontroller:0.23.1"
+
 //    // design
-//    implementation 'com.google.android.material:material:1.5.0'
+    implementation 'com.google.android.material:material:1.7.0-alpha01'
 
     // jetpack compose
     implementation "androidx.compose.ui:ui:$composeVersion"
