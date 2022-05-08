@@ -139,7 +139,7 @@ class MainActivity : ComponentActivity(), KoinComponent {
                         viewModel.requestMore(scrollState.firstVisibleItemIndex + 30)
                     }
 
-                    itemsIndexed(itemListState.value) { msgState ->
+                    items(itemListState.value) { msgState ->
                         when(msgState) {
                             is ItemState.ItemLoaded -> NewsItem(msgState.item)
                             is ItemState.Loading -> LoadingItem()
