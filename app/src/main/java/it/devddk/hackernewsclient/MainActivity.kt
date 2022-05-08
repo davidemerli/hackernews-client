@@ -267,7 +267,7 @@ class MainActivity : ComponentActivity(), KoinComponent {
                                 12,
                                 "www.com",
                                 null)
-                        ), 3)
+                        ))
                         Spacer(modifier = Modifier.height(2.dp))
                         NewsItem(Item(
                             StoryItem(14,
@@ -281,7 +281,7 @@ class MainActivity : ComponentActivity(), KoinComponent {
                                 12,
                                 "www.com",
                                 null)
-                        ), 2)
+                        ))
                     }
                 }
             }
