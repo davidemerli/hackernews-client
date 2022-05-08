@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -16,11 +17,7 @@ import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,7 +36,10 @@ import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import java.time.LocalDateTime
-import androidx.compose.foundation.lazy.items as lazyItems
+import androidx.compose.foundation.lazy.itemsIndexed
+import it.devddk.hackernewsclient.components.ErrorItem
+import it.devddk.hackernewsclient.components.LoadingItem
+import it.devddk.hackernewsclient.viewmodels.ItemState
 
 class MainActivity : ComponentActivity(), KoinComponent {
 
@@ -48,7 +48,6 @@ class MainActivity : ComponentActivity(), KoinComponent {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this).get()
-        viewModel.requestArticles()
 
         setContent {
             HackerNewsClientTheme {
@@ -74,15 +73,14 @@ class MainActivity : ComponentActivity(), KoinComponent {
     @Composable
     @OptIn(ExperimentalMaterial3Api::class)
     fun Test2() {
-        val scrollState = rememberScrollState()
-        val rowScrollState = rememberScrollState()
-        val list = viewModel.articles.observeAsState().value
+        val scrollState = rememberLazyListState()
 
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
         val scope = rememberCoroutineScope()
 
         val systemUiController = rememberSystemUiController()
         val useDarkIcons = !isSystemInDarkTheme()
+        val itemListState = viewModel.shownList.collectAsState(initial = emptyList())
 
         systemUiController.setStatusBarColor(
             color = Color.Red,
@@ -133,17 +131,25 @@ class MainActivity : ComponentActivity(), KoinComponent {
                 containerColor = MaterialTheme.colorScheme.background,
             ) {
                 LazyColumn(
-                    Modifier.padding(top = 64.dp)
+                    Modifier.padding(top = 64.dp),
+                    state = scrollState
                 ) {
-                    list?.let { articles ->
-                        lazyItems(items = articles, itemContent = { item ->
-                            NewsItem(item)
-                            Divider(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
-                                thickness = 0.5.dp
-                            )
-                        })
+
+                    scope.launch {
+                        viewModel.requestMore(scrollState.firstVisibleItemIndex + 30)
+                    }
+
+                    itemsIndexed(itemListState.value) { msgState ->
+                        when(msgState) {
+                            is ItemState.ItemLoaded -> NewsItem(msgState.item)
+                            is ItemState.Loading -> LoadingItem()
+                            is ItemState.ItemError -> ErrorItem()
+                        }
+                        Divider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
+                            thickness = 0.5.dp
+                        )
                     }
                 }
 
@@ -165,20 +171,6 @@ class MainActivity : ComponentActivity(), KoinComponent {
 //                            thickness = 0.5.dp
 //                        )
 //                    }
-            }
-        }
-    }
-
-    @Composable
-    fun ListOfStuff(list: List<Item>? = viewModel.articles.observeAsState().value) {
-        val scrollState = rememberScrollState()
-
-        Column(Modifier.verticalScroll(scrollState)) {
-            list?.forEach {
-                NewsItem(it)
-                Spacer(Modifier
-                    .height(2.dp)
-                    .fillMaxWidth())
             }
         }
     }
@@ -275,7 +267,7 @@ class MainActivity : ComponentActivity(), KoinComponent {
                                 12,
                                 "www.com",
                                 null)
-                        ))
+                        ), 3)
                         Spacer(modifier = Modifier.height(2.dp))
                         NewsItem(Item(
                             StoryItem(14,
@@ -289,7 +281,7 @@ class MainActivity : ComponentActivity(), KoinComponent {
                                 12,
                                 "www.com",
                                 null)
-                        ))
+                        ), 2)
                     }
                 }
             }

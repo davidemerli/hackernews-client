@@ -1,22 +1,19 @@
 package it.devddk.hackernewsclient.viewmodels
 
 import androidx.lifecycle.*
-import androidx.lifecycle.viewmodel.compose.viewModel
 import it.devddk.hackernewsclient.domain.interaction.item.GetItemUseCase
 import it.devddk.hackernewsclient.domain.interaction.item.GetNewStoriesUseCase
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.utils.CollectionQueryType
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.domain.model.utils.TopStories
-import it.devddk.hackernewsclient.domain.utils.skipped
-import kotlinx.coroutines.channels.actor
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.util.*
-import java.util.concurrent.ConcurrentSkipListMap
-import kotlin.collections.LinkedHashMap
+import timber.log.Timber
 
 class HomePageViewModel : ViewModel(), KoinComponent {
 
@@ -24,33 +21,34 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         const val DEFAULT_REQUEST_UNTIL = 20
     }
 
-    private var ids : Result<List<ItemId>>? = null
+    private var ids: Result<List<ItemId>>? = null
 
-    private val query : MutableStateFlow<CollectionQueryType> = MutableStateFlow(TopStories)
+    private val query: MutableStateFlow<CollectionQueryType> = MutableStateFlow(TopStories)
 
     private val loadUntil = MutableStateFlow(0)
-    private val _uiMessages = MutableStateFlow(ListUpdateMessage.ClearAll as ListUpdateMessage)
-    private val uiMessage = _uiMessages.asStateFlow()
-    private val itemStorage = MutableStateFlow(emptyMap<Int, MessageState>())
-    val shownList : Flow<List<MessageState>> = itemStorage.map { map ->
-        (0 until loadUntil.value).map { i -> map.getOrDefault(i, MessageState.Loading) }
+    private val itemStorage = MutableStateFlow(emptyMap<Int, ItemState>())
+    val shownList: Flow<List<ItemState>> = itemStorage.map { map ->
+        (0 until query.value.maxAmount).map { i -> map.getOrDefault(i, ItemState.Loading) }
     }
-
+    private val _uiMessages = MutableSharedFlow<ListUpdateMessage>()
+    private val uiMessages = _uiMessages.asSharedFlow()
     private val getNewStories: GetNewStoriesUseCase by inject()
     private val getItem: GetItemUseCase by inject()
 
 
     init {
         viewModelScope.launch {
-            uiMessage.onEach { msg ->
-                when(msg) {
+            uiMessages.onEach { msg ->
+                when (msg) {
+
                     is ListUpdateMessage.AddItem -> {
-                        itemStorage.update { old -> old + Pair(msg.index, msg.item.fold(
-                            onSuccess = { MessageState.ItemLoaded(it)},
-                            onFailure = { MessageState.Loading}
-                        ))}
+                        Timber.d("Appending item ${msg.index}")
+                        itemStorage.update { old ->
+                            old + Pair(msg.index, msg.item)
+                        }
                     }
                     is ListUpdateMessage.ClearAll -> {
+                        Timber.d("Clearing all items")
                         itemStorage.update { emptyMap() }
                     }
                 }
@@ -58,44 +56,51 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         }
     }
 
-
-    suspend fun setQuery(newQuery : CollectionQueryType) {
+    suspend fun setQuery(newQuery: CollectionQueryType) {
         val oldQuery = query.value
-        if(oldQuery != newQuery) {
+        if (oldQuery != newQuery) {
             query.emit(newQuery)
         }
     }
 
-    suspend fun requestMessage(newUntil : Int) {
-        if((ids?.isSuccess != true)) {
+    suspend fun requestMore(newUntil: Int) {
+
+        if ((ids?.isSuccess != true)) {
             refreshItemIds()
         }
-        if(newUntil > loadUntil.value) {
-            (loadUntil.value..newUntil).forEach { index ->
-                val id = getIdFromIndex(index)
-                if(id != null) {
-                    _uiMessages.emit(ListUpdateMessage.AddItem(index, getItem(id)))
-                } else  {
-                    _uiMessages.emit(ListUpdateMessage.AddItem(index, Result.skipped()))
+        if (newUntil > loadUntil.value) {
+
+            withContext(Dispatchers.IO) {
+                val oldUntil = loadUntil.getAndUpdate {
+                    newUntil
+                }
+                loadUntil.value = newUntil
+                Timber.d("Loading $oldUntil $newUntil")
+                (oldUntil..newUntil).forEach { index ->
+                    if (itemStorage.value[index] !is ItemState.ItemLoaded) {
+                        val id = getIdFromIndex(index)
+                        if (id != null) {
+                            withContext(Dispatchers.IO) {
+                                _uiMessages.emit(ListUpdateMessage.AddItem(index, getItem(id).fold(
+                                    onSuccess = {
+                                        Timber.d("Got item $index")
+                                        ItemState.ItemLoaded(it)
+                                    },
+                                    onFailure = {
+                                        ItemState.ItemError(it)
+                                    }
+                                )))
+                            }
+                        }
+                    }
                 }
             }
+
         }
     }
 
-    suspend fun requestItem(newUntil : Int) {
-        if(ids?.isFailure != false) {
-            refreshItemIds()
-        }
-        if(newUntil > loadUntil.value) {
-            (loadUntil.value..newUntil).forEach { index ->
-                getIdFromIndex(index)?.let { id ->
-                    _uiMessages.emit(ListUpdateMessage.AddItem(index, getItem(id)))
-                } ?: _uiMessages.emit(ListUpdateMessage.AddItem(index, Result.skipped()))
-            }
-        }
-    }
 
-    private fun getIdFromIndex(index : Int) : ItemId? {
+    private fun getIdFromIndex(index: Int): ItemId? {
         return ids?.getOrNull()?.getOrNull(index)
     }
 
@@ -107,13 +112,14 @@ class HomePageViewModel : ViewModel(), KoinComponent {
 }
 
 
-sealed class MessageState {
-    object Loading : MessageState()
-    data class ItemLoaded(val item : Item) : MessageState()
+sealed class ItemState {
+    object Loading : ItemState()
+    data class ItemLoaded(val item: Item) : ItemState()
+    data class ItemError(val exception: Throwable) : ItemState()
 }
 
 sealed class ListUpdateMessage {
     object ClearAll : ListUpdateMessage()
-    data class AddItem(val index : Int, val item : Result<Item>) : ListUpdateMessage()
+    data class AddItem(val index: Int, val item: ItemState) : ListUpdateMessage()
 }
 
