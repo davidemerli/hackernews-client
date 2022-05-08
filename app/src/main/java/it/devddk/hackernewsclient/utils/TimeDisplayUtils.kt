@@ -5,7 +5,7 @@ import it.devddk.hackernewsclient.R
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
-class TimeDisplayUtils(val context: Context) {
+class TimeDisplayUtils(private val context: Context) {
     fun toDateTimeAgoInterval(
         time: LocalDateTime?,
         now: LocalDateTime = LocalDateTime.now(),

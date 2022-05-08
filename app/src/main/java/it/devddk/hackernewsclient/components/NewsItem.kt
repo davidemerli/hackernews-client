@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import it.devddk.hackernewsclient.R
@@ -32,6 +33,9 @@ fun getDomainName(url: String): String {
         url
     }
 }
+
+
+
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -102,7 +106,7 @@ fun NewsItem(item: Item) {
                 ) {
                     Column {
                         Text(
-                            item.title ?: "title_fail",
+                            "${item.title}",
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 fontWeight = FontWeight.SemiBold,
                                 lineHeight = 19.5.sp
@@ -115,6 +119,243 @@ fun NewsItem(item: Item) {
                                 // ellipsis ?
                             )
                         }
+                    }
+                    Text(
+                        "$userString - $timeString",
+                        style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
+                        modifier = Modifier.padding(bottom = 0.dp)
+                    )
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.Bottom,
+                horizontalAlignment = Alignment.End
+            ) {
+                IconButton(onClick = { /*TODO*/ }) {
+                    Icon(
+                        Icons.Filled.MoreVert,
+                        contentDescription = "More",
+                        tint = MaterialTheme.colorScheme.secondary,
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End) {
+                    Text(
+                        "$comments",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.secondary
+                        ),
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    )
+                    IconButton(onClick = { /*TODO*/ }) {
+                        Icon(
+                            Icons.Filled.Email,
+                            contentDescription = "Comments",
+                            tint = MaterialTheme.colorScheme.secondary,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+fun LoadingItem() {
+    val context = LocalContext.current
+    val roundedShape = RoundedCornerShape(16.dp)
+
+    val userString = "Loading..."
+
+    val timeString = "Bho"
+
+    val url = "www.loading.com"
+    val points = 0
+    val comments = 0
+
+    Card(
+        modifier = Modifier
+            .background(color = Color.Green)
+            .wrapContentHeight()
+            .fillMaxWidth()
+            .padding(2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = roundedShape,
+
+        ) {
+        Row(
+            Modifier
+                .padding(10.dp)
+                .height(IntrinsicSize.Min)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row {
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Box(
+                        Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .fillMaxHeight()
+                            .background(Color.Red)
+                    )
+                    Text(
+                        "${points.toString()} pt",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                        ),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(0.875f)
+                        .padding(start = 8.dp),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Column {
+                        Text(
+                            "lading item",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                lineHeight = 19.5.sp
+                            ),
+                        )
+                        Text(
+                            getDomainName(url),
+                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
+                            // ellipsis ?
+                        )
+                    }
+                    Text(
+                        "$userString - $timeString",
+                        style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
+                        modifier = Modifier.padding(bottom = 0.dp)
+                    )
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.Bottom,
+                horizontalAlignment = Alignment.End
+            ) {
+                IconButton(onClick = { /*TODO*/ }) {
+                    Icon(
+                        Icons.Filled.MoreVert,
+                        contentDescription = "More",
+                        tint = MaterialTheme.colorScheme.secondary,
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End) {
+                    Text(
+                        "$comments",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.secondary
+                        ),
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    )
+                    IconButton(onClick = { /*TODO*/ }) {
+                        Icon(
+                            Icons.Filled.Email,
+                            contentDescription = "Comments",
+                            tint = MaterialTheme.colorScheme.secondary,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+fun ErrorItem() {
+    val context = LocalContext.current
+    val roundedShape = RoundedCornerShape(16.dp)
+
+    val userString = "Error..."
+
+    val timeString = "Bho"
+
+    val url = "www.loading.com"
+    val points = 0
+    val comments = 0
+
+    Card(
+        modifier = Modifier
+            .background(color = Color.Yellow)
+            .wrapContentHeight()
+            .fillMaxWidth()
+            .padding(2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = roundedShape,
+
+        ) {
+        Row(
+            Modifier
+                .padding(10.dp)
+                .height(IntrinsicSize.Min)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row {
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Box(
+                        Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .fillMaxHeight()
+                            .background(Color.Red)
+                    )
+                    Text(
+                        "${points.toString()} pt",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                        ),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(0.875f)
+                        .padding(start = 8.dp),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Column {
+                        Text(
+                            "lading item",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                lineHeight = 19.5.sp
+                            ),
+                        )
+                        Text(
+                            getDomainName(url),
+                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
+                            // ellipsis ?
+                        )
                     }
                     Text(
                         "$userString - $timeString",

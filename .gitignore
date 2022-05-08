@@ -137,7 +137,7 @@ obj/
 .idea/gradle.xml
 .idea/jarRepositories.xml
 .idea/navEditor.xml
-*.idea
+.idea/*
 # OS-specific files
 .DS_Store
 .DS_Store?
