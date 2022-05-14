@@ -2,14 +2,12 @@ package it.devddk.hackernewsclient.data.networking.model
 
 import it.devddk.hackernewsclient.data.common.utils.ResponseConversionException
 import it.devddk.hackernewsclient.data.networking.DomainMapper
-import it.devddk.hackernewsclient.domain.model.items.*
+import it.devddk.hackernewsclient.domain.model.items.Item
+import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.utils.Expandable
-import java.lang.NullPointerException
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-import java.util.*
-import kotlin.collections.HashMap
 
 data class ItemResponse(
     val id: Int? = null,
@@ -31,10 +29,12 @@ data class ItemResponse(
     override fun mapToDomainModel(): Item {
         return Item(
             id ?: throw ResponseConversionException("id must specified in item response"),
-            itemResponse(type ?: throw ResponseConversionException("type must specified in item response")),
+            itemResponse(type
+                ?: throw ResponseConversionException("type must specified in item response")),
             deleted,
             by?.let { Expandable.compressed(it) },
-            convertTimestamp(time?: throw ResponseConversionException("time must specified in item response")),
+            convertTimestamp(time
+                ?: throw ResponseConversionException("time must specified in item response")),
             dead,
             parent?.let { Expandable.compressed(it) },
             text,
@@ -48,10 +48,10 @@ data class ItemResponse(
         )
     }
 
-    private fun itemResponse(typeStr : String) : ItemType {
-        return when(typeStr) {
+    private fun itemResponse(typeStr: String): ItemType {
+        return when (typeStr) {
             "story" -> ItemType.STORY
-            "poll"  -> ItemType.POLL
+            "poll" -> ItemType.POLL
             "pollopt" -> ItemType.POLL_OPT
             "job" -> ItemType.JOB
             "comment" -> ItemType.COMMENT
@@ -60,5 +60,5 @@ data class ItemResponse(
     }
 
     private fun convertTimestamp(timestamp: Long): LocalDateTime =
-        Instant.ofEpochMilli(timestamp).atOffset(ZoneOffset.UTC).toLocalDateTime()
+        LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneOffset.UTC)
 }
