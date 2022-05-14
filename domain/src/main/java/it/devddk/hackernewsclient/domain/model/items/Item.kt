@@ -38,7 +38,8 @@ data class Item(
         }
     }
 
-    constructor(story: IStoryItem) : this(story.id,
+    constructor(story: IStoryItem) : this(
+        story.id,
         ItemType.STORY,
         story.deleted,
         story.by,
@@ -64,7 +65,8 @@ data class Item(
         url = job.url
     )
 
-    constructor(poll: IPollItem) : this(poll.id,
+    constructor(poll: IPollItem) : this(
+        poll.id,
         ItemType.POLL,
         poll.deleted,
         poll.by,
@@ -76,7 +78,8 @@ data class Item(
         parts = poll.parts,
         score = poll.score)
 
-    constructor(comment: ICommentItem) : this(comment.id,
+    constructor(comment: ICommentItem) : this(
+        comment.id,
         ItemType.COMMENT,
         comment.deleted,
         comment.by,
@@ -117,30 +120,14 @@ data class Item(
         kids = item.kids
     )
 
+    fun asStoryItem(): StoryItem =
+        StoryItem(id, deleted, by, time, dead, kids, title, score, descendants, url, text)
 
-    fun asStoryItem(): StoryItem = StoryItem(
-        id,
-        deleted,
-        by,
-        time,
-        dead,
-        kids,
-        title,
-        score,
-        descendants,
-        url,
-        text
-    )
+    fun asJobItem(): JobItem =
+        JobItem(id, deleted, by, time, dead, title, score, text)
 
-    fun asJobItem(): JobItem = JobItem(
-        id,
-        deleted,
-        by,
-        time, dead, title, score, text
-    )
-
-    fun asPollItem(): PollItem = PollItem(
-        id, deleted, by, time, dead, title, score, descendants, kids, parts)
+    fun asPollItem(): PollItem =
+        PollItem(id, deleted, by, time, dead, title, score, descendants, kids, parts)
 
     fun asPollOptItem(): PollOptItem =
         PollOptItem(id, deleted, by, time, dead, text, poll, score)
