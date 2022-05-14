@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.pages
 
+import android.text.Html
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -11,7 +12,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import it.devddk.hackernewsclient.domain.model.items.Item
-import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 
@@ -46,10 +46,13 @@ fun SingleNewsHeading(item: Item) {
         )
         // Don't display it if it is null
         if (item.text != null) {
-            Text("${item.text}")
+            Text(Html.fromHtml(
+                "${item.text}",
+                Html.FROM_HTML_OPTION_USE_CSS_COLORS
+            ).toString())
         }
-        Comments()
 
+        Comments()
     }
 
 
