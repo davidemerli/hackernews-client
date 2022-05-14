@@ -21,6 +21,9 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         const val DEFAULT_REQUEST_UNTIL = 20
     }
 
+    private val getNewStories: GetNewStoriesUseCase by inject()
+    private val getItem: GetItemUseCase by inject()
+
     private var ids: Result<List<ItemId>>? = null
 
     private val query: MutableStateFlow<CollectionQueryType> = MutableStateFlow(TopStories)
@@ -32,8 +35,7 @@ class HomePageViewModel : ViewModel(), KoinComponent {
     }
     private val _uiMessages = MutableSharedFlow<ListUpdateMessage>()
     private val uiMessages = _uiMessages.asSharedFlow()
-    private val getNewStories: GetNewStoriesUseCase by inject()
-    private val getItem: GetItemUseCase by inject()
+
 
 
     init {

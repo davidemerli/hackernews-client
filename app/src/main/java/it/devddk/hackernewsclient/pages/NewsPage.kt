@@ -54,11 +54,8 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
 
     LaunchedEffect(route) {
         when (route) {
-            is HackerNewsView -> {
-                viewModel.setQuery(route.query)
-            }
+            is HackerNewsView -> viewModel.setQuery(route.query)
         }
-
     }
 
     systemUiController.setStatusBarColor(
@@ -76,11 +73,10 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
                 onClick = {},
                 selected = false
             )
-            val firstSelected = TopStories
             ALL_QUERIES.forEach {
                 NavigationDrawerItem(
                     label = { Text(HackerNewsView(it).route) },
-                    selected = it == firstSelected,
+                    selected = it == (route as HackerNewsView).query,
                     onClick = { navController.navigate(HackerNewsView(it).route) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )

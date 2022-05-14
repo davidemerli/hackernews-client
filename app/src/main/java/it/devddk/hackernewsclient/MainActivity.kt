@@ -14,6 +14,7 @@ import it.devddk.hackernewsclient.domain.model.utils.NewStories
 import it.devddk.hackernewsclient.domain.model.utils.TopStories
 import it.devddk.hackernewsclient.pages.HackerNewsView
 import it.devddk.hackernewsclient.pages.NewsPage
+import it.devddk.hackernewsclient.pages.SingleNewsPage
 import it.devddk.hackernewsclient.ui.theme.HackerNewsClientTheme
 
 class MainActivity : ComponentActivity() {
@@ -39,6 +40,9 @@ class MainActivity : ComponentActivity() {
                 composable(route = HackerNewsView(query).route) {
                     NewsPage(navController, route = HackerNewsView(query))
                 }
+            }
+            composable("profile/{itemId}") { backStackEntry ->
+                SingleNewsPage(navController, backStackEntry.arguments?.getInt("itemId"))
             }
         }
     }
