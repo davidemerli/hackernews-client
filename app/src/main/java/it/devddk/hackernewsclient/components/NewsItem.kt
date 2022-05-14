@@ -3,6 +3,7 @@ package it.devddk.hackernewsclient.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -13,9 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import it.devddk.hackernewsclient.R
@@ -33,9 +36,6 @@ fun getDomainName(url: String): String {
         url
     }
 }
-
-
-
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,88 +74,110 @@ fun NewsItem(item: Item) {
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row {
-                Column(
-                    modifier = Modifier
-                        .fillMaxHeight(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Box(
-                        Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .fillMaxHeight()
-                            .background(MaterialTheme.colorScheme.secondary)
-                    )
-                    Text(
-                        "${points.toString()} pt",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                        ),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-                }
-                Column(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.875f)
-                        .padding(start = 8.dp),
-                    verticalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Column {
-                        Text(
-                            "${item.title}",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                lineHeight = 19.5.sp
-                            ),
-                        )
-                        url?.let {
-                            Text(
-                                getDomainName(url),
-                                style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
-                                // ellipsis ?
-                            )
-                        }
-                    }
-                    Text(
-                        "$userString - $timeString",
-                        style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
-                        modifier = Modifier.padding(bottom = 0.dp)
-                    )
-                }
+            Column(
+                modifier = Modifier.fillMaxHeight(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(
+                    Modifier
+                        .width(48.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .fillMaxHeight(0.8f)
+                        .background(MaterialTheme.colorScheme.secondary)
+                )
+                Text(
+                    "${points.toString()} pt",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                    ),
+                    textAlign = TextAlign.Center,
+                )
             }
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.Bottom,
-                horizontalAlignment = Alignment.End
+                    .fillMaxWidth()
+                    .padding(start = 8.dp),
+                verticalArrangement = Arrangement.SpaceBetween,
             ) {
-                IconButton(onClick = { /*TODO*/ }) {
-                    Icon(
-                        Icons.Filled.MoreVert,
-                        contentDescription = "More",
-                        tint = MaterialTheme.colorScheme.secondary,
-                    )
-                }
-                Row(verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End) {
-                    Text(
-                        "$comments",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = MaterialTheme.colorScheme.secondary
-                        ),
-                        modifier = Modifier.padding(bottom = 2.dp)
-                    )
-                    IconButton(onClick = { /*TODO*/ }) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(0.85f),
+                    ) {
+                        url?.let {
+                            ClickableText(
+                                text = AnnotatedString(getDomainName(url)),
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontStyle = FontStyle.Italic,
+                                    textDecoration = TextDecoration.Underline,
+                                ),
+                                maxLines = 1,
+                                onClick = {/*TODO*/ }
+                            )
+                        }
+                        Text(
+                            "${item.title}",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.SemiBold,
+                                lineHeight = 19.5.sp
+                            ),
+                        )
+                    }
+                    IconButton(
+                        modifier = Modifier.offset(x = 10.dp, y = (-10).dp),
+                        onClick = { /*TODO*/ }) {
                         Icon(
-                            Icons.Filled.Email,
-                            contentDescription = "Comments",
+                            Icons.Filled.MoreVert,
+                            contentDescription = "Options",
                             tint = MaterialTheme.colorScheme.secondary,
                         )
+                    }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Row {
+                        ClickableText(
+                            text = AnnotatedString(userString),
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontStyle = FontStyle.Italic,
+                                textDecoration = TextDecoration.Underline,
+                            ),
+                            onClick = {/*TODO*/ }
+                        )
+                        Text(
+                            " - $timeString",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.offset(x = 10.dp, y = 10.dp),
+                    ) {
+                        Text(
+                            "$comments",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.secondary,
+                            ),
+                            modifier = Modifier.offset(x = 4.dp),
+                        )
+                        IconButton(
+                            onClick = { /*TODO*/ }) {
+                            Icon(
+                                Icons.Filled.Email,
+                                contentDescription = "Options",
+                                tint = MaterialTheme.colorScheme.secondary,
+                            )
+                        }
                     }
                 }
             }
@@ -209,7 +231,7 @@ fun LoadingItem() {
                             .background(Color.Red)
                     )
                     Text(
-                        "${points.toString()} pt",
+                        "$points pt",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = FontWeight.Bold,
                         ),
@@ -328,7 +350,7 @@ fun ErrorItem() {
                             .background(Color.Red)
                     )
                     Text(
-                        "${points.toString()} pt",
+                        "$points pt",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = FontWeight.Bold,
                         ),

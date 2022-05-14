@@ -1,29 +1,29 @@
 <resources>
     <string name="app_name">HackerNews</string>
-    <string name="now">right now</string>
+    <string name="now">now</string>
     <string name="long_ago">a long time ago</string>
     <string name="author">by %s</string>
     <string name="author_unknown">by [unknown]</string>
     <string name="time_unknown">[time unknown]</string>
-    <string name="title_unknown">[Nessun Titolo]</string>
+    <string name="title_unknown">[title unknown]</string>
     <plurals name="minutes_ago">
-        <item quantity="one">%d minute ago</item>
-        <item quantity="other">%d minutes ago</item>
+        <item quantity="one">%dm</item>
+        <item quantity="other">%dm</item>
     </plurals>
     <plurals name="hours_ago">
-        <item quantity="one">%d hour ago</item>
-        <item quantity="other">%d hours ago</item>
+        <item quantity="one">%dh</item>
+        <item quantity="other">%dh</item>
     </plurals>
     <plurals name="days_ago">
-        <item quantity="one">%d day ago</item>
-        <item quantity="other">%d days ago</item>
+        <item quantity="one">%dd</item>
+        <item quantity="other">%dd</item>
     </plurals>
     <plurals name="weeks_ago">
-        <item quantity="one">%d week ago</item>
-        <item quantity="other">%d weeks ago</item>
+        <item quantity="one">%dw</item>
+        <item quantity="other">%dw</item>
     </plurals>
     <plurals name="years_ago">
-        <item quantity="one">%d year ago</item>
-        <item quantity="other">%d years ago</item>
+        <item quantity="one">%dy</item>
+        <item quantity="other">%dy</item>
     </plurals>
 </resources>

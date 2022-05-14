@@ -1,42 +1,37 @@
 package it.devddk.hackernewsclient.pages
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import it.devddk.hackernewsclient.components.NewsItem
-import it.devddk.hackernewsclient.domain.model.items.Item
-import it.devddk.hackernewsclient.domain.model.items.StoryItem
-import it.devddk.hackernewsclient.ui.theme.HackerNewsClientTheme
-import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.components.ErrorItem
 import it.devddk.hackernewsclient.components.LoadingItem
-import it.devddk.hackernewsclient.domain.model.utils.*
+import it.devddk.hackernewsclient.components.NewsItem
+import it.devddk.hackernewsclient.domain.model.utils.ALL_QUERIES
+import it.devddk.hackernewsclient.domain.model.utils.CollectionQueryType
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.ItemState
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -128,119 +123,6 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
                         thickness = 0.5.dp
                     )
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true, widthDp = 441, heightDp = 980)
-@Composable
-fun DefaultPreview2() {
-    Test()
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun Test() {
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-    // icons to mimic drawer destinations
-    val items = listOf(Icons.Default.Favorite, Icons.Default.Face, Icons.Default.Email)
-    val selectedItem = remember { mutableStateOf(items[0]) }
-
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        gesturesEnabled = drawerState.isOpen,
-        drawerContent = {
-            items.forEach { item ->
-                NavigationDrawerItem(
-                    icon = { Icon(item, contentDescription = null) },
-                    label = { Text(item.name) },
-                    selected = item == selectedItem.value,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        selectedItem.value = item
-                    },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-            }
-        },
-        content = {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(text = if (drawerState.isClosed) ">>> Swipe >>>" else "<<< Swipe <<<")
-                Spacer(Modifier.height(20.dp))
-                Button(onClick = { scope.launch { drawerState.open() } }) {
-                    Text("Click to open")
-                }
-            }
-        }
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true, widthDp = 441, heightDp = 980)
-@Composable
-fun DefaultPreview(name: String = "peppe") {
-    val scrollState = rememberScrollState()
-
-    HackerNewsClientTheme {
-        Surface(color = MaterialTheme.colorScheme.background) {
-            Scaffold(
-                topBar = {
-                    CenterAlignedTopAppBar(
-                        title = { Text(stringResource(R.string.app_name)) },
-                        navigationIcon = { Icon(Icons.Rounded.Menu, "Menu") },
-                        actions = {
-                            IconButton(onClick = { }) {
-                                Icon(Icons.Rounded.Search, "Search")
-                            }
-                            IconButton(onClick = { }) {
-                                Icon(Icons.Rounded.AccountCircle, "Notifications")
-                            }
-                        }
-                    )
-                },
-                containerColor = MaterialTheme.colorScheme.background,
-            ) {
-                Column(
-                    modifier = Modifier
-                        .verticalScroll(scrollState)
-                        .padding(4.dp),
-                ) {
-                    NewsItem(Item(
-                        StoryItem(14,
-                            false,
-                            Expandable.compressed("giovanni"),
-                            LocalDateTime.now(),
-                            false,
-                            emptyMap(),
-                            "Super articol",
-                            15,
-                            12,
-                            "www.com",
-                            null)
-                    ))
-                    Spacer(modifier = Modifier.height(2.dp))
-                    NewsItem(Item(
-                        StoryItem(14,
-                            false,
-                            Expandable.compressed("giovanni"),
-                            LocalDateTime.now(),
-                            false,
-                            emptyMap(),
-                            "Super articol",
-                            15,
-                            12,
-                            "www.com",
-                            null)
-                    ))
                 }
             }
         }
