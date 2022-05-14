@@ -1,6 +1,7 @@
 package it.devddk.hackernewsclient.viewmodels
 
-import androidx.lifecycle.*
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import it.devddk.hackernewsclient.domain.interaction.item.GetItemUseCase
 import it.devddk.hackernewsclient.domain.interaction.item.GetNewStoriesUseCase
 import it.devddk.hackernewsclient.domain.model.items.Item
@@ -61,6 +62,10 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         if (oldQuery != newQuery) {
             query.emit(newQuery)
         }
+    }
+
+    fun getQuery () : CollectionQueryType {
+        return query.value
     }
 
     suspend fun requestMore(newUntil: Int) {
