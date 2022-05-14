@@ -6,9 +6,11 @@ import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import it.devddk.hackernewsclient.domain.model.utils.ALL_QUERIES
 import it.devddk.hackernewsclient.domain.model.utils.NewStories
 import it.devddk.hackernewsclient.domain.model.utils.TopStories
@@ -41,8 +43,10 @@ class MainActivity : ComponentActivity() {
                     NewsPage(navController, route = HackerNewsView(query))
                 }
             }
-            composable("profile/{itemId}") { backStackEntry ->
-                SingleNewsPage(navController, backStackEntry.arguments?.getInt("itemId"))
+            composable("items/{itemId}",
+                arguments = listOf(navArgument("itemId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                SingleNewsPage(navController, backStackEntry.arguments?.getInt("itemId")!!)
             }
         }
     }

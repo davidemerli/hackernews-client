@@ -114,7 +114,9 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
 
                 itemsIndexed(itemListState.value) { _, msgState ->
                     when (msgState) {
-                        is ItemState.ItemLoaded -> NewsItem(msgState.item)
+                        is ItemState.ItemLoaded -> NewsItem(msgState.item, onClick = {
+                            navController.navigate("items/${msgState.item.id}")
+                        })
                         is ItemState.Loading -> LoadingItem()
                         is ItemState.ItemError -> ErrorItem()
                     }

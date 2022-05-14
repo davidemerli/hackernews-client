@@ -1,6 +1,7 @@
 package it.devddk.hackernewsclient.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
@@ -39,7 +40,7 @@ fun getDomainName(url: String): String {
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun NewsItem(item: Item) {
+fun NewsItem(item: Item, onClick : (() -> Unit)? = null) {
     val context = LocalContext.current
     val roundedShape = RoundedCornerShape(16.dp)
 
@@ -62,6 +63,7 @@ fun NewsItem(item: Item) {
             .background(MaterialTheme.colorScheme.background)
             .wrapContentHeight()
             .fillMaxWidth()
+            .clickable { onClick?.let { it() } }
             .padding(2.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = roundedShape,
