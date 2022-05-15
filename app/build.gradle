@@ -111,7 +111,6 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.4.1'
     implementation 'androidx.compose.runtime:runtime-livedata:1.2.0-beta01'
 
-    //Constraints
-    implementation 'androidx.constraintlayout:constraintlayout-compose:1.0.0'
+    implementation 'org.jsoup:jsoup:1.13.1'
 }
 apply plugin: 'com.google.gms.google-services'

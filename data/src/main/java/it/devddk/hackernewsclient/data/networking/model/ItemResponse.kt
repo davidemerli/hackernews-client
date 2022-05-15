@@ -1,17 +1,39 @@
 package it.devddk.hackernewsclient.data.networking.model
 
-import com.kedia.ogparser.OpenGraphCallback
-import com.kedia.ogparser.OpenGraphParser
-import com.kedia.ogparser.OpenGraphResult
 import it.devddk.hackernewsclient.data.common.utils.ResponseConversionException
 import it.devddk.hackernewsclient.data.networking.DomainMapper
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.utils.Expandable
-import timber.log.Timber
+import okio.ByteString.Companion.encode
+import org.jsoup.Jsoup
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import kotlin.random.Random
+
+fun getPreview(siteUrl: String?): String? {
+    try {
+        if (siteUrl != null) {
+            val response =
+                Jsoup.connect(siteUrl).ignoreContentType(true).followRedirects(true).execute()
+
+            return response.parse()
+                .select("meta[property=og:image]")
+                .first()
+                .attr("content")
+        }
+    } catch (e: Exception) {
+    }
+
+    return if (siteUrl != null) {
+        val urlEncoded = siteUrl.encode().base64()
+
+        "https://identicon-api.herokuapp.com/$urlEncoded/128?format=png"
+    } else {
+        "https://identicon-api.herokuapp.com/${Random.nextLong()}/128?format=png"
+    }
+}
 
 data class ItemResponse(
     val id: Int? = null,
@@ -31,23 +53,7 @@ data class ItemResponse(
     val url: String? = null,
 ) : DomainMapper<Item> {
 
-    private var previewUrl: String? = null
-
-    private val ogp = OpenGraphParser(object : OpenGraphCallback {
-        override fun onPostResponse(openGraphResult: OpenGraphResult) {
-            Timber.d(openGraphResult.image.toString())
-
-            previewUrl = openGraphResult.image
-        }
-
-        override fun onError(error: String) {
-            Timber.d(error)
-        }
-    })
-
     override fun mapToDomainModel(): Item {
-        ogp.parse(url ?: "")
-
         return Item(
             id ?: throw ResponseConversionException("id must specified in item response"),
             itemResponse(type
@@ -66,8 +72,9 @@ data class ItemResponse(
             poll?.let { Expandable.compressed(it) },
             score,
             url,
-            previewUrl
+            getPreview(url)
         )
+
     }
 
     private fun itemResponse(typeStr: String): ItemType {

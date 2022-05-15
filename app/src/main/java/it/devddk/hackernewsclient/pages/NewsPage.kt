@@ -1,6 +1,7 @@
 package it.devddk.hackernewsclient.pages
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -82,7 +83,17 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text(stringResource(R.string.app_name)) },
+                    title = {
+                        Row {
+                            Icon(
+                                ROUTE_ICONS[viewModel.getQuery()]!!,
+                                viewModel.getQuery().entryName,
+                                modifier = Modifier.padding(start = 4.dp, top = 4.dp, end = 4.dp)
+                            )
+
+                            Text(viewModel.getQuery().entryName)
+                        }
+                    },
                     navigationIcon = {
                         IconButton(
                             onClick = {
@@ -142,6 +153,6 @@ val ROUTE_ICONS = mapOf(
     NewStories to Icons.Filled.NewReleases,
     BestStories to Icons.Filled.AutoAwesome,
     AskStories to Icons.Filled.QuestionAnswer,
-    ShowStories to Icons.Filled.Description,
+    ShowStories to Icons.Filled.Dashboard,
     JobStories to Icons.Filled.Work
 )

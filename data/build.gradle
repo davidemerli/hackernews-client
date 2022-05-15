@@ -91,6 +91,8 @@ dependencies {
     //Open Graph Protocol
     implementation 'com.github.Priyansh-Kedia:OpenGraphParser:2.5.4'
 
+    implementation 'org.jsoup:jsoup:1.13.1'
+
     // Desugaring to use java 8 features
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
 }

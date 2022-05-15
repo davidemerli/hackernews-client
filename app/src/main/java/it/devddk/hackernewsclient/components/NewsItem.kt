@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontStyle
@@ -27,7 +29,6 @@ import coil.compose.rememberAsyncImagePainter
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
-import timber.log.Timber
 import java.net.URI
 
 fun getDomainName(url: String): String {
@@ -40,7 +41,6 @@ fun getDomainName(url: String): String {
         url
     }
 }
-
 
 @Composable
 @ExperimentalMaterial3Api
@@ -62,12 +62,17 @@ fun NewsItem(item: Item, onClick: (() -> Unit)? = null) {
     val points = item.score
     val comments = item.descendants
 
-    Timber.d(item.asStoryItem().previewUrl)
+    val painter =
+        rememberAsyncImagePainter(
+            item.previewUrl,
+            filterQuality = FilterQuality.High,
+            contentScale = ContentScale.Crop,
+        )
+
 
     Card(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.background)
-            .wrapContentHeight()
             .fillMaxWidth()
             .clickable { onClick?.let { it() } }
             .padding(2.dp),
@@ -78,25 +83,25 @@ fun NewsItem(item: Item, onClick: (() -> Unit)? = null) {
         Row(
             Modifier
                 .padding(10.dp)
-                .height(IntrinsicSize.Min)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(
-                modifier = Modifier.fillMaxHeight(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Box(
                     Modifier
-                        .width(48.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .fillMaxHeight(0.8f)
+                        .fillMaxWidth(0.1f)
+                        .height(96.dp)
+                        .background(MaterialTheme.colorScheme.secondary)
                 ) {
                     Image(
-                        painter = rememberAsyncImagePainter(item.asStoryItem().previewUrl
-                            ?: "https://files.schudio.com/inspireacademy/images/news/asda.png"),
+                        painter = painter,
+                        modifier = Modifier.fillMaxSize(),
                         contentDescription = "My content description",
+                        contentScale = ContentScale.Crop
                     )
                 }
                 Text(
@@ -109,7 +114,6 @@ fun NewsItem(item: Item, onClick: (() -> Unit)? = null) {
             }
             Column(
                 modifier = Modifier
-                    .fillMaxHeight()
                     .fillMaxWidth()
                     .padding(start = 8.dp),
                 verticalArrangement = Arrangement.SpaceBetween,
@@ -119,7 +123,9 @@ fun NewsItem(item: Item, onClick: (() -> Unit)? = null) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(
-                        modifier = Modifier.fillMaxWidth(0.85f),
+                        modifier = Modifier
+                            .fillMaxWidth(0.85f)
+                            .fillMaxHeight(),
                     ) {
                         url?.let {
                             ClickableText(
@@ -134,7 +140,7 @@ fun NewsItem(item: Item, onClick: (() -> Unit)? = null) {
                             )
                         }
                         Text(
-                            "${item.title}",
+                            item.title?.trim() ?: R.string.title_unknown.toString(),
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.SemiBold,
@@ -165,31 +171,33 @@ fun NewsItem(item: Item, onClick: (() -> Unit)? = null) {
                                 fontStyle = FontStyle.Italic,
                                 textDecoration = TextDecoration.Underline,
                             ),
-                            onClick = {/*TODO*/ }
+                            onClick = { /*TODO*/ }
                         )
                         Text(
                             " - $timeString",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.offset(x = 10.dp, y = 10.dp),
-                    ) {
-                        Text(
-                            "$comments",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.secondary,
-                            ),
-                            modifier = Modifier.offset(x = 4.dp),
-                        )
-                        IconButton(
-                            onClick = { /*TODO*/ }) {
-                            Icon(
-                                Icons.Filled.Email,
-                                contentDescription = "Options",
-                                tint = MaterialTheme.colorScheme.secondary,
+                    comments?.let {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.offset(x = 10.dp, y = 10.dp),
+                        ) {
+                            Text(
+                                "$comments",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = MaterialTheme.colorScheme.secondary,
+                                ),
+                                modifier = Modifier.offset(x = 4.dp),
                             )
+                            IconButton(
+                                onClick = { /*TODO*/ }) {
+                                Icon(
+                                    Icons.Filled.Email,
+                                    contentDescription = "Options",
+                                    tint = MaterialTheme.colorScheme.secondary,
+                                )
+                            }
                         }
                     }
                 }
