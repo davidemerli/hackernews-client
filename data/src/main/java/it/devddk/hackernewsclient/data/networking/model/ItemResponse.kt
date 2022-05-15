@@ -1,10 +1,14 @@
 package it.devddk.hackernewsclient.data.networking.model
 
+import com.kedia.ogparser.OpenGraphCallback
+import com.kedia.ogparser.OpenGraphParser
+import com.kedia.ogparser.OpenGraphResult
 import it.devddk.hackernewsclient.data.common.utils.ResponseConversionException
 import it.devddk.hackernewsclient.data.networking.DomainMapper
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.utils.Expandable
+import timber.log.Timber
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -26,7 +30,24 @@ data class ItemResponse(
     val score: Int? = null,
     val url: String? = null,
 ) : DomainMapper<Item> {
+
+    private var previewUrl: String? = null
+
+    private val ogp = OpenGraphParser(object : OpenGraphCallback {
+        override fun onPostResponse(openGraphResult: OpenGraphResult) {
+            Timber.d(openGraphResult.image.toString())
+
+            previewUrl = openGraphResult.image
+        }
+
+        override fun onError(error: String) {
+            Timber.d(error)
+        }
+    })
+
     override fun mapToDomainModel(): Item {
+        ogp.parse(url ?: "")
+
         return Item(
             id ?: throw ResponseConversionException("id must specified in item response"),
             itemResponse(type
@@ -44,7 +65,8 @@ data class ItemResponse(
             parts.associateWith { null },
             poll?.let { Expandable.compressed(it) },
             score,
-            url
+            url,
+            previewUrl
         )
     }
 

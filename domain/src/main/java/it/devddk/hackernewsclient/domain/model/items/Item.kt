@@ -22,6 +22,7 @@ data class Item(
     val poll: Expandable<ItemId, PollItem>? = null,
     val score: Int? = null,
     val url: String? = null,
+    val previewUrl: String? = null,
 ) {
 
     companion object {
@@ -50,7 +51,8 @@ data class Item(
         title = story.title,
         descendants = story.descendants,
         score = story.score,
-        url = story.url
+        url = story.url,
+        previewUrl = story.previewUrl
     )
 
     constructor(job: IJobItem) : this(
@@ -121,7 +123,7 @@ data class Item(
     )
 
     fun asStoryItem(): StoryItem =
-        StoryItem(id, deleted, by, time, dead, kids, title, score, descendants, url, text)
+        StoryItem(id, deleted, by, time, dead, kids, title, score, descendants, url, previewUrl, text)
 
     fun asJobItem(): JobItem =
         JobItem(id, deleted, by, time, dead, title, score, text)

@@ -1,13 +1,12 @@
 package it.devddk.hackernewsclient.pages
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Search
@@ -27,15 +26,14 @@ import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.components.ErrorItem
 import it.devddk.hackernewsclient.components.LoadingItem
 import it.devddk.hackernewsclient.components.NewsItem
-import it.devddk.hackernewsclient.domain.model.utils.ALL_QUERIES
-import it.devddk.hackernewsclient.domain.model.utils.CollectionQueryType
+import it.devddk.hackernewsclient.domain.model.utils.*
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.ItemState
 import kotlinx.coroutines.launch
 
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
+@ExperimentalMaterial3Api
 fun NewsPage(navController: NavController, route: NewsPageRoutes) {
     val scrollState = rememberLazyListState()
     val viewModel: HomePageViewModel = viewModel()
@@ -62,20 +60,23 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
         drawerState = drawerState,
         gesturesEnabled = drawerState.isOpen,
         drawerContent = {
-            NavigationDrawerItem(
-                label = { Text(stringResource(R.string.app_name)) },
-                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
-                onClick = {},
-                selected = false
+            Text(
+                stringResource(R.string.app_name),
+                modifier = Modifier.padding(28.dp)
             )
             ALL_QUERIES.forEach {
                 NavigationDrawerItem(
-                    label = { Text(HackerNewsView(it).route) },
+                    icon = {
+                        Icon(
+                            imageVector = ROUTE_ICONS[HackerNewsView(it).query]!!,
+                            contentDescription = HackerNewsView(it).query.entryName
+                        )
+                    },
+                    label = { Text(HackerNewsView(it).query.entryName) },
                     selected = it == (route as HackerNewsView).query,
                     onClick = { navController.navigate(HackerNewsView(it).route) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
-                Spacer(Modifier.height(2.dp))
             }
         }) {
         Scaffold(
@@ -104,10 +105,9 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
             containerColor = MaterialTheme.colorScheme.background,
         ) {
             LazyColumn(
-                Modifier.padding(top = 64.dp),
+                Modifier.padding(top = it.calculateTopPadding()),
                 state = scrollState
             ) {
-
                 scope.launch {
                     viewModel.requestMore(scrollState.firstVisibleItemIndex + 30)
                 }
@@ -134,5 +134,14 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
 sealed class NewsPageRoutes
 
 data class HackerNewsView(val query: CollectionQueryType) : NewsPageRoutes() {
-    val route = query::class.java.simpleName
+    val route: String = query::class.java.simpleName
 }
+
+val ROUTE_ICONS = mapOf(
+    TopStories to Icons.Filled.TrendingUp,
+    NewStories to Icons.Filled.NewReleases,
+    BestStories to Icons.Filled.AutoAwesome,
+    AskStories to Icons.Filled.QuestionAnswer,
+    ShowStories to Icons.Filled.Description,
+    JobStories to Icons.Filled.Work
+)

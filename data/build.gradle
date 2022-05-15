@@ -88,9 +88,8 @@ dependencies {
     // Logging
     implementation 'com.jakewharton.timber:timber:5.0.1'
 
-
-
-
+    //Open Graph Protocol
+    implementation 'com.github.Priyansh-Kedia:OpenGraphParser:2.5.4'
 
     // Desugaring to use java 8 features
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'

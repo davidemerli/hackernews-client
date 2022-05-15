@@ -1,22 +1,29 @@
 package it.devddk.hackernewsclient.pages
 
-import android.text.Html
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.web.WebView
+import com.google.accompanist.web.rememberWebViewState
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 
 
 @Composable
+@ExperimentalPagerApi
+@ExperimentalMaterial3Api
 fun SingleNewsPage(navController: NavController, id: Int?) {
 
     val mViewModel: SingleNewsViewModel = viewModel()
@@ -28,36 +35,59 @@ fun SingleNewsPage(navController: NavController, id: Int?) {
 
     when (val uiStateValue = uiState.value) {
         is SingleNewsUiState.Error -> Error(throwable = uiStateValue.throwable)
-        is SingleNewsUiState.ItemLoaded -> SingleNewsHeading(item = uiStateValue.item)
+
+        is SingleNewsUiState.ItemLoaded -> SingleNewsHeading(
+            item = uiStateValue.item,
+            onBackPressed = { navController.popBackStack() }
+        )
+
         SingleNewsUiState.Loading -> Loading()
     }
 }
 
 @Composable
-fun SingleNewsHeading(item: Item) {
-    Column {
-        Text(
-            "${item.title}",
-            style = MaterialTheme.typography.bodyLarge.copy(
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.SemiBold,
-                lineHeight = 19.5.sp
+@ExperimentalPagerApi
+@ExperimentalMaterial3Api
+@SuppressLint("SetJavaScriptEnabled")
+fun SingleNewsHeading(item: Item, onBackPressed: () -> Unit) {
+    Scaffold(
+        topBar = {
+            SmallTopAppBar(
+                title = {},
+                scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(),
+                navigationIcon = {
+                    IconButton(onClick = onBackPressed) {
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                }
             )
-        )
-        // Don't display it if it is null
-        if (item.text != null) {
-            Text(Html.fromHtml(
-                "${item.text}",
-                Html.FROM_HTML_OPTION_USE_CSS_COLORS
-            ).toString())
+        },
+    ) {
+        Column(
+            modifier = Modifier.padding(top = it.calculateTopPadding()),
+        ) {
+            item.text?.let { articleText ->
+                Text(
+                    articleText,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+
+            item.url?.let { url ->
+                val state = rememberWebViewState(url)
+
+                WebView(
+                    state = state,
+                    onCreated = { wv ->
+                        wv.settings.javaScriptEnabled = true
+                        wv.isScrollbarFadingEnabled = true
+                        wv.isNestedScrollingEnabled = true
+                    }
+                )
+            }
         }
-
-        Comments()
     }
-
-
 }
-
 
 @Composable
 fun Comments() {

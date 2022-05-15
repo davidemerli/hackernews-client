@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,9 +23,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
+import timber.log.Timber
 import java.net.URI
 
 fun getDomainName(url: String): String {
@@ -38,9 +41,10 @@ fun getDomainName(url: String): String {
     }
 }
 
+
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
-fun NewsItem(item: Item, onClick : (() -> Unit)? = null) {
+@ExperimentalMaterial3Api
+fun NewsItem(item: Item, onClick: (() -> Unit)? = null) {
     val context = LocalContext.current
     val roundedShape = RoundedCornerShape(16.dp)
 
@@ -57,6 +61,8 @@ fun NewsItem(item: Item, onClick : (() -> Unit)? = null) {
     val url = item.url
     val points = item.score
     val comments = item.descendants
+
+    Timber.d(item.asStoryItem().previewUrl)
 
     Card(
         modifier = Modifier
@@ -86,8 +92,13 @@ fun NewsItem(item: Item, onClick : (() -> Unit)? = null) {
                         .width(48.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .fillMaxHeight(0.8f)
-                        .background(MaterialTheme.colorScheme.secondary)
-                )
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter(item.asStoryItem().previewUrl
+                            ?: "https://files.schudio.com/inspireacademy/images/news/asda.png"),
+                        contentDescription = "My content description",
+                    )
+                }
                 Text(
                     "${points.toString()} pt",
                     style = MaterialTheme.typography.bodyMedium.copy(
