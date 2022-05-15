@@ -19,7 +19,12 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
     private val _uiState = MutableStateFlow(SingleNewsUiState.Loading as SingleNewsUiState)
     val uiState = _uiState.asStateFlow()
 
+    private val _commentsMap = MutableStateFlow(emptyMap<ItemId, CommentUiState>())
+    val commentsMap = _commentsMap.asStateFlow()
+
+
     suspend fun setId(newId: Int?) {
+        _commentsMap.value = emptyMap()
         _uiState.emit(SingleNewsUiState.Loading)
         if (newId == null) {
             _uiState.emit(SingleNewsUiState.Error(Exception("EEE")))
@@ -36,6 +41,56 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
             )
         }
     }
+
+    suspend fun expandComment(idToExpand: ItemId) {
+        val currUiState = uiState.value
+        if (currUiState is SingleNewsUiState.ItemLoaded) {
+            when (val itemToExpand = _commentsMap.value[idToExpand]) {
+                is CommentUiState.CommentLoaded -> loadSubcomments(itemToExpand.item)
+                else -> { /* Do nothing */ }
+            }
+        }
+    }
+
+    private suspend fun loadSubcomments(item: Item) {
+        item.let { theItem ->
+            withContext(Dispatchers.IO) {
+                theItem.kids.forEach { id ->
+                    getItemById(id).fold(
+                        onSuccess = { item ->
+                            _commentsMap.update {
+                                it + Pair(id,
+                                    CommentUiState.CommentLoaded(item))
+                            }
+                        },
+                        onFailure = { t ->
+                            _commentsMap.update {
+                                it + Pair(id,
+                                    CommentUiState.Error(t))
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+    suspend fun getItem(id: ItemId) {
+        getItemById(id).fold(
+            onSuccess = { item ->
+                _commentsMap.update {
+                    it + Pair(id,
+                        CommentUiState.CommentLoaded(item))
+                }
+            },
+            onFailure = { t ->
+                _commentsMap.update {
+                    it + Pair(id,
+                        CommentUiState.Error(t))
+                }
+            }
+        )
+    }
 }
 
 
@@ -43,4 +98,10 @@ sealed class SingleNewsUiState {
     object Loading : SingleNewsUiState()
     data class Error(val throwable: Throwable) : SingleNewsUiState()
     data class ItemLoaded(val item: Item) : SingleNewsUiState()
+}
+
+sealed class CommentUiState {
+    object Loading : CommentUiState()
+    data class Error(val throwable: Throwable) : CommentUiState()
+    data class CommentLoaded(val item: Item) : CommentUiState()
 }

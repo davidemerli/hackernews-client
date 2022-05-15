@@ -1,7 +1,5 @@
 package it.devddk.hackernewsclient.domain.model.items
 
-import it.devddk.hackernewsclient.domain.model.User
-import it.devddk.hackernewsclient.domain.model.utils.Expandable
 import java.time.LocalDateTime
 
 interface IJobItem : IBaseItem {
@@ -13,7 +11,7 @@ interface IJobItem : IBaseItem {
 data class JobItem(
     override val id: Int,
     override val deleted: Boolean = false,
-    override val by: Expandable<String, User>?,
+    override val by: String?,
     override val time: LocalDateTime?,
     override val dead: Boolean = false,
     override val title: String?,

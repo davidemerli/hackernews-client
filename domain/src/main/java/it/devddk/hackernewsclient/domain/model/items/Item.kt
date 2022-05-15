@@ -1,7 +1,5 @@
 package it.devddk.hackernewsclient.domain.model.items
 
-import it.devddk.hackernewsclient.domain.model.User
-import it.devddk.hackernewsclient.domain.model.utils.Expandable
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import java.time.LocalDateTime
 
@@ -10,16 +8,16 @@ data class Item(
     val id: Int,
     val type: ItemType,
     val deleted: Boolean = false,
-    val by: Expandable<String, User>?,
+    val by: String?,
     val time: LocalDateTime?,
     val dead: Boolean = false,
-    val parent: Expandable<ItemId, Item>? = null,
+    val parent: ItemId? = null,
     val text: String? = null,
-    val kids: Map<ItemId, ICommentItem?> = emptyMap(),
+    val kids: List<ItemId> = emptyList(),
     val title: String? = null,
     val descendants: Int? = 0,
-    val parts: Map<ItemId, PollOptItem?> = emptyMap(),
-    val poll: Expandable<ItemId, PollItem>? = null,
+    val parts: List<ItemId> = emptyList(),
+    val poll: ItemId? = null,
     val score: Int? = null,
     val url: String? = null,
 ) {

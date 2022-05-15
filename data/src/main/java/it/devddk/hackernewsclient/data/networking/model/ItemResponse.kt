@@ -32,17 +32,17 @@ data class ItemResponse(
             itemResponse(type
                 ?: throw ResponseConversionException("type must specified in item response")),
             deleted,
-            by?.let { Expandable.compressed(it) },
+            by,
             convertTimestamp(time
                 ?: throw ResponseConversionException("time must specified in item response")),
             dead,
-            parent?.let { Expandable.compressed(it) },
+            parent,
             text,
-            kids.associateWith { null },
+            kids,
             title,
             descendants,
-            parts.associateWith { null },
-            poll?.let { Expandable.compressed(it) },
+            parts,
+            poll,
             score,
             url
         )

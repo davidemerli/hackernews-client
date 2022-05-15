@@ -45,7 +45,7 @@ fun NewsItem(item: Item, onClick : (() -> Unit)? = null) {
     val roundedShape = RoundedCornerShape(16.dp)
 
     val userString = remember(item) {
-        val userId = item.by?.id
+        val userId = item.by
         if (userId != null) context.getString(R.string.author, userId)
         else context.getString(R.string.author_unknown)
     }
@@ -431,7 +431,7 @@ fun NewsItemTall(item: Item) {
     val roundedShape = RoundedCornerShape(16.dp)
 
     val userString = remember(item) {
-        val userId = item.by?.id
+        val userId = item.by
         if (userId != null) context.getString(R.string.author, userId)
         else context.getString(R.string.author_unknown)
     }
