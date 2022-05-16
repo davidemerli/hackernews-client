@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.pages
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -13,9 +14,7 @@ import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -62,9 +61,7 @@ fun Comments(item: Item) {
         CenterAlignedTopAppBar(
             title = { Text(stringResource(R.string.app_name)) },
             navigationIcon = {
-
-                Icon(
-                    Icons.Rounded.Menu, "Menu")
+                Icon(Icons.Rounded.Menu, "Menu")
             },
             actions = {
                 IconButton(onClick = { }) {
@@ -75,10 +72,8 @@ fun Comments(item: Item) {
                 }
             },
         )
-    },
-        containerColor = MaterialTheme.colorScheme.background) {
+    }, containerColor = MaterialTheme.colorScheme.background) {
         LazyColumn(state = scrollState) {
-
             item {
                 Text(
                     "${item.title}",
@@ -104,19 +99,56 @@ fun Comments(item: Item) {
                 thisComment?.let {
                     val commentState =
                         comments.value.getOrDefault(it, CommentUiState.Loading)
-                    when (commentState) {
-                        is CommentUiState.CommentLoaded -> Text(commentState.item.text ?: "Peppe",
-                            modifier = Modifier.padding(15.dp))
-                        is CommentUiState.Error -> Text("Errorrrrr",
-                            modifier = Modifier.padding(15.dp))
-                        is CommentUiState.Loading -> Text("LOADING",
-                            modifier = Modifier.padding(15.dp))
-                    }
+                    ExpandableComment(commentState, comments.value, 0)
                 }
-
             }
         }
     }
+}
+
+fun Item.isExpandable() = kids.isNotEmpty()
+
+
+@Composable
+fun ExpandableComment(parentComment: CommentUiState, comments: Map<ItemId, CommentUiState>, depth: Int) {
+    val mViewModel: SingleNewsViewModel = viewModel()
+    var expanded by remember { mutableStateOf(false) }
+    val expandable =
+        parentComment is CommentUiState.CommentLoaded && parentComment.item.isExpandable()
+
+    Column {
+        CommentCard(parentComment, depth, onClick = {
+            if (expandable) {
+                expanded = !expanded
+            }
+        })
+        if (expandable && expanded) {
+            val commentItem = (parentComment as CommentUiState.CommentLoaded).item
+            commentItem.kids.forEach { childId ->
+                LaunchedEffect(childId) {
+                    mViewModel.getItem(childId)
+                }
+                ExpandableComment(comments.getOrDefault(childId, CommentUiState.Loading), comments, depth + 1)
+            }
+        }
+    }
+}
+
+@Composable
+fun CommentCard(commentState: CommentUiState, depth: Int, onClick : () -> Unit) {
+    Box(Modifier.clickable {
+        onClick()
+    }) {
+        when (commentState) {
+            is CommentUiState.CommentLoaded -> Text("($depth) ${commentState.item.text ?: "Peppe"}",
+                modifier = Modifier.padding(15.dp))
+            is CommentUiState.Error -> Text("Errorrrrr",
+                modifier = Modifier.padding(15.dp))
+            is CommentUiState.Loading -> Text("LOADING",
+                modifier = Modifier.padding(15.dp))
+        }
+    }
+
 }
 
 

@@ -75,21 +75,23 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
         }
     }
 
-    suspend fun getItem(id: ItemId) {
-        getItemById(id).fold(
-            onSuccess = { item ->
-                _commentsMap.update {
-                    it + Pair(id,
-                        CommentUiState.CommentLoaded(item))
+    suspend fun getItem(id: ItemId, forceRefresh : Boolean = false) {
+        if(forceRefresh || commentsMap.value[id] !is CommentUiState.CommentLoaded) {
+            getItemById(id).fold(
+                onSuccess = { item ->
+                    _commentsMap.update {
+                        it + Pair(id,
+                            CommentUiState.CommentLoaded(item))
+                    }
+                },
+                onFailure = { t ->
+                    _commentsMap.update {
+                        it + Pair(id,
+                            CommentUiState.Error(t))
+                    }
                 }
-            },
-            onFailure = { t ->
-                _commentsMap.update {
-                    it + Pair(id,
-                        CommentUiState.Error(t))
-                }
-            }
-        )
+            )
+        }
     }
 }
 
