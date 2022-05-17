@@ -3,17 +3,17 @@ package it.devddk.hackernewsclient
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import it.devddk.hackernewsclient.domain.model.utils.ALL_QUERIES
-import it.devddk.hackernewsclient.domain.model.utils.NewStories
-import it.devddk.hackernewsclient.domain.model.utils.TopStories
 import it.devddk.hackernewsclient.pages.HackerNewsView
 import it.devddk.hackernewsclient.pages.NewsPage
 import it.devddk.hackernewsclient.pages.SingleNewsPage
@@ -21,6 +21,7 @@ import it.devddk.hackernewsclient.ui.theme.HackerNewsClientTheme
 
 class MainActivity : ComponentActivity() {
 
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -35,6 +36,8 @@ class MainActivity : ComponentActivity() {
 
 
     @Composable
+    @ExperimentalComposeUiApi
+    @ExperimentalMaterial3Api
     private fun AppRootNavigator() {
         val navController = rememberNavController()
         NavHost(navController = navController, "TopStories") {

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="depth_colors">
+        <item>@color/layer_1</item>
+        <item>@color/layer_2</item>
+        <item>@color/layer_3</item>
+        <item>@color/layer_4</item>
+        <item>@color/layer_5</item>
+        <item>@color/layer_6_plus</item>
+    </array>
+</resources>

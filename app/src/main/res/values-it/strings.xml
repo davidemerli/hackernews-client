@@ -26,4 +26,10 @@
         <item quantity="one">%d anno fa</item>
         <item quantity="other">%d anni fa</item>
     </plurals>
+    <plurals name="comments">
+        <item quantity="one">%d commento</item>
+        <item quantity="other">%d commenti</item>
+    </plurals>
+    <string name="close_comments">Chiudi commenti</string>
+    <string name="open_comments">Apri commenti</string>
 </resources>

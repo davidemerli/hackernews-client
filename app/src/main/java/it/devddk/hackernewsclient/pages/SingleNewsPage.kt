@@ -14,10 +14,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.integerArrayResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -38,9 +41,9 @@ import it.devddk.hackernewsclient.viewmodels.CommentUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 
-
 @Composable
 @ExperimentalMaterial3Api
+@ExperimentalComposeUiApi
 fun SingleNewsPage(navController: NavController, id: Int?) {
 
     val mViewModel: SingleNewsViewModel = viewModel()
@@ -58,6 +61,7 @@ fun SingleNewsPage(navController: NavController, id: Int?) {
 }
 
 @Composable
+@ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
 fun Comments(item: Item) {
 
@@ -127,6 +131,7 @@ fun Item.isExpandable() = kids.isNotEmpty()
 
 
 @Composable
+@ExperimentalComposeUiApi
 fun ExpandableComment(
     parentComment: CommentUiState,
     comments: Map<ItemId, CommentUiState>,
@@ -159,13 +164,11 @@ fun ExpandableComment(
 }
 
 @Composable
+@ExperimentalComposeUiApi
 fun CommentCard(commentState: CommentUiState, depth: Int, onClick: () -> Unit, expanded: Boolean) {
-    val depthColors: List<Color> = listOf(Color(0x66ef476f),
-        Color(0x66ffd166),
-        Color(0x6606d6a0),
-        Color(0x66118ab2),
-        Color(0x66073b4c))
-
+    val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map {
+        Color(it)
+    }
     val context = LocalContext.current
 
     Row(modifier = Modifier
@@ -173,6 +176,7 @@ fun CommentCard(commentState: CommentUiState, depth: Int, onClick: () -> Unit, e
         .padding(start = ((depth + 1) * 6).dp, top = 4.dp, end = 4.dp, bottom = 4.dp)
         .clip(RoundedCornerShape(4.dp))
         .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f))) {
+
         Box(modifier = Modifier
             .width(10.dp)
             .fillMaxHeight()
@@ -227,10 +231,11 @@ fun CommentCard(commentState: CommentUiState, depth: Int, onClick: () -> Unit, e
                             Row(modifier = Modifier.fillMaxSize(),
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically) {
-                                Text("$numKids comments",
+                                Text(pluralStringResource(R.plurals.comments, numKids, numKids),
                                     style = MaterialTheme.typography.bodySmall)
                                 Icon(if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
-                                    if (expanded) "Close Comments" else "Open Comments")
+                                    if (expanded) stringResource(R.string.close_comments) else stringResource(
+                                        R.string.open_comments))
                             }
                         }
                     }
@@ -249,7 +254,6 @@ fun CommentCard(commentState: CommentUiState, depth: Int, onClick: () -> Unit, e
         }
     }
 }
-
 
 @Composable
 fun Error(throwable: Throwable) {

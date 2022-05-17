@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'org.jlleitschuh.gradle.ktlint' version '10.2.0'
+    id 'com.google.firebase.crashlytics'
 }
 
 android {
@@ -70,6 +71,8 @@ dependencies {
     implementation "androidx.compose.material3:material3:$material3Version"
     implementation "androidx.compose.ui:ui-tooling-preview:$composeVersion"
     implementation project(path: ':domain')
+    implementation 'com.google.firebase:firebase-crashlytics-ktx:18.2.9'
+    implementation 'com.google.firebase:firebase-analytics-ktx:20.1.2'
     debugImplementation "androidx.compose.ui:ui-tooling:$composeVersion"
 
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.4.1'
