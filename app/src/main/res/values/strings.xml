@@ -26,4 +26,12 @@
         <item quantity="one">%dy</item>
         <item quantity="other">%dy</item>
     </plurals>
+
+
+    <plurals name="comments">
+        <item quantity="one">%d comment</item>
+        <item quantity="other">%d comments</item>
+    </plurals>
+    <string name="close_comments">Close comments</string>
+    <string name="open_comments">Open comments</string>
 </resources>

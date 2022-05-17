@@ -12,10 +12,13 @@ import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.integerArrayResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -36,7 +39,6 @@ import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 
 @Composable
 fun SingleNewsPage(navController: NavController, id: Int?) {
-
     val mViewModel: SingleNewsViewModel = viewModel()
     val uiState = mViewModel.uiState.collectAsState(SingleNewsUiState.Loading)
 
@@ -153,15 +155,12 @@ fun ExpandableComment(
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun CommentCard(commentState: CommentUiState, depth: Int, onClick: () -> Unit, expanded: Boolean) {
-    val depthColors: List<Color> = listOf(
-        Color(0xffef476f),
-        Color(0xffffd166),
-        Color(0xff06d6a0),
-        Color(0xff118ab2),
-        Color(0xff073b4c)
-    )
+    val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map {
+        Color(it)
+    }
 
     val context = LocalContext.current
 
@@ -181,8 +180,7 @@ fun CommentCard(commentState: CommentUiState, depth: Int, onClick: () -> Unit, e
                     .fillMaxHeight()
                     .padding(end = 4.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(depthColors[depth % depthColors.size])
-            )
+                    .background(depthColors[depth % depthColors.size]))
 
             when (commentState) {
                 is CommentUiState.CommentLoaded -> {
@@ -225,13 +223,14 @@ fun CommentCard(commentState: CommentUiState, depth: Int, onClick: () -> Unit, e
                                     .padding(top = 8.dp),
                                 horizontalArrangement = Arrangement.Center
                             ) {
-                                Text("" +
-                                        "$numKids comments",
+                                Text(
+                                    pluralStringResource(R.plurals.comments, numKids, numKids),
                                     style = MaterialTheme.typography.bodySmall
                                 )
                                 Icon(
                                     if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
-                                    if (expanded) "Close Comments" else "Open Comments"
+                                    if (expanded) stringResource(R.string.close_comments)
+                                        else stringResource(R.string.open_comments)
                                 )
                             }
                         }
