@@ -4,7 +4,7 @@ import it.devddk.hackernewsclient.data.common.utils.ResponseConversionException
 import it.devddk.hackernewsclient.data.networking.DomainMapper
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
-import it.devddk.hackernewsclient.domain.model.utils.Expandable
+import org.jsoup.Jsoup
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -37,7 +37,7 @@ data class ItemResponse(
                 ?: throw ResponseConversionException("time must specified in item response")),
             dead,
             parent,
-            text,
+            text?.let { fixLinks(text) } ?: "",
             kids,
             title,
             descendants,
@@ -57,6 +57,25 @@ data class ItemResponse(
             "comment" -> ItemType.COMMENT
             else -> throw ResponseConversionException("Invalid type")
         }
+    }
+
+    private fun fixLinks(text: String): String {
+        /*
+         get all links and replace text with link, since longer links on HN arrive with ellipses
+         in the text part of the <a> tag. The html parser does not make clickable links, so we need
+         to do it manually, but the text presents the link with ellipses, so we need to restore them
+         to full length.
+         */
+
+        val doc = Jsoup.parse(text)
+
+        doc.select("a").forEach {
+            val href = it.attr("href")
+            it.text(href)
+        }
+
+        return doc.html()
+
     }
 
     private fun convertTimestamp(timestamp: Long): LocalDateTime =
