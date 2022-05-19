@@ -4,10 +4,35 @@ import it.devddk.hackernewsclient.data.common.utils.ResponseConversionException
 import it.devddk.hackernewsclient.data.networking.DomainMapper
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
+import okio.ByteString.Companion.encode
 import org.jsoup.Jsoup
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import kotlin.random.Random
+
+fun getPreview(siteUrl: String?): String? {
+    try {
+        if (siteUrl != null) {
+            val response =
+                Jsoup.connect(siteUrl).ignoreContentType(true).followRedirects(true).execute()
+
+            return response.parse()
+                .select("meta[property=og:image]")
+                .first()
+                .attr("content")
+        }
+    } catch (e: Exception) {
+    }
+
+    return if (siteUrl != null) {
+        val urlEncoded = siteUrl.encode().base64()
+
+        "https://identicon-api.herokuapp.com/$urlEncoded/128?format=png"
+    } else {
+        "https://identicon-api.herokuapp.com/${Random.nextLong()}/128?format=png"
+    }
+}
 
 data class ItemResponse(
     val id: Int? = null,
@@ -26,6 +51,7 @@ data class ItemResponse(
     val score: Int? = null,
     val url: String? = null,
 ) : DomainMapper<Item> {
+
     override fun mapToDomainModel(): Item {
         return Item(
             id ?: throw ResponseConversionException("id must specified in item response"),
@@ -44,8 +70,10 @@ data class ItemResponse(
             parts,
             poll,
             score,
-            url
+            url,
+            getPreview(url)
         )
+
     }
 
     private fun itemResponse(typeStr: String): ItemType {

@@ -2,7 +2,6 @@ package it.devddk.hackernewsclient.data.repository.item
 
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.GenericTypeIndicator
-import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.utils.*
 import it.devddk.hackernewsclient.domain.repository.StoryRepository
 import kotlinx.coroutines.tasks.await
@@ -19,7 +18,7 @@ class StoryRepositoryImpl : StoryRepository, KoinComponent {
     override suspend fun getStories(query: CollectionQueryType): Result<List<ItemId>> {
         return runCatching {
             val what = when (query) {
-                AskStories -> "topstories"
+                AskStories -> "askstories"
                 BestStories -> "beststories"
                 JobStories -> "jobstories"
                 NewStories -> "newstories"
