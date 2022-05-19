@@ -1,16 +1,16 @@
 package it.devddk.hackernewsclient.viewmodels
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import it.devddk.hackernewsclient.domain.interaction.item.GetItemUseCase
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.lang.Exception
 
 class SingleNewsViewModel : ViewModel(), KoinComponent {
 
@@ -31,14 +31,11 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
             return
         }
         withContext(Dispatchers.IO) {
-            getItemById(newId).fold(
-                onSuccess = {
-                    _uiState.emit(SingleNewsUiState.ItemLoaded(it))
-                },
-                onFailure = {
-                    _uiState.emit(SingleNewsUiState.Error(it))
-                }
-            )
+            getItemById(newId).fold(onSuccess = {
+                _uiState.emit(SingleNewsUiState.ItemLoaded(it))
+            }, onFailure = {
+                _uiState.emit(SingleNewsUiState.Error(it))
+            })
         }
     }
 
@@ -47,7 +44,8 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
         if (currUiState is SingleNewsUiState.ItemLoaded) {
             when (val itemToExpand = _commentsMap.value[idToExpand]) {
                 is CommentUiState.CommentLoaded -> loadSubcomments(itemToExpand.item)
-                else -> { /* Do nothing */ }
+                else -> { /* Do nothing */
+                }
             }
         }
     }
@@ -56,41 +54,31 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
         item.let { theItem ->
             withContext(Dispatchers.IO) {
                 theItem.kids.forEach { id ->
-                    getItemById(id).fold(
-                        onSuccess = { item ->
-                            _commentsMap.update {
-                                it + Pair(id,
-                                    CommentUiState.CommentLoaded(item))
-                            }
-                        },
-                        onFailure = { t ->
-                            _commentsMap.update {
-                                it + Pair(id,
-                                    CommentUiState.Error(t))
-                            }
+                    getItemById(id).fold(onSuccess = { item ->
+                        _commentsMap.update {
+                            it + Pair(id, CommentUiState.CommentLoaded(item))
                         }
-                    )
+                    }, onFailure = { t ->
+                        _commentsMap.update {
+                            it + Pair(id, CommentUiState.Error(t))
+                        }
+                    })
                 }
             }
         }
     }
 
-    suspend fun getItem(id: ItemId, forceRefresh : Boolean = false) {
-        if(forceRefresh || commentsMap.value[id] !is CommentUiState.CommentLoaded) {
-            getItemById(id).fold(
-                onSuccess = { item ->
-                    _commentsMap.update {
-                        it + Pair(id,
-                            CommentUiState.CommentLoaded(item))
-                    }
-                },
-                onFailure = { t ->
-                    _commentsMap.update {
-                        it + Pair(id,
-                            CommentUiState.Error(t))
-                    }
+    suspend fun getItem(id: ItemId, forceRefresh: Boolean = false) {
+        if (forceRefresh || commentsMap.value[id] !is CommentUiState.CommentLoaded) {
+            getItemById(id).fold(onSuccess = { item ->
+                _commentsMap.update {
+                    it + Pair(id, CommentUiState.CommentLoaded(item))
                 }
-            )
+            }, onFailure = { t ->
+                _commentsMap.update {
+                    it + Pair(id, CommentUiState.Error(t))
+                }
+            })
         }
     }
 }

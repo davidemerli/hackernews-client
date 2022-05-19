@@ -40,6 +40,7 @@ class MainActivity : ComponentActivity() {
     @ExperimentalMaterial3Api
     private fun AppRootNavigator() {
         val navController = rememberNavController()
+
         NavHost(navController = navController, "TopStories") {
             ALL_QUERIES.forEach { query ->
                 composable(route = HackerNewsView(query).route) {

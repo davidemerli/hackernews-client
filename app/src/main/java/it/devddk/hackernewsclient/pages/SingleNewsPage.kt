@@ -1,6 +1,7 @@
 package it.devddk.hackernewsclient.pages
 
 import android.text.Html
+import android.text.Spanned
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -27,9 +28,11 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.text.HtmlCompat
+import androidx.core.text.toSpanned
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import it.devddk.hackernewsclient.R
@@ -96,12 +99,16 @@ fun Comments(item: Item) {
                 // Don't display it if it is null
                 item.text?.let { text ->
                     SelectionContainer {
-                        LinkifyText("${Html.fromHtml(text, HtmlCompat.FROM_HTML_MODE_COMPACT)}",
+                        LinkifyText(
+                            text.toSpanned().toString(),
                             modifier = Modifier.padding(8.dp),
-                            style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Light,
-                                lineHeight = 19.5.sp),
-                            linkColor = MaterialTheme.colorScheme.secondary)
+                                lineHeight = 19.5.sp
+                            ),
+                            linkColor = MaterialTheme.colorScheme.secondary
+                        )
                     }
                 }
             }
@@ -120,6 +127,7 @@ fun Comments(item: Item) {
                         commentState,
                         comments.value,
                         0,
+                        rootItem = item,
                     )
                 }
             }
@@ -136,6 +144,7 @@ fun ExpandableComment(
     parentComment: CommentUiState,
     comments: Map<ItemId, CommentUiState>,
     depth: Int,
+    rootItem: Item,
 ) {
     val mViewModel: SingleNewsViewModel = viewModel()
     val expandable =
@@ -144,9 +153,14 @@ fun ExpandableComment(
     var expanded by rememberSaveable { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        CommentCard(parentComment, depth, onClick = {
-            expanded = !expanded
-        }, expanded = expanded)
+        CommentCard(parentComment,
+            depth,
+            expanded = expanded,
+            rootItem = rootItem,
+            onClick = {
+                expanded = !expanded
+            }
+        )
 
         if (expandable && expanded) {
             val commentItem = (parentComment as CommentUiState.CommentLoaded).item
@@ -157,7 +171,8 @@ fun ExpandableComment(
 
                 ExpandableComment(comments.getOrDefault(childId, CommentUiState.Loading),
                     comments,
-                    depth + 1)
+                    depth + 1,
+                    rootItem)
             }
         }
     }
@@ -165,10 +180,17 @@ fun ExpandableComment(
 
 @Composable
 @ExperimentalComposeUiApi
-fun CommentCard(commentState: CommentUiState, depth: Int, onClick: () -> Unit, expanded: Boolean) {
+fun CommentCard(
+    commentState: CommentUiState,
+    depth: Int,
+    rootItem: Item,
+    onClick: () -> Unit,
+    expanded: Boolean,
+) {
     val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map {
         Color(it)
     }
+
     val context = LocalContext.current
 
     Row(modifier = Modifier
@@ -184,37 +206,43 @@ fun CommentCard(commentState: CommentUiState, depth: Int, onClick: () -> Unit, e
             .clip(RoundedCornerShape(topStart = 4.dp, bottomStart = 4.dp))
             .background(depthColors[depth % depthColors.size]))
 
+
         when (commentState) {
             is CommentUiState.CommentLoaded -> {
-                val text = commentState.item.text?.let { text ->
-                    Html.fromHtml(text, HtmlCompat.FROM_HTML_OPTION_USE_CSS_COLORS)
-                } ?: "< deleted comment >"
+                val text = commentState.item.text ?: "< deleted comment >"
 
                 val timeString = remember(commentState.item) {
                     TimeDisplayUtils(context).toDateTimeAgoInterval(commentState.item.time)
                 }
 
+                val isOriginalPoster = rootItem.by == commentState.item.by
+
+                val byString =
+                    "${commentState.item.by}${if (isOriginalPoster) " (OP)" else ""}"
+
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = buildAnnotatedString {
-                            pushStyle(SpanStyle(textDecoration = TextDecoration.Underline,
-                                fontStyle = FontStyle.Italic,
-                                fontWeight = FontWeight.SemiBold))
-                            append(commentState.item.by ?: "")
-                            pop()
-                            append(" • ")
-                            append(timeString)
-                        },
+                    Text(text = buildAnnotatedString {
+                        pushStyle(SpanStyle(
+                            textDecoration = TextDecoration.Underline,
+                            fontStyle = if (isOriginalPoster) FontStyle.Normal else FontStyle.Italic,
+                            fontWeight = if (isOriginalPoster) FontWeight.Black else FontWeight.SemiBold,
+                        ))
+                        append(byString)
+                        pop()
+                        append(" • ")
+                        append(timeString)
+                    },
                         modifier = Modifier.padding(4.dp),
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (isOriginalPoster) MaterialTheme.colorScheme.primary else depthColors[depth % depthColors.size]
                     )
 
                     SelectionContainer {
                         LinkifyText(
-                            "${text.trim()}",
+                            text = Html.fromHtml(text, Html.FROM_HTML_MODE_COMPACT).toString(),
                             modifier = Modifier.padding(4.dp),
                             style = MaterialTheme.typography.bodyMedium,
+                            overflow = TextOverflow.Visible,
                             linkColor = MaterialTheme.colorScheme.secondary,
                         )
                     }
@@ -228,14 +256,24 @@ fun CommentCard(commentState: CommentUiState, depth: Int, onClick: () -> Unit, e
                             .clickable {
                                 onClick()
                             }) {
-                            Row(modifier = Modifier.fillMaxSize(),
+                            Row(
+                                modifier = Modifier.fillMaxSize(),
                                 horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically) {
-                                Text(pluralStringResource(R.plurals.comments, numKids, numKids),
-                                    style = MaterialTheme.typography.bodySmall)
-                                Icon(if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    pluralStringResource(R.plurals.comments,
+                                        numKids,
+                                        numKids
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+
+                                Icon(
+                                    if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
                                     if (expanded) stringResource(R.string.close_comments) else stringResource(
-                                        R.string.open_comments))
+                                        R.string.open_comments)
+                                )
                             }
                         }
                     }
@@ -252,6 +290,8 @@ fun CommentCard(commentState: CommentUiState, depth: Int, onClick: () -> Unit, e
                     .padding(16.dp)
                     .fillMaxWidth())
         }
+
+
     }
 }
 
@@ -263,4 +303,12 @@ fun Error(throwable: Throwable) {
 @Composable
 fun Loading() {
     Text("Loading")
+}
+
+fun isFromYCombinator(url: String): Boolean {
+    return url.matches("https://news\\.ycombinator\\.com/item\\?id=\\d{8}".toRegex())
+}
+
+fun String.toSpanned(): Spanned {
+    return Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
 }
