@@ -8,9 +8,9 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="layer_1">#66EF476F</color>
-    <color name="layer_2">#66FFd166</color>
-    <color name="layer_3">#6606D6A0</color>
-    <color name="layer_4">#66118AB2</color>
-    <color name="layer_5">#66073B4C</color>
+    <color name="layer_1">#EF476F</color>
+    <color name="layer_2">#FFd166</color>
+    <color name="layer_3">#06D6A0</color>
+    <color name="layer_4">#118AB2</color>
+    <color name="layer_5">#9C27B0</color>
 </resources>
