@@ -3,13 +3,11 @@ package it.devddk.hackernewsclient.pages
 import android.annotation.SuppressLint
 import android.text.Html
 import android.text.Spanned
-import android.webkit.WebSettings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -88,10 +86,6 @@ fun TabbedView(item: Item) {
         "comments",
         "article",
     )
-
-    val mViewModel: SingleNewsViewModel = viewModel()
-    val scrollState = rememberLazyListState()
-    val comments = mViewModel.commentList.collectAsState(emptyList())
     var tabIndex by remember { mutableStateOf(0) }
     val tabTitles = listOf("Article", "Comments")
     val pagerState = rememberPagerState()
@@ -194,7 +188,7 @@ fun Comments(item: Item) {
 
     val mViewModel: SingleNewsViewModel = viewModel()
     val scrollState = rememberLazyListState()
-    val comments = mViewModel.commentsMap.collectAsState()
+    val comments = mViewModel.commentList.collectAsState(emptyList())
 
     LazyColumn(state = scrollState) {
         item {
@@ -221,16 +215,15 @@ fun Comments(item: Item) {
         }
 
 
-            itemsIndexed(comments.value) { _, thisComment ->
-                LaunchedEffect(thisComment.itemId) {
-                    mViewModel.getItem(thisComment.itemId)
-                }
-
-                ExpandableComment(
-                    thisComment,
-                    rootItem = item,
-                )
+        itemsIndexed(comments.value) { _, thisComment ->
+            LaunchedEffect(thisComment.itemId) {
+                mViewModel.getItem(thisComment.itemId)
             }
+
+            ExpandableComment(
+                thisComment,
+                rootItem = item,
+            )
         }
     }
 }
@@ -269,7 +262,6 @@ fun ExpandableComment(
 @ExperimentalComposeUiApi
 fun CommentCard(
     commentState: CommentUiState,
-    depth: Int,
     rootItem: Item,
     onClick: () -> Unit,
     expanded: Boolean,
