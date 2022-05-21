@@ -10,11 +10,8 @@ import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.domain.model.utils.TopStories
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import timber.log.Timber
 
 class HomePageViewModel : ViewModel(), KoinComponent {
 
@@ -25,108 +22,84 @@ class HomePageViewModel : ViewModel(), KoinComponent {
     private val getNewStories: GetNewStoriesUseCase by inject()
     private val getItem: GetItemUseCase by inject()
 
-    private var ids: Result<List<ItemId>>? = null
+    private val _query: MutableStateFlow<CollectionQueryType> = MutableStateFlow(TopStories)
+    val query = _query.asStateFlow()
 
-    private val query: MutableStateFlow<CollectionQueryType> = MutableStateFlow(TopStories)
+    val pageState: StateFlow<NewsPageState> = _query.transform { query ->
+        emit(NewsPageState.Loading)
+        getNewStories(query).fold(
+            onSuccess = {
+                emit(NewsPageState.NewsIdsLoaded(it))
+            },
+            onFailure = {
+                emit(NewsPageState.NewsIdsError(it))
+            }
+        )
+    }.flowOn(Dispatchers.IO)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), NewsPageState.Loading)
 
-    private val loadUntil = MutableStateFlow(0)
-    private val itemStorage = MutableStateFlow(emptyMap<Int, ItemState>())
-    val shownList: Flow<List<ItemState>> = itemStorage.map { map ->
-        (0 until query.value.maxAmount).map { i -> map.getOrDefault(i, ItemState.Loading) }
-    }
-    private val _uiMessages = MutableSharedFlow<ListUpdateMessage>()
-    private val uiMessages = _uiMessages.asSharedFlow()
-
-
-
-    init {
-        viewModelScope.launch {
-            uiMessages.onEach { msg ->
-                when (msg) {
-
-                    is ListUpdateMessage.AddItem -> {
-                        Timber.d("Appending item ${msg.index}")
-                        itemStorage.update { old ->
-                            old + Pair(msg.index, msg.item)
-                        }
-                    }
-                    is ListUpdateMessage.ClearAll -> {
-                        Timber.d("Clearing all items")
-                        itemStorage.update { emptyMap() }
-                    }
-                }
-            }.collect()
-        }
-    }
+    private val itemList: MutableList<NewsItemState> = mutableListOf()
+    private val _itemListFlow: MutableSharedFlow<List<NewsItemState>> = MutableSharedFlow(1)
+    val itemListFlow = _itemListFlow.asSharedFlow()
 
     suspend fun setQuery(newQuery: CollectionQueryType) {
-        val oldQuery = query.value
+        val oldQuery = _query.value
         if (oldQuery != newQuery) {
-            query.emit(newQuery)
-        }
-    }
-
-    fun getQuery () : CollectionQueryType {
-        return query.value
-    }
-
-    suspend fun requestMore(newUntil: Int) {
-
-        if ((ids?.isSuccess != true)) {
-            refreshItemIds()
-        }
-        if (newUntil > loadUntil.value) {
-
-            withContext(Dispatchers.IO) {
-                val oldUntil = loadUntil.getAndUpdate {
-                    newUntil
-                }
-                loadUntil.value = newUntil
-                Timber.d("Loading $oldUntil $newUntil")
-                (oldUntil..newUntil).forEach { index ->
-                    if (itemStorage.value[index] !is ItemState.ItemLoaded) {
-                        val id = getIdFromIndex(index)
-                        if (id != null) {
-                            withContext(Dispatchers.IO) {
-                                _uiMessages.emit(ListUpdateMessage.AddItem(index, getItem(id).fold(
-                                    onSuccess = {
-                                        Timber.d("Got item $index")
-                                        ItemState.ItemLoaded(it)
-                                    },
-                                    onFailure = {
-                                        ItemState.ItemError(it)
-                                    }
-                                )))
-                            }
-                        }
-                    }
+            synchronized(itemList) {
+                itemList.clear()
+                for (i in 0 until newQuery.maxAmount) {
+                    itemList.add(NewsItemState.Loading)
                 }
             }
-
+            _query.emit(newQuery)
+            updateItemList()
         }
     }
 
+    suspend fun requestItem(index: Int) {
+        val currPageState = pageState.value
+        if (currPageState !is NewsPageState.NewsIdsLoaded) {
+            return
+        }
+        synchronized(itemList) {
+            if (itemList[index] is NewsItemState.ItemLoaded) {
+                return
+            }
+        }
+        val itemId = currPageState.itemsId[index]
 
-    private fun getIdFromIndex(index: Int): ItemId? {
-        return ids?.getOrNull()?.getOrNull(index)
+        getItem(itemId).fold(
+            onSuccess = {
+                synchronized(itemList) {
+                    itemList[index] = NewsItemState.ItemLoaded(it)
+                }
+            },
+            onFailure = {
+                synchronized(itemList) {
+                    itemList[index] = NewsItemState.ItemError(it)
+                }
+            })
+        updateItemList()
     }
 
-    private suspend fun refreshItemIds() {
-        ids = getNewStories(query.value)
-        loadUntil.value = 0
-        _uiMessages.emit(ListUpdateMessage.ClearAll)
+    private suspend fun updateItemList() {
+        val result: List<NewsItemState>
+        synchronized(itemList) {
+            result = itemList.toList()
+        }
+        _itemListFlow.emit(result)
     }
 }
 
-
-sealed class ItemState {
-    object Loading : ItemState()
-    data class ItemLoaded(val item: Item) : ItemState()
-    data class ItemError(val exception: Throwable) : ItemState()
+sealed class NewsPageState {
+    object Loading : NewsPageState()
+    data class NewsIdsLoaded(val itemsId: List<ItemId>) : NewsPageState()
+    data class NewsIdsError(val exception: Throwable) : NewsPageState()
 }
 
-sealed class ListUpdateMessage {
-    object ClearAll : ListUpdateMessage()
-    data class AddItem(val index: Int, val item: ItemState) : ListUpdateMessage()
-}
 
+sealed class NewsItemState {
+    object Loading : NewsItemState()
+    data class ItemLoaded(val item: Item) : NewsItemState()
+    data class ItemError(val exception: Throwable) : NewsItemState()
+}

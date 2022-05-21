@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -38,7 +39,6 @@ import androidx.navigation.NavController
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.components.LinkifyText
 import it.devddk.hackernewsclient.domain.model.items.Item
-import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
 import it.devddk.hackernewsclient.viewmodels.CommentUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
@@ -71,7 +71,7 @@ fun Comments(item: Item) {
 
     val mViewModel: SingleNewsViewModel = viewModel()
     val scrollState = rememberLazyListState()
-    val comments = mViewModel.commentsMap.collectAsState()
+    val comments = mViewModel.commentList.collectAsState(emptyList())
 
     Scaffold(topBar = {
         CenterAlignedTopAppBar(
@@ -114,23 +114,16 @@ fun Comments(item: Item) {
                 }
             }
 
-            items(item.kids.size) { index ->
-                val thisComment = item.kids.getOrNull(index)
-                LaunchedEffect(index) {
-                    thisComment?.let { it ->
-                        mViewModel.getItem(it)
-                    }
-                }
-                thisComment?.let { it ->
-                    val commentState = comments.value.getOrDefault(it, CommentUiState.Loading)
 
-                    ExpandableComment(
-                        commentState,
-                        comments.value,
-                        0,
-                        rootItem = item,
-                    )
+            itemsIndexed(comments.value) { _, thisComment ->
+                LaunchedEffect(thisComment.itemId) {
+                    mViewModel.getItem(thisComment.itemId)
                 }
+
+                ExpandableComment(
+                    thisComment,
+                    rootItem = item,
+                )
             }
         }
     }
@@ -142,20 +135,17 @@ fun Item.isExpandable() = kids.isNotEmpty()
 @Composable
 @ExperimentalComposeUiApi
 fun ExpandableComment(
-    parentComment: CommentUiState,
-    comments: Map<ItemId, CommentUiState>,
-    depth: Int,
+    comment: CommentUiState,
     rootItem: Item,
 ) {
     val mViewModel: SingleNewsViewModel = viewModel()
     val expandable =
-        parentComment is CommentUiState.CommentLoaded && parentComment.item.isExpandable()
+        comment is CommentUiState.CommentLoaded && comment.item.isExpandable()
 
     var expanded by rememberSaveable { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        CommentCard(parentComment,
-            depth,
+        CommentCard(comment,
             expanded = expanded,
             rootItem = rootItem,
             onClick = {
@@ -163,18 +153,8 @@ fun ExpandableComment(
             }
         )
 
-        if (expandable && expanded) {
-            val commentItem = (parentComment as CommentUiState.CommentLoaded).item
-            commentItem.kids.forEach { childId ->
-                LaunchedEffect(childId) {
-                    mViewModel.getItem(childId)
-                }
-
-                ExpandableComment(comments.getOrDefault(childId, CommentUiState.Loading),
-                    comments,
-                    depth + 1,
-                    rootItem)
-            }
+        LaunchedEffect(expanded) {
+            mViewModel.expandComment(comment.itemId, expandable && expanded)
         }
     }
 }
@@ -183,7 +163,6 @@ fun ExpandableComment(
 @ExperimentalComposeUiApi
 fun CommentCard(
     commentState: CommentUiState,
-    depth: Int,
     rootItem: Item,
     onClick: () -> Unit,
     expanded: Boolean,
@@ -191,6 +170,7 @@ fun CommentCard(
     val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map {
         Color(it)
     }
+    val depth = commentState.depth
 
     val context = LocalContext.current
 

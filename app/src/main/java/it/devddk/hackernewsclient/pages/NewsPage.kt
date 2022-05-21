@@ -1,9 +1,12 @@
 package it.devddk.hackernewsclient.pages
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -12,10 +15,7 @@ import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -29,14 +29,14 @@ import it.devddk.hackernewsclient.components.LoadingItem
 import it.devddk.hackernewsclient.components.NewsItem
 import it.devddk.hackernewsclient.domain.model.utils.*
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
-import it.devddk.hackernewsclient.viewmodels.ItemState
+import it.devddk.hackernewsclient.viewmodels.NewsItemState
+import it.devddk.hackernewsclient.viewmodels.NewsPageState
 import kotlinx.coroutines.launch
 
 
 @Composable
 @ExperimentalMaterial3Api
 fun NewsPage(navController: NavController, route: NewsPageRoutes) {
-    val scrollState = rememberLazyListState()
     val viewModel: HomePageViewModel = viewModel()
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -44,7 +44,10 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
 
     val systemUiController = rememberSystemUiController()
     val useDarkIcons = !isSystemInDarkTheme()
-    val itemListState = viewModel.shownList.collectAsState(initial = emptyList())
+
+    val pageState = viewModel.pageState.collectAsState(NewsPageState.Loading)
+
+    val query = viewModel.query.collectAsState(initial = TopStories)
 
     LaunchedEffect(route) {
         when (route) {
@@ -86,12 +89,12 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
                     title = {
                         Row {
                             Icon(
-                                ROUTE_ICONS[viewModel.getQuery()]!!,
-                                viewModel.getQuery().entryName,
+                                ROUTE_ICONS[query.value]!!,
+                                query.value.entryName,
                                 modifier = Modifier.padding(start = 4.dp, top = 4.dp, end = 4.dp)
                             )
 
-                            Text(viewModel.getQuery().entryName)
+                            Text(query.value.entryName)
                         }
                     },
                     navigationIcon = {
@@ -115,32 +118,65 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
             },
             containerColor = MaterialTheme.colorScheme.background,
         ) {
-            LazyColumn(
-                Modifier.padding(top = it.calculateTopPadding()),
-                state = scrollState
-            ) {
-                scope.launch {
-                    viewModel.requestMore(scrollState.firstVisibleItemIndex + 30)
-                }
 
-                itemsIndexed(itemListState.value) { _, msgState ->
-                    when (msgState) {
-                        is ItemState.ItemLoaded -> NewsItem(msgState.item, onClick = {
-                            navController.navigate("items/${msgState.item.id}")
-                        })
-                        is ItemState.Loading -> LoadingItem()
-                        is ItemState.ItemError -> ErrorItem()
-                    }
-                    Divider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
-                        thickness = 0.5.dp
-                    )
-                }
+            when (val currPageState = pageState.value) {
+                is NewsPageState.Loading -> LoadingScreen()
+                is NewsPageState.NewsIdsError -> ErrorScreen()
+                is NewsPageState.NewsIdsLoaded -> ItemInfiniteList(navController,
+                    modifier = Modifier.padding(top = it.calculateTopPadding()))
             }
+
+
         }
     }
 }
+
+@ExperimentalMaterial3Api
+@Composable
+fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier) {
+
+    val lazyListState = rememberLazyListState()
+    val viewModel: HomePageViewModel = viewModel()
+    val itemListState = viewModel.itemListFlow.collectAsState(initial = emptyList())
+
+
+    LazyColumn(
+        modifier = modifier,
+        state = lazyListState
+    ) {
+        itemsIndexed(itemListState.value) { index, itemState ->
+            LaunchedEffect(index) {
+                viewModel.requestItem(index)
+            }
+
+            when (itemState) {
+                is NewsItemState.ItemLoaded -> NewsItem(itemState.item, onClick = {
+                    navController.navigate("items/${itemState.item.id}")
+                })
+                is NewsItemState.Loading -> LoadingItem()
+                is NewsItemState.ItemError -> ErrorItem()
+            }
+            Divider(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
+                thickness = 0.5.dp
+            )
+
+            itemListState.value[index]
+        }
+    }
+}
+
+@Composable
+fun ErrorScreen() {
+    Text("Error")
+}
+
+@Composable
+fun LoadingScreen() {
+    Text("Loading")
+}
+
 
 sealed class NewsPageRoutes
 
