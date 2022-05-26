@@ -9,6 +9,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import retrofit2.Converter
+import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
@@ -21,6 +22,13 @@ val networkingModule = module {
             if (BuildConfig.DEBUG) addInterceptor { get() }
                 .callTimeout(10, TimeUnit.SECONDS)
         }.build()
+    }
+    single {
+        Retrofit.Builder()
+            .baseUrl(BuildConfig.ALGOLIA_URL)
+            .client(get())
+            .addConverterFactory(get())
+            .build()
     }
     single {
         Firebase.database("https://hacker-news.firebaseio.com/")
