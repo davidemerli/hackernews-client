@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import timber.log.Timber
 
 class HomePageViewModel : ViewModel(), KoinComponent {
 
@@ -38,7 +39,7 @@ class HomePageViewModel : ViewModel(), KoinComponent {
     }.flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), NewsPageState.Loading)
 
-    private val itemList: MutableList<NewsItemState> = mutableListOf()
+    private val itemList: MutableList<NewsItemState> = MutableList(500) { NewsItemState.Loading }
     private val _itemListFlow: MutableSharedFlow<List<NewsItemState>> = MutableSharedFlow(1)
     val itemListFlow = _itemListFlow.asSharedFlow()
 
@@ -57,6 +58,7 @@ class HomePageViewModel : ViewModel(), KoinComponent {
     }
 
     suspend fun requestItem(index: Int) {
+        Timber.d("Requesting item $index")
         val currPageState = pageState.value
         if (currPageState !is NewsPageState.NewsIdsLoaded) {
             return
