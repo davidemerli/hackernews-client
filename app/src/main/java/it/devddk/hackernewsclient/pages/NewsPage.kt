@@ -137,7 +137,8 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
 
     val lazyListState = rememberLazyListState()
     val viewModel: HomePageViewModel = viewModel()
-    val itemListState = viewModel.itemListFlow.collectAsState(initial = emptyList())
+    val itemListState =
+        viewModel.itemListFlow.collectAsState(initial = List(TopStories.maxAmount) { NewsItemState.Loading })
 
 
     LazyColumn(

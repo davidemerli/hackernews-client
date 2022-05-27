@@ -252,7 +252,7 @@ fun ExpandableComment(
             }
         )
 
-        LaunchedEffect(expanded) {
+        LaunchedEffect(comment.itemId, expanded) {
             mViewModel.expandComment(comment.itemId, expandable && expanded)
         }
     }

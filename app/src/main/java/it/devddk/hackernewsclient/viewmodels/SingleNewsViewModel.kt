@@ -14,6 +14,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
 class SingleNewsViewModel : ViewModel(), KoinComponent {
 
@@ -26,7 +27,6 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
 
     private val _commentList = MutableSharedFlow<List<CommentUiState>>(1)
     val commentList = _commentList.asSharedFlow()
-
 
     private fun dfs(root: ItemId, map: Map<ItemId, CommentUiState>): List<CommentUiState> {
         val result: MutableList<CommentUiState> = mutableListOf()
@@ -65,53 +65,64 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
                         mCommentsMap[kidId] = CommentUiState.Loading(kidId, 0)
                     }
                 }
+                updateCommentList()
             }, onFailure = {
                 _uiState.emit(SingleNewsUiState.Error(it))
             })
         }
-        updateCommentList()
     }
 
     suspend fun expandComment(idToExpand: Int, expanded: Boolean) {
-        Timber.d("${if (expanded) "E" else "Une"}xpand item $idToExpand")
+        //Timber.v("${if (expanded) "E" else "Une"}xpand item $idToExpand")
+        val rebuildTree : Boolean
         synchronized(mCommentsMap) {
             val commentToExpand = mCommentsMap[idToExpand]
             if (commentToExpand !is CommentUiState.CommentLoaded) {
-                return
+                return@expandComment
             }
-            if (expanded) {
-                commentToExpand.item.kids.forEach { kidId ->
-                    if (mCommentsMap[kidId] !is CommentUiState.CommentLoaded) {
-                        mCommentsMap[kidId] =
-                            CommentUiState.Loading(kidId, commentToExpand.depth + 1)
-                    }
+            when {
+                commentToExpand.expanded == expanded -> {
+                    rebuildTree = false
                 }
-                mCommentsMap[idToExpand] = commentToExpand.copy(expanded = true)
-            } else {
-                mCommentsMap[idToExpand] = commentToExpand.copy(expanded = false)
+                expanded -> {
+                    rebuildTree = true
+                    commentToExpand.item.kids.forEach { kidId ->
+                        if (mCommentsMap[kidId] !is CommentUiState.CommentLoaded) {
+                            mCommentsMap[kidId] =
+                                CommentUiState.Loading(kidId, commentToExpand.depth + 1)
+                        }
+                    }
+                    mCommentsMap[idToExpand] = commentToExpand.copy(expanded = true)
+                }
+                else -> {
+                    rebuildTree = true
+                    mCommentsMap[idToExpand] = commentToExpand.copy(expanded = false)
+                }
             }
         }
-        updateCommentList()
+        if(rebuildTree) {
+            updateCommentList()
+        }
     }
 
 
     suspend fun getItem(id: ItemId, forceRefresh: Boolean = false) {
-        Timber.d("Get item $id")
         val commentState = mCommentsMap[id]!!
         if (forceRefresh || commentState !is CommentUiState.CommentLoaded) {
             withContext(Dispatchers.IO) {
                 getItemById(id).fold(onSuccess = { item ->
-                    mCommentsMap[id] = CommentUiState.CommentLoaded(item, commentState.depth, true)
+                    mCommentsMap[id] = CommentUiState.CommentLoaded(item, commentState.depth, false)
                 }, onFailure = { t ->
                     mCommentsMap[id] = CommentUiState.Error(id, t, commentState.depth)
                 })
             }
+            updateCommentList()
         }
-        updateCommentList()
     }
 
 
     private suspend fun updateCommentList() {
+        Timber.d("Rebuild tree")
         when (val currUiState = uiState.value) {
             is SingleNewsUiState.ItemLoaded -> {
                 val result: List<CommentUiState>
