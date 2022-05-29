@@ -8,6 +8,6 @@ import retrofit2.http.Query
 interface AlgoliaSearchApi {
 
     @GET("search")
-    suspend fun searchByRelevance(@Query("query") query : String, @Query("page") page : String) : Response<SearchResponse>
+    suspend fun searchByRelevance(@Query("query") query : String, @Query("page") page : Int) : Response<SearchResponse>
 
 }

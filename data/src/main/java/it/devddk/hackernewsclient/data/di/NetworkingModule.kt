@@ -4,6 +4,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import it.devddk.hackernewsclient.data.BuildConfig
+import it.devddk.hackernewsclient.data.api.AlgoliaSearchApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.core.qualifier.named
@@ -19,7 +20,7 @@ val networkingModule = module {
     single { HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY) }
     single {
         OkHttpClient.Builder().apply {
-            if (BuildConfig.DEBUG) addInterceptor { get() }
+            if (BuildConfig.DEBUG) addInterceptor(get<HttpLoggingInterceptor>())
                 .callTimeout(10, TimeUnit.SECONDS)
         }.build()
     }
@@ -29,6 +30,9 @@ val networkingModule = module {
             .client(get())
             .addConverterFactory(get())
             .build()
+    }
+    single {
+        get<Retrofit>().create(AlgoliaSearchApi::class.java)
     }
     single {
         Firebase.database("https://hacker-news.firebaseio.com/")
