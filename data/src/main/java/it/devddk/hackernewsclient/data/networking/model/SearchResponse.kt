@@ -5,7 +5,9 @@ import it.devddk.hackernewsclient.data.networking.DomainMapper
 import it.devddk.hackernewsclient.data.networking.utils.convertTimestamp
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
+import it.devddk.hackernewsclient.domain.model.items.StoryItem
 import it.devddk.hackernewsclient.domain.model.search.*
+import timber.log.Timber
 
 data class SearchResponse(
     val hits: List<SearchResultHitResponse>,
@@ -25,14 +27,14 @@ data class SearchResponse(
                 position = startPosition + relativePosition,
                 highlightResult = hit.highlightResult.mapToDomainModel()
             )
-            SearchedItem(item, metadata)
+            SearchResult(item, metadata)
         }
-        return SearchResultsSlice(startPosition, results)
+        return SearchResultsSlice(page, startPosition, results)
     }
 
     private fun buildItemFromHit(hit : SearchResultHitResponse) : Item {
-        val itemType = ItemType.valueOf(checkNotNull(hit.tags.getOrNull(0)
-        ) { "ItemType not specified in Search Hit tags" })
+        val itemType = ItemType.STORY
+        Timber.d("Object id ${hit.objectId}")
         return Item(
             id = hit.objectId.toInt(),
             type = itemType,
@@ -74,7 +76,7 @@ data class SearchResultHitResponse(
     @SerializedName("relevancy_score") val relevancyScore: Int?,
     val tags: List<String>,
     @SerializedName("num_comments") val numComments: Int?,
-    val objectId: String,
+    @SerializedName("objectID") val objectId: String,
     @SerializedName("_highlightResult") val highlightResult : HighlightDataResponse
 )
 

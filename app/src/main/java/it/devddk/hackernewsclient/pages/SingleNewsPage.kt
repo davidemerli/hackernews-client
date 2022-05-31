@@ -71,7 +71,7 @@ fun SingleNewsPage(navController: NavController, id: Int?) {
 
     when (val uiStateValue = uiState.value) {
         is SingleNewsUiState.Error -> Error(throwable = uiStateValue.throwable)
-        is SingleNewsUiState.ItemLoaded -> TabbedView(uiStateValue.item)
+        is SingleNewsUiState.ItemLoaded -> TabbedView(uiStateValue.item, navController)
         SingleNewsUiState.Loading -> Loading()
     }
 }
@@ -80,7 +80,7 @@ fun SingleNewsPage(navController: NavController, id: Int?) {
 @ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
 @OptIn(ExperimentalPagerApi::class)
-fun TabbedView(item: Item) {
+fun TabbedView(item: Item, navController: NavController) {
     var tabPosition by remember { mutableStateOf(0) }
     val tabs = listOf(
         "comments",
@@ -99,7 +99,9 @@ fun TabbedView(item: Item) {
                     Icon(Icons.Rounded.Menu, "Menu")
                 },
                 actions = {
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = {
+                        navController.navigate("search")
+                    }) {
                         Icon(Icons.Rounded.Search, "Search")
                     }
                     IconButton(onClick = { }) {
