@@ -153,7 +153,6 @@ fun TabbedView(item: Item) {
 @ExperimentalMaterial3Api
 @SuppressLint("SetJavaScriptEnabled")
 fun Article(item: Item) {
-
     item.url?.let { url ->
         val viewState = rememberWebViewState(url = url)
 
@@ -173,6 +172,7 @@ fun Article(item: Item) {
                     onCreated = {
                         it.loadUrl(item.url ?: "")
                         it.settings.javaScriptEnabled = true
+                        it.settings.domStorageEnabled = true
                     }
                 )
             }
