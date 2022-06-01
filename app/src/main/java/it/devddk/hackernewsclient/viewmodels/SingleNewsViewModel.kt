@@ -1,8 +1,10 @@
 package it.devddk.hackernewsclient.viewmodels
 
 import androidx.lifecycle.ViewModel
+import it.devddk.hackernewsclient.domain.interaction.item.GetCommentTreeUseCase
 import it.devddk.hackernewsclient.domain.interaction.item.GetItemUseCase
 import it.devddk.hackernewsclient.domain.model.items.Item
+import it.devddk.hackernewsclient.domain.model.items.ItemTree
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.domain.utils.Stack
 import it.devddk.hackernewsclient.domain.utils.pop
@@ -13,40 +15,25 @@ import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import timber.log.Timber
+import java.text.FieldPosition
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.exp
 
 class SingleNewsViewModel : ViewModel(), KoinComponent {
 
-    private val getItemById: GetItemUseCase by inject()
+    private val getCommentTree: GetCommentTreeUseCase by inject()
 
     private val _uiState = MutableStateFlow(SingleNewsUiState.Loading as SingleNewsUiState)
+
+    private val _linearizedTree = mutableListOf<CommentTreeUiState>()
+    private val _commentTreeFlow : MutableSharedFlow<List<CommentTreeUiState>> = MutableSharedFlow(1)
+    val commentTreeFlow = _commentTreeFlow.asSharedFlow()
+
+
     val uiState = _uiState.asStateFlow()
-
-    private val mCommentsMap: MutableMap<ItemId, CommentUiState> = ConcurrentHashMap()
-
-    private val _commentList = MutableSharedFlow<List<CommentUiState>>(1)
-    val commentList = _commentList.asSharedFlow()
-
-    private fun dfs(root: ItemId, map: Map<ItemId, CommentUiState>): List<CommentUiState> {
-        val result: MutableList<CommentUiState> = mutableListOf()
-        val stack: Stack<ItemId> = mutableListOf()
-        stack.push(root)
-        while (stack.isNotEmpty()) {
-            val nextId = stack.pop()!!
-            val nextComment = map[nextId] ?: continue
-            if(nextComment.depth >= 0) {
-                result.add(nextComment)
-            }
-            if(nextComment is CommentUiState.CommentLoaded && nextComment.expanded) {
-                nextComment.item.kids.reversed().forEach { kidId ->
-                    stack.push(kidId)
-                }
-            }
-        }
-        return result
-    }
-
 
     suspend fun setId(newId: Int?) {
         Timber.d("Set article $newId")
@@ -56,83 +43,32 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
             return
         }
         withContext(Dispatchers.IO) {
-            getItemById(newId).fold(onSuccess = { item ->
-                _uiState.emit(SingleNewsUiState.ItemLoaded(item))
-                synchronized(mCommentsMap) {
-                    mCommentsMap.clear()
-                    mCommentsMap[newId] = CommentUiState.CommentLoaded(item, -1, true)
-                    item.kids.forEach { kidId ->
-                        mCommentsMap[kidId] = CommentUiState.Loading(kidId, 0)
+            getCommentTree(newId).fold(
+                onSuccess = { tree ->
+                    _uiState.emit(SingleNewsUiState.ItemLoaded(tree.item))
+                    val newTree = tree.mapToUiState {depth -> depth <= 1}.dfsLinearize()
+                    synchronized(_linearizedTree) {
+                        _linearizedTree.clear()
+                        _linearizedTree.addAll(newTree)
                     }
+                },
+                onFailure = {
+                    _uiState.emit(SingleNewsUiState.Error(it))
+                    _linearizedTree.clear()
                 }
-                updateCommentList()
-            }, onFailure = {
-                _uiState.emit(SingleNewsUiState.Error(it))
-            })
+            )
         }
     }
 
-    suspend fun expandComment(idToExpand: Int, expanded: Boolean) {
-        //Timber.v("${if (expanded) "E" else "Une"}xpand item $idToExpand")
-        val rebuildTree : Boolean
-        synchronized(mCommentsMap) {
-            val commentToExpand = mCommentsMap[idToExpand]
-            if (commentToExpand !is CommentUiState.CommentLoaded) {
-                return@expandComment
-            }
-            when {
-                commentToExpand.expanded == expanded -> {
-                    rebuildTree = false
-                }
-                expanded -> {
-                    rebuildTree = true
-                    commentToExpand.item.kids.forEach { kidId ->
-                        if (mCommentsMap[kidId] !is CommentUiState.CommentLoaded) {
-                            mCommentsMap[kidId] =
-                                CommentUiState.Loading(kidId, commentToExpand.depth + 1)
-                        }
-                    }
-                    mCommentsMap[idToExpand] = commentToExpand.copy(expanded = true)
-                }
-                else -> {
-                    rebuildTree = true
-                    mCommentsMap[idToExpand] = commentToExpand.copy(expanded = false)
-                }
-            }
+    suspend fun setExpansion(position: Int, expanded: Boolean) {
+        synchronized(_linearizedTree) {
+            _linearizedTree[position].setExpansion(expanded)
         }
-        if(rebuildTree) {
-            updateCommentList()
-        }
+        notifyListUpdated()
     }
 
-
-    suspend fun getItem(id: ItemId, forceRefresh: Boolean = false) {
-        val commentState = mCommentsMap[id]!!
-        if (forceRefresh || commentState !is CommentUiState.CommentLoaded) {
-            withContext(Dispatchers.IO) {
-                getItemById(id).fold(onSuccess = { item ->
-                    mCommentsMap[id] = CommentUiState.CommentLoaded(item, commentState.depth, false)
-                }, onFailure = { t ->
-                    mCommentsMap[id] = CommentUiState.Error(id, t, commentState.depth)
-                })
-            }
-            updateCommentList()
-        }
-    }
-
-
-    private suspend fun updateCommentList() {
-        Timber.d("Rebuild tree")
-        when (val currUiState = uiState.value) {
-            is SingleNewsUiState.ItemLoaded -> {
-                val result: List<CommentUiState>
-                synchronized(mCommentsMap) {
-                    result = dfs(currUiState.item.id, mCommentsMap)
-                }
-                _commentList.emit(result)
-            }
-            else -> {}
-        }
+    private suspend fun notifyListUpdated() {
+        _commentTreeFlow.emit(_linearizedTree)
     }
 }
 
@@ -140,20 +76,72 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
 sealed class SingleNewsUiState {
     object Loading : SingleNewsUiState()
     data class Error(val throwable: Throwable) : SingleNewsUiState()
-    data class ItemLoaded(val item: Item) : SingleNewsUiState()
+    data class ItemLoaded(val rootItem: Item) :
+        SingleNewsUiState()
 }
 
-sealed class CommentUiState(open val itemId: ItemId, open val depth: Int) {
-    data class Loading(override val itemId: ItemId, override val depth: Int) :
-        CommentUiState(itemId, depth)
+class CommentTreeUiState(
+    val item: Item,
+    val children: List<CommentTreeUiState>,
+    val depth: Int,
+    expanded: Boolean,
+    visible: Boolean,
+) {
 
-    data class Error(
-        override val itemId: ItemId,
-        val throwable: Throwable,
-        override val depth: Int,
-    ) :
-        CommentUiState(itemId, depth)
+    var expanded: Boolean = expanded
+    private set
+    var visible: Boolean = visible
+    private set
 
-    data class CommentLoaded(val item: Item, override val depth: Int, val expanded: Boolean) :
-        CommentUiState(item.id, depth)
+    fun setExpansion(newExpansion: Boolean) {
+        if (expanded == newExpansion) {
+            return
+        }
+        expanded = newExpansion
+        children.forEach {
+            setVisibility(newExpansion)
+        }
+    }
+
+
+    fun setVisibility(newVisibility: Boolean) {
+        if (visible == newVisibility) {
+            return
+        }
+        visible = newVisibility
+        if(expanded) {
+            children.forEach {
+                it.setVisibility(newVisibility)
+            }
+        }
+    }
+
+    fun dfsLinearize(): MutableList<CommentTreeUiState> {
+        val stack = Stack<CommentTreeUiState>()
+        val list = mutableListOf<CommentTreeUiState>()
+        stack.push(this)
+        while (stack.isNotEmpty()) {
+            val nextNode = stack.pop()!!
+
+            if (nextNode.depth >= 1) {
+                list.add(nextNode)
+            }
+            nextNode.children.reversed().forEach {
+                stack.push(it)
+            }
+        }
+        return list
+    }
+}
+
+fun ItemTree.mapToUiState(
+    depth: Int = 0,
+    initialDepthF: (depth: Int) -> Boolean,
+): CommentTreeUiState {
+    return CommentTreeUiState(
+        item,
+        comments.map { it.mapToUiState(depth + 1, initialDepthF) },
+        depth,
+        expanded = initialDepthF(depth + 1),
+        visible = initialDepthF(depth))
 }
