@@ -16,6 +16,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField "String", 'SERVER_URL', "\"https://hacker-news.firebaseio.com\""
+        buildConfigField "String", 'ALGOLIA_URL', "\"https://hn.algolia.com/api/v1/\""
     }
 
     buildTypes {
@@ -63,6 +64,7 @@ dependencies {
 
     // testing
     testImplementation "junit:junit:$junitVersion"
+    testImplementation "io.insert-koin:koin-test:$koinVersion"
     testImplementation "io.insert-koin:koin-test-junit4:$koinVersion"
     // Optional -- Robolectric environment
     testImplementation "androidx.test:core:$androidXTestVersion"
@@ -89,6 +91,7 @@ dependencies {
     implementation 'com.jakewharton.timber:timber:5.0.1'
 
     implementation 'org.jsoup:jsoup:1.13.1'
+
 
     // Desugaring to use java 8 features
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'

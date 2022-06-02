@@ -2,6 +2,9 @@ package it.devddk.hackernewsclient.data.networking.model
 
 import it.devddk.hackernewsclient.data.common.utils.ResponseConversionException
 import it.devddk.hackernewsclient.data.networking.DomainMapper
+import it.devddk.hackernewsclient.data.networking.utils.convertTimestamp
+import it.devddk.hackernewsclient.data.networking.utils.fixLinks
+import it.devddk.hackernewsclient.data.networking.utils.toItemType
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import okio.ByteString.Companion.encode
@@ -55,15 +58,13 @@ data class ItemResponse(
     override fun mapToDomainModel(): Item {
         return Item(
             id ?: throw ResponseConversionException("id must specified in item response"),
-            itemResponse(type
-                ?: throw ResponseConversionException("type must specified in item response")),
+            type?.toItemType()?: throw ResponseConversionException("type must specified in item response"),
             deleted,
             by,
-            convertTimestamp(time
-                ?: throw ResponseConversionException("time must specified in item response")),
+            time?.convertTimestamp() ?: throw ResponseConversionException("time must specified in item response"),
             dead,
             parent,
-            text?.let { fixLinks(text) } ?: "",
+            text?.fixLinks() ?: "",
             kids,
             title,
             descendants,
@@ -76,36 +77,5 @@ data class ItemResponse(
 
     }
 
-    private fun itemResponse(typeStr: String): ItemType {
-        return when (typeStr) {
-            "story" -> ItemType.STORY
-            "poll" -> ItemType.POLL
-            "pollopt" -> ItemType.POLL_OPT
-            "job" -> ItemType.JOB
-            "comment" -> ItemType.COMMENT
-            else -> throw ResponseConversionException("Invalid type")
-        }
-    }
 
-    private fun fixLinks(text: String): String {
-        /*
-         get all links and replace text with link, since longer links on HN arrive with ellipses
-         in the text part of the <a> tag. The html parser does not make clickable links, so we need
-         to do it manually, but the text presents the link with ellipses, so we need to restore them
-         to full length.
-         */
-
-        val doc = Jsoup.parse(text)
-
-        doc.select("a").forEach {
-            val href = it.attr("href")
-            it.text(href)
-        }
-
-        return doc.html()
-
-    }
-
-    private fun convertTimestamp(timestamp: Long): LocalDateTime =
-        LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneOffset.UTC)
 }

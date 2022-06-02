@@ -107,7 +107,9 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
                         }
                     },
                     actions = {
-                        IconButton(onClick = { }) {
+                        IconButton(onClick = {
+                            navController.navigate("search")
+                        }) {
                             Icon(Icons.Rounded.Search, "Search")
                         }
                         IconButton(onClick = { }) {

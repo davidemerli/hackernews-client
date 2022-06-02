@@ -12,7 +12,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.rounded.AccountCircle
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -71,7 +74,7 @@ fun SingleNewsPage(navController: NavController, id: Int?) {
 
     when (val uiStateValue = uiState.value) {
         is SingleNewsUiState.Error -> Error(throwable = uiStateValue.throwable)
-        is SingleNewsUiState.ItemLoaded -> TabbedView(uiStateValue.item)
+        is SingleNewsUiState.ItemLoaded -> TabbedView(uiStateValue.item, navController)
         SingleNewsUiState.Loading -> Loading()
     }
 }
@@ -80,7 +83,7 @@ fun SingleNewsPage(navController: NavController, id: Int?) {
 @ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
 @OptIn(ExperimentalPagerApi::class)
-fun TabbedView(item: Item) {
+fun TabbedView(item: Item, navController: NavController) {
     var tabPosition by remember { mutableStateOf(0) }
     val tabs = listOf(
         "comments",
@@ -99,9 +102,6 @@ fun TabbedView(item: Item) {
                     Icon(Icons.Rounded.Menu, "Menu")
                 },
                 actions = {
-                    IconButton(onClick = { }) {
-                        Icon(Icons.Rounded.Search, "Search")
-                    }
                     IconButton(onClick = { }) {
                         Icon(Icons.Rounded.AccountCircle, "Notifications")
                     }

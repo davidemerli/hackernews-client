@@ -17,6 +17,7 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import it.devddk.hackernewsclient.domain.model.utils.ALL_QUERIES
 import it.devddk.hackernewsclient.pages.HackerNewsView
 import it.devddk.hackernewsclient.pages.NewsPage
+import it.devddk.hackernewsclient.pages.SearchPage
 import it.devddk.hackernewsclient.pages.SingleNewsPage
 import it.devddk.hackernewsclient.ui.theme.HackerNewsClientTheme
 
@@ -54,6 +55,9 @@ class MainActivity : ComponentActivity() {
                 arguments = listOf(navArgument("itemId") { type = NavType.IntType })
             ) { backStackEntry ->
                 SingleNewsPage(navController, backStackEntry.arguments?.getInt("itemId")!!)
+            }
+            composable("search") {
+                SearchPage(navController = navController)
             }
         }
     }
