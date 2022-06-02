@@ -12,7 +12,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.rounded.AccountCircle
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -99,11 +102,6 @@ fun TabbedView(item: Item, navController: NavController) {
                     Icon(Icons.Rounded.Menu, "Menu")
                 },
                 actions = {
-                    IconButton(onClick = {
-                        navController.navigate("search")
-                    }) {
-                        Icon(Icons.Rounded.Search, "Search")
-                    }
                     IconButton(onClick = { }) {
                         Icon(Icons.Rounded.AccountCircle, "Notifications")
                     }
