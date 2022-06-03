@@ -44,7 +44,7 @@ fun getDomainName(url: String): String {
 
 @Composable
 @ExperimentalMaterial3Api
-fun NewsItem(item: Item, onClick: (() -> Unit)? = null) {
+fun NewsItem(item: Item, onClick: (() -> Unit) = {}) {
     val context = LocalContext.current
     val roundedShape = RoundedCornerShape(16.dp)
 
@@ -74,7 +74,7 @@ fun NewsItem(item: Item, onClick: (() -> Unit)? = null) {
         modifier = Modifier
             .background(MaterialTheme.colorScheme.background)
             .fillMaxWidth()
-            .clickable { onClick?.let { it() } }
+            .clickable(onClick = onClick)
             .padding(2.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = roundedShape,
