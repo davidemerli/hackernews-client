@@ -10,6 +10,7 @@ import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.domain.model.utils.TopStories
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import timber.log.Timber
@@ -69,18 +70,19 @@ class HomePageViewModel : ViewModel(), KoinComponent {
             }
         }
         val itemId = currPageState.itemsId[index]
-
-        getItem(itemId).fold(
-            onSuccess = {
-                synchronized(itemList) {
-                    itemList[index] = NewsItemState.ItemLoaded(it)
-                }
-            },
-            onFailure = {
-                synchronized(itemList) {
-                    itemList[index] = NewsItemState.ItemError(it)
-                }
-            })
+        withContext(Dispatchers.IO) {
+            getItem(itemId).fold(
+                onSuccess = {
+                    synchronized(itemList) {
+                        itemList[index] = NewsItemState.ItemLoaded(it)
+                    }
+                },
+                onFailure = {
+                    synchronized(itemList) {
+                        itemList[index] = NewsItemState.ItemError(it)
+                    }
+                })
+        }
         updateItemList()
     }
 

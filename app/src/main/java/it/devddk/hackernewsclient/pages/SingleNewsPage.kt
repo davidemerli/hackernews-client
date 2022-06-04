@@ -56,6 +56,7 @@ import it.devddk.hackernewsclient.utils.TimeDisplayUtils
 import it.devddk.hackernewsclient.viewmodels.CommentUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
+import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.max
 
@@ -84,11 +85,6 @@ fun SingleNewsPage(navController: NavController, id: Int?) {
 @ExperimentalMaterial3Api
 @OptIn(ExperimentalPagerApi::class)
 fun TabbedView(item: Item, navController: NavController) {
-    var tabPosition by remember { mutableStateOf(0) }
-    val tabs = listOf(
-        "comments",
-        "article",
-    )
     var tabIndex by remember { mutableStateOf(0) }
     val tabTitles = listOf("Article", "Comments")
     val pagerState = rememberPagerState()
@@ -110,10 +106,10 @@ fun TabbedView(item: Item, navController: NavController) {
         },
         containerColor = MaterialTheme.colorScheme.background
     ) {
-        it.calculateTopPadding()
         Column(
             modifier = Modifier.padding(top = it.calculateTopPadding()),
         ) {
+            /*
             TabRow(selectedTabIndex = tabIndex,
                 indicator = { tabPositions ->
                     TabRowDefaults.Indicator(
@@ -131,19 +127,8 @@ fun TabbedView(item: Item, navController: NavController) {
                         text = { Text(text = title, color = MaterialTheme.colorScheme.secondary) }
                     )
                 }
-            }
-
-            HorizontalPager(
-                count = tabTitles.size,
-                state = pagerState,
-                itemSpacing = 0.dp,
-                verticalAlignment = Alignment.Top,
-            ) { tabIndex ->
-                when (tabIndex) {
-                    0 -> Article(item)
-                    1 -> Comments(item)
-                }
-            }
+            }*/
+            Comments(item)
         }
     }
 }
@@ -216,8 +201,10 @@ fun Comments(item: Item) {
 
 
         itemsIndexed(comments.value) { _, thisComment ->
-            LaunchedEffect(thisComment.itemId) {
-                mViewModel.getItem(thisComment.itemId)
+            if(thisComment !is CommentUiState.CommentLoaded) {
+                LaunchedEffect(thisComment.itemId) {
+                    mViewModel.getItem(thisComment.itemId)
+                }
             }
 
             ExpandableComment(
@@ -240,6 +227,7 @@ fun ExpandableComment(
     val mViewModel: SingleNewsViewModel = viewModel()
     val expandable =
         comment is CommentUiState.CommentLoaded && comment.item.isExpandable()
+    val coroutineScope = rememberCoroutineScope()
 
     var expanded by rememberSaveable { mutableStateOf(false) }
 
@@ -249,12 +237,11 @@ fun ExpandableComment(
             rootItem = rootItem,
             onClick = {
                 expanded = !expanded
+                coroutineScope.launch {
+                    mViewModel.expandComment(comment.itemId, expandable && expanded)
+                }
             }
         )
-
-        LaunchedEffect(comment.itemId, expanded) {
-            mViewModel.expandComment(comment.itemId, expandable && expanded)
-        }
     }
 }
 

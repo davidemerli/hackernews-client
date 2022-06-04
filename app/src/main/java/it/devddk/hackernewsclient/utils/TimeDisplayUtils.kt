@@ -17,7 +17,7 @@ class TimeDisplayUtils(private val context: Context) {
             ChronoUnit.MINUTES to R.plurals.minutes_ago)
 
         if(time == null) {
-            context.getString(R.string.time_unknown)
+            return context.getString(R.string.time_unknown)
         }
 
         return unitMap.firstNotNullOfOrNull { (unit, stringId) ->

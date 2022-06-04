@@ -97,7 +97,7 @@ fun SearchPage(navController: NavController) {
 fun ResultItem(item: Item, onClick: () -> Unit = {}) {
     when (item.type) {
         ItemType.STORY -> {
-            NewsItem(item = item, onClick = onClick)
+            NewsItem(item = item, onClick = onClick, placeholder = false)
         }
         else -> {
             Text(item.id.toString())

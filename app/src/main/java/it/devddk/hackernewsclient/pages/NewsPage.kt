@@ -1,12 +1,9 @@
 package it.devddk.hackernewsclient.pages
 
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -24,8 +21,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import it.devddk.hackernewsclient.R
-import it.devddk.hackernewsclient.components.ErrorItem
-import it.devddk.hackernewsclient.components.LoadingItem
 import it.devddk.hackernewsclient.components.NewsItem
 import it.devddk.hackernewsclient.domain.model.utils.*
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
@@ -127,8 +122,6 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
                 is NewsPageState.NewsIdsLoaded -> ItemInfiniteList(navController,
                     modifier = Modifier.padding(top = it.calculateTopPadding()))
             }
-
-
         }
     }
 }
@@ -148,16 +141,18 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
         state = lazyListState
     ) {
         itemsIndexed(itemListState.value) { index, itemState ->
-            LaunchedEffect(index) {
-                viewModel.requestItem(index)
-            }
+
 
             when (itemState) {
                 is NewsItemState.ItemLoaded -> NewsItem(itemState.item, onClick = {
                     navController.navigate("items/${itemState.item.id}")
-                })
-                is NewsItemState.Loading -> LoadingItem()
-                is NewsItemState.ItemError -> ErrorItem()
+                }, placeholder = false)
+                is NewsItemState.Loading, is NewsItemState.ItemError -> {
+                    LaunchedEffect(index) {
+                        viewModel.requestItem(index)
+                    }
+                    NewsItem(placeholder = true)
+                }
             }
             Divider(
                 modifier = Modifier.padding(horizontal = 16.dp),
