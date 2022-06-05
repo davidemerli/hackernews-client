@@ -70,9 +70,6 @@ fun SearchPage(navController: NavController) {
                 }
 
                 when (val result = resultList.value.getOrNull(index)) {
-                    is SearchResultUiState.Loading -> {
-                        Text("Loading More...")
-                    }
                     is SearchResultUiState.ResultLoaded -> {
                         ResultItem(
                             result.result.item,
@@ -82,8 +79,8 @@ fun SearchPage(navController: NavController) {
                             }
                         )
                     }
-                    null -> {
-
+                    else -> {
+                        Text("Loading More...")
                     }
                 }
 

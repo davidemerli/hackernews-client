@@ -2,7 +2,9 @@ package it.devddk.hackernewsclient.domain.model.search
 
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 
-
+/**
+ * Data that
+ */
 data class SearchResultMetaData(
     val id: ItemId,
     val position: Int,
