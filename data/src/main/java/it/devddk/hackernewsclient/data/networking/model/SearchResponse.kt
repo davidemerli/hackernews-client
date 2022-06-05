@@ -24,6 +24,7 @@ data class SearchResponse(
             val item = buildItemFromHit(hit)
             val metadata = SearchResultMetaData(
                 id = hit.objectId.toInt(),
+                rootId = hit.storyId ?: hit.objectId.toInt(),
                 position = startPosition + relativePosition,
                 highlightResult = hit.highlightResult.mapToDomainModel()
             )
