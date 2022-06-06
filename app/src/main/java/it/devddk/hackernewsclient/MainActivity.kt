@@ -36,7 +36,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
     @Composable
     private fun AppRootNavigator() {
         val navController = rememberNavController()
@@ -47,7 +46,8 @@ class MainActivity : ComponentActivity() {
                     NewsPage(navController, route = HackerNewsView(query))
                 }
             }
-            composable("items/{itemId}",
+            composable(
+                "items/{itemId}",
                 arguments = listOf(navArgument("itemId") { type = NavType.IntType })
             ) { backStackEntry ->
                 SingleNewsPage(navController, backStackEntry.arguments?.getInt("itemId")!!)
@@ -58,4 +58,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-

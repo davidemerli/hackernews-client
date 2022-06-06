@@ -31,7 +31,6 @@ import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.NewsPageState
 import kotlinx.coroutines.launch
 
-
 @Composable
 @ExperimentalMaterial3Api
 fun NewsPage(navController: NavController, route: NewsPageRoutes) {
@@ -80,7 +79,8 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
             }
-        }) {
+        }
+    ) {
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
@@ -122,8 +122,10 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
             when (val currPageState = pageState.value) {
                 is NewsPageState.Loading -> LoadingScreen()
                 is NewsPageState.NewsIdsError -> ErrorScreen()
-                is NewsPageState.NewsIdsLoaded -> ItemInfiniteList(navController,
-                    modifier = Modifier.padding(top = it.calculateTopPadding()))
+                is NewsPageState.NewsIdsLoaded -> ItemInfiniteList(
+                    navController,
+                    modifier = Modifier.padding(top = it.calculateTopPadding())
+                )
             }
         }
     }
@@ -137,7 +139,6 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
     val viewModel: HomePageViewModel = viewModel()
     val itemListState =
         viewModel.itemListFlow.collectAsState(initial = List(TopStories.maxAmount) { NewsItemState.Loading })
-
 
     LazyColumn(
         modifier = modifier,
@@ -182,7 +183,6 @@ fun ErrorScreen() {
 fun LoadingScreen() {
     Text("Loading")
 }
-
 
 sealed class NewsPageRoutes
 

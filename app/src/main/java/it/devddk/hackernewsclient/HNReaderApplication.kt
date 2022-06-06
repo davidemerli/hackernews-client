@@ -10,7 +10,6 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import timber.log.Timber
 
-
 class HNReaderApplication : Application() {
 
     override fun onCreate() {
@@ -29,7 +28,6 @@ class HNReaderApplication : Application() {
         }
     }
 
-
     inner class DevelopmentTree : Timber.Tree() {
         override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
             if (priority == Log.VERBOSE || priority == Log.DEBUG) {
@@ -42,7 +40,5 @@ class HNReaderApplication : Application() {
                 Log.println(priority, tag, t.stackTraceToString())
             }
         }
-
     }
-
 }

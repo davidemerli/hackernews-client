@@ -113,7 +113,7 @@ fun ItemDomain(item: Item, placeholder: Boolean = false) {
                     color = PlaceholderDefaults.color(contentAlpha = 0.5f),
                     highlight = PlaceholderHighlight.fade(),
                 ),
-            onClick = {/*TODO*/ },
+            onClick = { /*TODO*/ },
         )
     }
 }
@@ -317,7 +317,7 @@ fun NewsItem(item: Item = placeholderItem, placeholder: Boolean, onClick: (() ->
                         Text(
                             text = " - ",
 
-                            )
+                        )
 
                         ItemBy(item, placeholder = placeholder)
 
@@ -398,16 +398,18 @@ fun NewsItemTall(item: Item) {
                         }
                     }
                 }
-                Box(Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(if (isAskHN) 90.dp else 110.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.secondary)
+                Box(
+                    Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(if (isAskHN) 90.dp else 110.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.secondary)
                 )
             }
             Column(Modifier.padding(start = 2.dp)) {
                 IconButton(
-                    onClick = { /*TODO*/ }) {
+                    onClick = { /*TODO*/ }
+                ) {
                     Icon(
                         Icons.Filled.Star,
                         contentDescription = "More",
@@ -459,7 +461,7 @@ fun NewsItemTall(item: Item) {
                         modifier = Modifier.padding(bottom = 2.dp)
                     )
                     Text(
-                        "${points.toString()} pt - 5 minutes read",
+                        "$points pt - 5 minutes read",
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
@@ -469,9 +471,12 @@ fun NewsItemTall(item: Item) {
                     verticalArrangement = Arrangement.Bottom
                 ) {
                     IconButton(
-                        onClick = { /*TODO*/ }) {
-                        Row(verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(end = 8.dp)) {
+                        onClick = { /*TODO*/ }
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
                             Text(
                                 "$comments",
                                 style = MaterialTheme.typography.bodyMedium.copy(

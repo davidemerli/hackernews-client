@@ -22,7 +22,6 @@ import it.devddk.hackernewsclient.viewmodels.SearchPageViewModel
 import it.devddk.hackernewsclient.viewmodels.SearchResultUiState
 import timber.log.Timber
 
-
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun SearchPage(navController: NavController) {
@@ -57,11 +56,13 @@ fun SearchPage(navController: NavController) {
             modifier = Modifier.padding(top = it.calculateTopPadding()),
         ) {
             item {
-                Text(if (searchQuery.length < 3) {
-                    "Type at least 3 chars..."
-                } else {
-                    "Results for $searchQuery"
-                })
+                Text(
+                    if (searchQuery.length < 3) {
+                        "Type at least 3 chars..."
+                    } else {
+                        "Results for $searchQuery"
+                    }
+                )
             }
 
             items(resultList.value.size + 1) { index ->
@@ -83,10 +84,8 @@ fun SearchPage(navController: NavController) {
                         )
                     }
                     null -> {
-
                     }
                 }
-
             }
         }
     }
@@ -128,7 +127,7 @@ fun SearchBar(
                     errorIndicatorColor = MaterialTheme.colorScheme.background,
                 ),
                 singleLine = true,
-                //dismiss keyboard on submit
+                // dismiss keyboard on submit
                 keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
             )
         },

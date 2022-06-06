@@ -90,7 +90,7 @@ fun TabbedView(item: Item, navController: NavController) {
     Scaffold(
         topBar = {
             LargeTopAppBar(
-                //TODO: collapse on scroll
+                // TODO: collapse on scroll
                 title = {
                     item.title?.let { title ->
                         Text(
@@ -116,7 +116,7 @@ fun TabbedView(item: Item, navController: NavController) {
         Column(
             modifier = Modifier.padding(top = it.calculateTopPadding()),
         ) {
-            //TODO: replace with horizontal pager
+            // TODO: replace with horizontal pager
             TabRow(
                 selectedTabIndex = tabIndex,
                 containerColor = MaterialTheme.colorScheme.background,
@@ -215,7 +215,8 @@ fun CommentView(item: Item) {
         }
 
         item {
-            Text("< end of comments >",
+            Text(
+                "< end of comments >",
                 style = MaterialTheme.typography.bodyLarge.copy(
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.secondary,
@@ -243,7 +244,8 @@ fun ExpandableComment(
     var expanded by rememberSaveable { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        CommentCard(comment,
+        CommentCard(
+            comment,
             expanded = expanded,
             rootItem = rootItem,
             onClick = {
@@ -315,21 +317,25 @@ fun CommentCard(
                     "${commentState.item.by}${if (isOriginalPoster) " (OP)" else ""}"
 
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(text = buildAnnotatedString {
-                        pushStyle(SpanStyle(
-                            textDecoration = TextDecoration.Underline,
-                            fontStyle = if (isOriginalPoster) FontStyle.Normal else FontStyle.Italic,
-                            fontWeight = if (isOriginalPoster) FontWeight.Black else FontWeight.SemiBold,
-                        ))
-                        append(byString)
-                        pop()
-                        append(" • ")
-                        append(timeString)
-                    },
+                    Text(
+                        text = buildAnnotatedString {
+                            pushStyle(
+                                SpanStyle(
+                                    textDecoration = TextDecoration.Underline,
+                                    fontStyle = if (isOriginalPoster) FontStyle.Normal else FontStyle.Italic,
+                                    fontWeight = if (isOriginalPoster) FontWeight.Black else FontWeight.SemiBold,
+                                )
+                            )
+                            append(byString)
+                            pop()
+                            append(" • ")
+                            append(timeString)
+                        },
                         modifier = Modifier.padding(4.dp),
                         style = MaterialTheme.typography.bodyLarge,
                         color = if (isOriginalPoster) MaterialTheme.colorScheme.primary else depthColors[depth % depthColors.size].copy(
-                            alpha = 1f)
+                            alpha = 1f
+                        )
                     )
 
                     SelectionContainer {
@@ -345,19 +351,22 @@ fun CommentCard(
                     val numKids = commentState.item.kids.size
 
                     if (numKids > 0) {
-                        Box(modifier = Modifier
-                            .height(48.dp)
-                            .padding(vertical = 4.dp)
-                            .clickable {
-                                onClick()
-                            }) {
+                        Box(
+                            modifier = Modifier
+                                .height(48.dp)
+                                .padding(vertical = 4.dp)
+                                .clickable {
+                                    onClick()
+                                }
+                        ) {
                             Row(
                                 modifier = Modifier.fillMaxSize(),
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    pluralStringResource(R.plurals.comments,
+                                    pluralStringResource(
+                                        R.plurals.comments,
                                         numKids,
                                         numKids
                                     ),
@@ -367,26 +376,28 @@ fun CommentCard(
                                 Icon(
                                     if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
                                     if (expanded) stringResource(R.string.close_comments) else stringResource(
-                                        R.string.open_comments)
+                                        R.string.open_comments
+                                    )
                                 )
                             }
                         }
                     }
                 }
-
             }
-            is CommentUiState.Error -> Text("< ERROR >",
+            is CommentUiState.Error -> Text(
+                "< ERROR >",
                 modifier = Modifier
                     .padding(16.dp)
-                    .fillMaxWidth())
+                    .fillMaxWidth()
+            )
 
-            is CommentUiState.Loading -> Text("LOADING ...",
+            is CommentUiState.Loading -> Text(
+                "LOADING ...",
                 modifier = Modifier
                     .padding(16.dp)
-                    .fillMaxWidth())
+                    .fillMaxWidth()
+            )
         }
-
-
     }
 }
 

@@ -81,7 +81,8 @@ class HomePageViewModel : ViewModel(), KoinComponent {
                     synchronized(itemList) {
                         itemList[index] = NewsItemState.ItemError(it)
                     }
-                })
+                }
+            )
         }
         updateItemList()
     }
@@ -100,7 +101,6 @@ sealed class NewsPageState {
     data class NewsIdsLoaded(val itemsId: List<ItemId>) : NewsPageState()
     data class NewsIdsError(val exception: Throwable) : NewsPageState()
 }
-
 
 sealed class NewsItemState {
     object Loading : NewsItemState()

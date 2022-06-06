@@ -2,8 +2,8 @@ package it.devddk.hackernewsclient.viewmodels
 
 import androidx.lifecycle.ViewModel
 import it.devddk.hackernewsclient.domain.interaction.search.SearchItemByRelevanceUseCase
-import it.devddk.hackernewsclient.domain.model.search.SearchResultsSlice
 import it.devddk.hackernewsclient.domain.model.search.SearchResult
+import it.devddk.hackernewsclient.domain.model.search.SearchResultsSlice
 import it.devddk.hackernewsclient.domain.utils.takeWhileInclusive
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +26,6 @@ class SearchPageViewModel : ViewModel(), KoinComponent {
     private val _resultListFlow = MutableSharedFlow<List<SearchResultUiState>>(1)
     val resultListFlow = _resultListFlow.asSharedFlow()
 
-
     suspend fun updateQuery(query: String) {
         val oldQuery = searchQuery.value
         if (oldQuery != query && query.length >= 3) {
@@ -35,9 +34,7 @@ class SearchPageViewModel : ViewModel(), KoinComponent {
             updateResultList()
             requestItem(0)
         }
-
     }
-
 
     suspend fun requestItem(position: Int) {
         val pageIndex = position.div(20)
@@ -78,7 +75,6 @@ class SearchPageViewModel : ViewModel(), KoinComponent {
         Timber.d("$pages")
         _resultListFlow.emit(newList)
     }
-
 }
 
 private sealed class SliceLoadingState {
@@ -94,7 +90,6 @@ private sealed class SliceLoadingState {
         override fun unrollToUiStates() = slice.results.map {
             SearchResultUiState.ResultLoaded(it)
         }
-
     }
 
     data class Error(val throwable: Throwable) : SliceLoadingState() {
@@ -106,5 +101,3 @@ sealed class SearchResultUiState {
     data class Loading(val position: Int) : SearchResultUiState()
     data class ResultLoaded(val result: SearchResult) : SearchResultUiState()
 }
-
-

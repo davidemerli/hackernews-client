@@ -64,7 +64,7 @@ fun DraggableCard(
         transitionSpec = { tween(durationMillis = ANIMATION_DURATION) },
         targetValueByState = { if (isRevealed) cardOffset - offsetX.value else -offsetX.value },
 
-        )
+    )
 
     val cardElevation by transition.animateDp(
         label = "cardElevation",
@@ -154,4 +154,3 @@ fun DraggableCardSimple(
         content = { Text(card.title ?: "") }
     )
 }
-
