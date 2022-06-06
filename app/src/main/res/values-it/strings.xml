@@ -32,4 +32,5 @@
     </plurals>
     <string name="close_comments">Chiudi commenti</string>
     <string name="open_comments">Apri commenti</string>
+    <string name="points">%d pt</string>
 </resources>

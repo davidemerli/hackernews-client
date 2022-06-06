@@ -12,7 +12,10 @@ import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -142,18 +145,23 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
     ) {
         itemsIndexed(itemListState.value) { index, itemState ->
 
-
             when (itemState) {
-                is NewsItemState.ItemLoaded -> NewsItem(itemState.item, onClick = {
-                    navController.navigate("items/${itemState.item.id}")
-                }, placeholder = false)
+                is NewsItemState.ItemLoaded -> {
+                    NewsItem(
+                        itemState.item,
+                        onClick = { navController.navigate("items/${itemState.item.id}") },
+                        placeholder = false
+                    )
+                }
                 is NewsItemState.Loading, is NewsItemState.ItemError -> {
                     LaunchedEffect(index) {
                         viewModel.requestItem(index)
                     }
+
                     NewsItem(placeholder = true)
                 }
             }
+
             Divider(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),

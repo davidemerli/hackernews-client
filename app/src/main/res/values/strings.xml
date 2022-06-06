@@ -6,6 +6,7 @@
     <string name="author_unknown">by [unknown]</string>
     <string name="time_unknown">[time unknown]</string>
     <string name="title_unknown">[title unknown]</string>
+    <string name="points">%d pt</string>
     <plurals name="minutes_ago">
         <item quantity="one">%dm</item>
         <item quantity="other">%dm</item>
