@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.integerArrayResource
 import androidx.compose.ui.res.pluralStringResource
@@ -44,14 +45,13 @@ import androidx.navigation.NavController
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
 import it.devddk.hackernewsclient.R
-import it.devddk.hackernewsclient.components.LinkifyText
+import it.devddk.hackernewsclient.components.*
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
 import it.devddk.hackernewsclient.viewmodels.CommentUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 fun String.toSpanned(): String {
     return Html.fromHtml(this, Html.FROM_HTML_MODE_COMPACT).toString()
@@ -81,61 +81,98 @@ fun SingleNewsPage(navController: NavController, id: Int?) {
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 fun TabbedView(item: Item, navController: NavController) {
-
     var tabIndex by remember { mutableStateOf(0) }
+    //TODO: remove article when item.url is null and remove horizontal paging
     val tabs = listOf("Article", "Comments")
 
-    Scaffold(
-        topBar = {
-            LargeTopAppBar(
-                // TODO: collapse on scroll
-                title = {
-                    item.title?.let { title ->
-                        Text(
-                            title,
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Rounded.ArrowBack, "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { }) {
-                        Icon(Icons.Rounded.AccountCircle, "Notifications")
-                    }
-                },
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) {
-        Column(
-            modifier = Modifier.padding(top = it.calculateTopPadding()),
-        ) {
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val scrollState = rememberLazyListState()
+
+    val mViewModel: SingleNewsViewModel = viewModel()
+    val comments = mViewModel.commentList.collectAsState(emptyList())
+
+    Scaffold(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection), topBar = {
+        SmallTopAppBar(
+            scrollBehavior = scrollBehavior,
+            modifier = Modifier.wrapContentHeight(Alignment.Bottom),
+            title = { },
+            navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.Rounded.ArrowBack, "Back")
+                }
+            },
+            actions = {
+                IconButton(onClick = { }) {
+                    Icon(Icons.Rounded.AccountCircle, "Notifications")
+                }
+            },
+        )
+    }, containerColor = MaterialTheme.colorScheme.background) {
+        LazyColumn(state = scrollState,
+            modifier = Modifier.padding(top = it.calculateTopPadding())) {
             // TODO: replace with horizontal pager
-            TabRow(
-                selectedTabIndex = tabIndex,
-                containerColor = MaterialTheme.colorScheme.background,
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = tabIndex == index,
-                        onClick = { tabIndex = index },
-                        text = { Text(text = title, color = MaterialTheme.colorScheme.secondary) }
-                    )
+            stickyHeader {
+                TabRow(selectedTabIndex = tabIndex,
+                    containerColor = MaterialTheme.colorScheme.background,
+                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(selected = tabIndex == index, onClick = { tabIndex = index }, text = {
+                            Text(text = title, color = MaterialTheme.colorScheme.secondary)
+                        })
+                    }
                 }
             }
 
             when (tabIndex) {
                 0 -> {
-                    ArticleView(item)
+                    item { ArticleView(item) }
                 }
                 1 -> {
-                    CommentView(item)
+                    item {
+                        Column(
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            ItemDomain(item = item)
+                            ItemTitle(item = item)
+                            Row {
+                                ItemBy(item)
+
+                                Text(text = " - ")
+
+                                ItemTime(item)
+                            }
+                        }
+
+                        ArticleDescription(item = item)
+                    }
+
+                    itemsIndexed(comments.value, key = { _, item -> item.itemId }) { _, comment ->
+                        Box(modifier = Modifier.animateItemPlacement()) {
+                            if (comment !is CommentUiState.CommentLoaded) {
+                                LaunchedEffect(comment.itemId) {
+                                    mViewModel.getItem(comment.itemId)
+                                }
+                            }
+
+                            ExpandableComment(
+                                comment,
+                                rootItem = item,
+                            )
+                        }
+                    }
+
+                    item {
+                        Text("< end of comments >",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.secondary,
+                            ),
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth())
+                    }
                 }
             }
         }
@@ -149,83 +186,30 @@ fun ArticleView(item: Item) {
         val viewState = rememberWebViewState(url = url)
 
         if (viewState.isLoading) {
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.secondary
-            )
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.secondary)
         }
 
         // Using a lazycol avoids scrolling problems when in horizontal pager
 
-        LazyColumn {
-            item {
-                WebView(
-                    state = viewState,
-                    onCreated = {
-                        it.loadUrl(item.url ?: "")
-                        it.settings.javaScriptEnabled = true
-                        it.settings.domStorageEnabled = true
-                    }
-                )
-            }
-        }
+        WebView(state = viewState, onCreated = {
+            it.loadUrl(item.url ?: "")
+            it.settings.javaScriptEnabled = true
+            it.settings.domStorageEnabled = true
+        })
     }
 }
 
 @Composable
-@OptIn(ExperimentalFoundationApi::class)
-fun CommentView(item: Item) {
-
-    val mViewModel: SingleNewsViewModel = viewModel()
-    val scrollState = rememberLazyListState()
-    val comments = mViewModel.commentList.collectAsState(emptyList())
-
-    LazyColumn(state = scrollState) {
-        Timber.d("${item.text == null}")
-        if (!item.text.isNullOrBlank()) {
-            item {
-                SelectionContainer {
-                    LinkifyText(
-                        item.text!!.toSpanned(),
-                        modifier = Modifier.padding(8.dp),
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Light,
-                            lineHeight = 19.5.sp
-                        ),
-                        linkColor = MaterialTheme.colorScheme.secondary
-                    )
-                }
-            }
-        }
-
-        itemsIndexed(comments.value, key = { _, item -> item.itemId }) { _, comment ->
-            Box(modifier = Modifier.animateItemPlacement()) {
-                if (comment !is CommentUiState.CommentLoaded) {
-                    LaunchedEffect(comment.itemId) {
-                        mViewModel.getItem(comment.itemId)
-                    }
-                }
-
-                ExpandableComment(
-                    comment,
-                    rootItem = item,
-                )
-            }
-        }
-
-        item {
-            Text(
-                "< end of comments >",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.secondary,
-                ),
-
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth()
-            )
+fun ArticleDescription(item: Item) {
+    if (!item.text.isNullOrBlank()) {
+        SelectionContainer {
+            LinkifyText(item.text!!.toSpanned(),
+                modifier = Modifier.padding(8.dp),
+                style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Light,
+                    lineHeight = 19.5.sp),
+                linkColor = MaterialTheme.colorScheme.secondary)
         }
     }
 }
@@ -243,160 +227,139 @@ fun ExpandableComment(
 
     var expanded by rememberSaveable { mutableStateOf(false) }
 
-    Column(modifier = Modifier.fillMaxWidth()) {
-        CommentCard(
-            comment,
-            expanded = expanded,
-            rootItem = rootItem,
-            onClick = {
-                if (comment.isExpandable()) {
-                    expanded = !expanded
+    val onClick = {
+        if (comment.isExpandable()) {
+            expanded = !expanded
 
-                    coroutineScope.launch {
-                        mViewModel.expandComment(
-                            comment.itemId,
-                            comment.isExpandable() && expanded
-                        )
-                    }
-                }
+            coroutineScope.launch {
+                mViewModel.expandComment(comment.itemId,
+                    comment.isExpandable() && expanded)
             }
-        )
+        }
+    }
+
+    when (comment) {
+        is CommentUiState.CommentLoaded -> {
+            CommentCard(
+                comment.item,
+                comment.depth,
+                expanded = expanded,
+                rootItem = rootItem,
+                onClick = onClick
+            )
+        }
+        is CommentUiState.Error -> Text("< ERROR >",
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth())
+        //TODO: use placeholder CommentCard
+        is CommentUiState.Loading -> Text("LOADING ...",
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth())
     }
 }
 
 @Composable
+fun DepthIndicator(depth: Int) {
+    val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
+
+    Box(modifier = Modifier
+        .width(10.dp)
+        .fillMaxHeight()
+        .padding(end = 4.dp)
+        .clip(RoundedCornerShape(topStart = 4.dp, bottomStart = 4.dp))
+        .background(depthColors[depth % depthColors.size]))
+}
+
+@Composable
 @OptIn(ExperimentalComposeUiApi::class)
+fun ExpandChildren(expanded: Boolean, numKids: Int, onClick: () -> Unit) {
+    Box(modifier = Modifier
+        .height(48.dp)
+        .padding(vertical = 4.dp)
+        .clickable { onClick() }) {
+        Row(modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically) {
+            Text(pluralStringResource(R.plurals.comments, numKids, numKids),
+                style = MaterialTheme.typography.bodySmall)
+
+            Icon(if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+                if (expanded) stringResource(R.string.close_comments) else stringResource(R.string.open_comments))
+        }
+    }
+}
+
+//TODO: define placeholders modifiers and a placeholder comment
+@Composable
 fun CommentCard(
-    commentState: CommentUiState,
+    item: Item,
+    depth: Int = 0,
     rootItem: Item,
     expanded: Boolean,
     onClick: () -> Unit = {},
 ) {
-    val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
-
     val context = LocalContext.current
 
-    val depth = commentState.depth
     val paddingStart = (depth * 6).dp + 2.dp
 
-    val commentBackground = Color(
-        ColorUtils.blendARGB(
-            MaterialTheme.colorScheme.secondary.toArgb(),
-            Color.Black.toArgb(),
-            0.8f
-        )
-    )
+    val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
 
-    Row(
-        modifier = Modifier
-            .height(IntrinsicSize.Min)
-            .padding(start = paddingStart, top = 4.dp, end = 4.dp, bottom = 4.dp)
-            .clip(RoundedCornerShape(4.dp))
-            .background(commentBackground)
-    ) {
-        Box(
-            modifier = Modifier
-                .width(10.dp)
-                .fillMaxHeight()
-                .padding(end = 4.dp)
-                .clip(RoundedCornerShape(topStart = 4.dp, bottomStart = 4.dp))
-                .background(depthColors[depth % depthColors.size])
-        )
+    // obtains a background color for the comments which is a slight tint of the colorScheme secondary color
+    val commentBackground = Color(ColorUtils.blendARGB(MaterialTheme.colorScheme.secondary.toArgb(),
+        MaterialTheme.colorScheme.background.toArgb(),
+        0.9f))
 
-        when (commentState) {
-            is CommentUiState.CommentLoaded -> {
-                val text = commentState.item.text ?: "< deleted comment >"
+    Row(modifier = Modifier
+        .height(IntrinsicSize.Min)
+        .padding(start = paddingStart, top = 4.dp, end = 4.dp, bottom = 4.dp)
+        .clip(RoundedCornerShape(4.dp))
+        .background(commentBackground)) {
+        DepthIndicator(depth = depth)
 
-                val timeString = remember(commentState.item) {
-                    TimeDisplayUtils(context).toDateTimeAgoInterval(commentState.item.time)
-                }
+        val text = item.text ?: "< deleted comment >"
 
-                val isOriginalPoster = rootItem.by == commentState.item.by
+        val timeString = remember(item) {
+            TimeDisplayUtils(context).toDateTimeAgoInterval(item.time)
+        }
 
-                val byString =
-                    "${commentState.item.by}${if (isOriginalPoster) " (OP)" else ""}"
+        val isOriginalPoster = rootItem.by == item.by
 
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = buildAnnotatedString {
-                            pushStyle(
-                                SpanStyle(
-                                    textDecoration = TextDecoration.Underline,
-                                    fontStyle = if (isOriginalPoster) FontStyle.Normal else FontStyle.Italic,
-                                    fontWeight = if (isOriginalPoster) FontWeight.Black else FontWeight.SemiBold,
-                                )
-                            )
-                            append(byString)
-                            pop()
-                            append(" • ")
-                            append(timeString)
-                        },
-                        modifier = Modifier.padding(4.dp),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = if (isOriginalPoster) MaterialTheme.colorScheme.primary else depthColors[depth % depthColors.size].copy(
-                            alpha = 1f
-                        )
-                    )
+        val byString = "${item.by}${if (isOriginalPoster) " (OP)" else ""}"
 
-                    SelectionContainer {
-                        LinkifyText(
-                            text = text.toSpanned(),
-                            modifier = Modifier.padding(4.dp),
-                            style = MaterialTheme.typography.bodyMedium,
-                            overflow = TextOverflow.Visible,
-                            linkColor = MaterialTheme.colorScheme.secondary,
-                        )
-                    }
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(text = buildAnnotatedString {
+                pushStyle(SpanStyle(
+                    textDecoration = TextDecoration.Underline,
+                    fontStyle = if (isOriginalPoster) FontStyle.Normal else FontStyle.Italic,
+                    fontWeight = if (isOriginalPoster) FontWeight.Black else FontWeight.SemiBold,
+                ))
+                append(byString)
+                pop()
+                append(" • ")
+                append(timeString)
+            },
+                modifier = Modifier.padding(4.dp),
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (isOriginalPoster) MaterialTheme.colorScheme.primary else depthColors[depth % depthColors.size].copy(
+                    alpha = 1f))
 
-                    val numKids = commentState.item.kids.size
-
-                    if (numKids > 0) {
-                        Box(
-                            modifier = Modifier
-                                .height(48.dp)
-                                .padding(vertical = 4.dp)
-                                .clickable {
-                                    onClick()
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxSize(),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    pluralStringResource(
-                                        R.plurals.comments,
-                                        numKids,
-                                        numKids
-                                    ),
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-
-                                Icon(
-                                    if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
-                                    if (expanded) stringResource(R.string.close_comments) else stringResource(
-                                        R.string.open_comments
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
+            SelectionContainer {
+                LinkifyText(
+                    text = text.toSpanned(),
+                    modifier = Modifier.padding(4.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    overflow = TextOverflow.Visible,
+                    linkColor = MaterialTheme.colorScheme.secondary,
+                )
             }
-            is CommentUiState.Error -> Text(
-                "< ERROR >",
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth()
-            )
 
-            is CommentUiState.Loading -> Text(
-                "LOADING ...",
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth()
-            )
+            val numKids = item.kids.size
+
+            if (numKids > 0) {
+                ExpandChildren(expanded = expanded, numKids = numKids, onClick = onClick)
+            }
         }
     }
 }
