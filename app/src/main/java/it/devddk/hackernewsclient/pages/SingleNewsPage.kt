@@ -38,6 +38,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -70,6 +71,11 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.accompanist.placeholder.PlaceholderDefaults
+import com.google.accompanist.placeholder.PlaceholderHighlight
+import com.google.accompanist.placeholder.material.color
+import com.google.accompanist.placeholder.material.shimmer
+import com.google.accompanist.placeholder.placeholder
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
 import it.devddk.hackernewsclient.R
@@ -79,6 +85,8 @@ import it.devddk.hackernewsclient.components.ItemTime
 import it.devddk.hackernewsclient.components.ItemTitle
 import it.devddk.hackernewsclient.components.LinkifyText
 import it.devddk.hackernewsclient.domain.model.items.Item
+import it.devddk.hackernewsclient.domain.model.items.ItemType
+import it.devddk.hackernewsclient.utils.SettingPrefs
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
 import it.devddk.hackernewsclient.viewmodels.CommentUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
@@ -119,11 +127,18 @@ fun TabbedView(item: Item, navController: NavController) {
     // TODO: remove article when item.url is null and remove horizontal paging
     val tabs = listOf("Article", "Comments")
 
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val topBarScrollState = rememberTopAppBarScrollState()
+
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(topBarScrollState)
     val scrollState = rememberLazyListState()
 
     val mViewModel: SingleNewsViewModel = viewModel()
     val comments = mViewModel.commentList.collectAsState(emptyList())
+
+    val context = LocalContext.current
+    val dataStore = SettingPrefs(context)
+
+    val depthSize = dataStore.depth.collectAsState(initial = SettingPrefs.DEFAULT_DEPTH)
 
     Scaffold(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection), topBar = {
         SmallTopAppBar(
@@ -167,9 +182,7 @@ fun TabbedView(item: Item, navController: NavController) {
             }
             1 -> {
                 item {
-                    Column(
-                        modifier = Modifier.padding(8.dp)
-                    ) {
+                    Column(modifier = Modifier.padding(8.dp)) {
                         ItemDomain(item = item)
                         ItemTitle(item = item)
                         Row {
@@ -193,8 +206,9 @@ fun TabbedView(item: Item, navController: NavController) {
                         }
 
                         ExpandableComment(
-                            comment,
+                            comment = comment,
                             rootItem = item,
+                            depthSize = depthSize.value.toInt()
                         )
                     }
                 }
@@ -261,10 +275,21 @@ fun ArticleDescription(item: Item) {
 fun Item.isExpandable() = kids.isNotEmpty()
 fun CommentUiState.isExpandable() = this is CommentUiState.CommentLoaded && this.item.isExpandable()
 
+val placeholderItem = Item(
+    0,
+    ItemType.COMMENT,
+    title = "_".repeat(30),
+    url = "https://news.ycombinator.com/",
+    by = "_".repeat(10),
+    text = "_".repeat(100),
+    time = null
+)
+
 @Composable
 fun ExpandableComment(
     comment: CommentUiState,
     rootItem: Item,
+    depthSize: Int,
 ) {
     val mViewModel: SingleNewsViewModel = viewModel()
     val coroutineScope = rememberCoroutineScope()
@@ -276,10 +301,7 @@ fun ExpandableComment(
             expanded = !expanded
 
             coroutineScope.launch {
-                mViewModel.expandComment(
-                    comment.itemId,
-                    comment.isExpandable() && expanded
-                )
+                mViewModel.expandComment(comment.itemId, comment.isExpandable() && expanded)
             }
         }
     }
@@ -289,9 +311,11 @@ fun ExpandableComment(
             CommentCard(
                 comment.item,
                 comment.depth,
+                depthSize = depthSize,
                 expanded = expanded,
                 rootItem = rootItem,
-                onClick = onClick
+                onClick = onClick,
+                placeholder = false,
             )
         }
         is CommentUiState.Error -> Text(
@@ -301,11 +325,14 @@ fun ExpandableComment(
                 .fillMaxWidth()
         )
         // TODO: use placeholder CommentCard
-        is CommentUiState.Loading -> Text(
-            "LOADING ...",
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
+        is CommentUiState.Loading -> CommentCard(
+            placeholderItem,
+            comment.depth,
+            depthSize = depthSize,
+            expanded = expanded,
+            rootItem = rootItem,
+            onClick = onClick,
+            placeholder = true,
         )
     }
 }
@@ -356,13 +383,18 @@ fun ExpandChildren(expanded: Boolean, numKids: Int, onClick: () -> Unit) {
 fun CommentCard(
     item: Item,
     depth: Int = 0,
+    depthSize: Int = 6,
     rootItem: Item,
     expanded: Boolean,
     onClick: () -> Unit = {},
+    placeholder: Boolean = false,
 ) {
+    if (item.deleted) return
+    if (item.dead) return
+
     val context = LocalContext.current
 
-    val paddingStart = (depth * 6).dp + 2.dp
+    val paddingStart = (depth * depthSize).dp + 2.dp
 
     val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
 
@@ -409,7 +441,14 @@ fun CommentCard(
                     append(" • ")
                     append(timeString)
                 },
-                modifier = Modifier.padding(4.dp),
+                modifier = Modifier
+                    .padding(4.dp)
+                    .placeholder(
+                        visible = placeholder,
+                        color = PlaceholderDefaults.color(contentColor = MaterialTheme.colorScheme.secondary),
+                        shape = RoundedCornerShape(8.dp),
+                        highlight = PlaceholderHighlight.shimmer(),
+                    ),
                 style = MaterialTheme.typography.bodyLarge,
                 color = if (isOriginalPoster) MaterialTheme.colorScheme.primary else depthColors[depth % depthColors.size].copy(
                     alpha = 1f
@@ -419,10 +458,17 @@ fun CommentCard(
             SelectionContainer {
                 LinkifyText(
                     text = text.toSpanned(),
-                    modifier = Modifier.padding(4.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     overflow = TextOverflow.Visible,
                     linkColor = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .placeholder(
+                            visible = placeholder,
+                            color = PlaceholderDefaults.color(contentColor = MaterialTheme.colorScheme.secondary),
+                            shape = RoundedCornerShape(8.dp),
+                            highlight = PlaceholderHighlight.shimmer(),
+                        ),
                 )
             }
 

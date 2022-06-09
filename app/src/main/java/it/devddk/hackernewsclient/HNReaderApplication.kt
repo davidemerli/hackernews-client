@@ -18,7 +18,11 @@ class HNReaderApplication : Application() {
             // declare used Android context
             androidContext(this@HNReaderApplication)
             // declare modules
-            modules(interactionModule, networkingModule, repositoryModule)
+            modules(
+                interactionModule,
+                networkingModule,
+                repositoryModule,
+            )
         }
 
         if (BuildConfig.DEBUG) {
