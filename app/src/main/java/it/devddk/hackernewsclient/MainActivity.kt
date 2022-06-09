@@ -17,6 +17,7 @@ import it.devddk.hackernewsclient.domain.model.utils.ALL_QUERIES
 import it.devddk.hackernewsclient.pages.HackerNewsView
 import it.devddk.hackernewsclient.pages.NewsPage
 import it.devddk.hackernewsclient.pages.SearchPage
+import it.devddk.hackernewsclient.pages.SettingsPage
 import it.devddk.hackernewsclient.pages.SingleNewsPage
 import it.devddk.hackernewsclient.ui.theme.HackerNewsClientTheme
 
@@ -46,14 +47,27 @@ class MainActivity : ComponentActivity() {
                     NewsPage(navController, route = HackerNewsView(query))
                 }
             }
+
             composable(
                 "items/{itemId}",
-                arguments = listOf(navArgument("itemId") { type = NavType.IntType })
+                arguments = listOf(
+                    navArgument("itemId") {
+                        type = NavType.IntType
+                    }
+                )
             ) { backStackEntry ->
-                SingleNewsPage(navController, backStackEntry.arguments?.getInt("itemId")!!)
+                SingleNewsPage(
+                    navController = navController,
+                    id = backStackEntry.arguments?.getInt("itemId")!!
+                )
             }
+
             composable("search") {
                 SearchPage(navController = navController)
+            }
+
+            composable("settings") {
+                SettingsPage(navController = navController)
             }
         }
     }
