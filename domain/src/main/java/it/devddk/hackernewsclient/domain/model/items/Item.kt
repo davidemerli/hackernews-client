@@ -21,6 +21,7 @@ data class Item(
     val score: Int? = null,
     val url: String? = null,
     val previewUrl: String? = null,
+    val collections : Set<ItemCollectionTag> = emptySet()
 ) {
 
     companion object {

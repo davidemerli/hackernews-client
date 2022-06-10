@@ -3,6 +3,7 @@ package it.devddk.hackernewsclient.data.networking.model
 import com.google.gson.annotations.SerializedName
 import it.devddk.hackernewsclient.data.networking.DomainMapper
 import it.devddk.hackernewsclient.data.networking.utils.convertTimestamp
+import it.devddk.hackernewsclient.data.networking.utils.toItemType
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.items.StoryItem
@@ -33,7 +34,7 @@ data class SearchResponse(
     }
 
     private fun buildItemFromHit(hit : SearchResultHitResponse) : Item {
-        val itemType = ItemType.STORY
+        val itemType = hit.type.toItemType() ?: ItemType.STORY
         Timber.d("Object id ${hit.objectId}")
         return Item(
             id = hit.objectId.toInt(),
@@ -66,6 +67,7 @@ data class SearchResultHitResponse(
     val url: String,
     val author: String?,
     val points: Int?,
+    val type: String?,
     @SerializedName("story_text") val storyText: String?,
     @SerializedName("comment_text") val commentText: String?,
     @SerializedName("story_id") val storyId: Int?,
