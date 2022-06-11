@@ -3,6 +3,7 @@ package it.devddk.hackernewsclient
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -13,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import it.devddk.hackernewsclient.domain.model.utils.ALL_QUERIES
 import it.devddk.hackernewsclient.pages.HackerNewsView
 import it.devddk.hackernewsclient.pages.NewsPage
@@ -30,6 +32,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             HackerNewsClientTheme {
+                val systemUiController = rememberSystemUiController()
+
+                systemUiController.setStatusBarColor(
+                    color = MaterialTheme.colorScheme.background,
+                    darkIcons = !isSystemInDarkTheme()
+                )
+
                 Surface(color = MaterialTheme.colorScheme.background) {
                     AppRootNavigator()
                 }

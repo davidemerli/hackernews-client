@@ -1,6 +1,5 @@
 package it.devddk.hackernewsclient.pages
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -16,11 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import it.devddk.hackernewsclient.components.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.components.HomePageTopBar
 import it.devddk.hackernewsclient.components.NewsItem
@@ -37,9 +34,6 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-    val systemUiController = rememberSystemUiController()
-    val useDarkIcons = !isSystemInDarkTheme()
-
     val pageState = viewModel.pageState.collectAsState(NewsPageState.Loading)
 
     val query = viewModel.query.collectAsState(initial = TopStories)
@@ -49,11 +43,6 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
             is HackerNewsView -> viewModel.setQuery(route.query)
         }
     }
-
-    systemUiController.setStatusBarColor(
-        color = Color.Red,
-        darkIcons = useDarkIcons
-    )
 
     HNModalNavigatorPanel(
         navController = navController,
