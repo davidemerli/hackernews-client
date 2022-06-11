@@ -16,6 +16,7 @@ import androidx.navigation.navArgument
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import it.devddk.hackernewsclient.domain.model.utils.ALL_QUERIES
+import it.devddk.hackernewsclient.pages.FeedbackPage
 import it.devddk.hackernewsclient.pages.HackerNewsView
 import it.devddk.hackernewsclient.pages.NewsPage
 import it.devddk.hackernewsclient.pages.SearchPage
@@ -77,6 +78,10 @@ class MainActivity : ComponentActivity() {
 
             composable("settings") {
                 SettingsPage(navController = navController)
+            }
+
+            composable("feedback") {
+                FeedbackPage(navController = navController)
             }
         }
     }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.QuestionAnswer
@@ -54,6 +55,7 @@ import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.utils.ALL_QUERIES
 import it.devddk.hackernewsclient.pages.HackerNewsView
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,6 +69,7 @@ fun HomePageTopBar(
     CenterAlignedTopAppBar(
         title = {
             Row {
+                Timber.d(query)
                 Icon(
                     ROUTE_ICONS[query]!!,
                     query,
@@ -202,6 +205,16 @@ fun HNModalNavigatorPanel(
             onClick = { navController.navigate("settings") },
             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
         )
+
+        NavigationDrawerItem(
+            icon = {
+                Icon(Icons.Filled.Feedback, contentDescription = "Feedback")
+            },
+            label = { Text("Feedback") },
+            selected = query == "Feedback",
+            onClick = { navController.navigate("feedback") },
+            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+        )
     }) {
         content()
     }
@@ -214,7 +227,8 @@ val ROUTE_ICONS = mapOf(
     "AskStories" to Icons.Filled.QuestionAnswer,
     "ShowStories" to Icons.Filled.Dashboard,
     "JobStories" to Icons.Filled.Work,
-    "Settings" to Icons.Filled.Settings
+    "Settings" to Icons.Filled.Settings,
+    "Feedback" to Icons.Filled.Feedback
 )
 
 val ROUTE_TITLES = mapOf(
