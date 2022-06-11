@@ -64,7 +64,9 @@ fun SettingsPage(navController: NavController) {
                         },
                         request = depthPreference,
                         valueRange = 6.0f..24.0f,
-                        valueRepresentation = { value -> value.toInt().toString() },
+                        valueRepresentation = { value ->
+                            "${value.toInt()}".padStart(2, '0')
+                        },
                     )
                 ),
                 dataStore = dataStore,
