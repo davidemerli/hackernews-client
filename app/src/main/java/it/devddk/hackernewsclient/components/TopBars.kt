@@ -24,12 +24,14 @@ import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
@@ -173,6 +175,7 @@ fun HNModalNavigatorPanel(
 ) {
     ModalNavigationDrawer(drawerState = state, gesturesEnabled = state.isOpen, drawerContent = {
         Text(text = stringResource(R.string.app_name), modifier = Modifier.padding(28.dp))
+
         ALL_QUERIES.forEach {
             NavigationDrawerItem(
                 icon = {
@@ -187,6 +190,12 @@ fun HNModalNavigatorPanel(
                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
             )
         }
+
+        Divider(
+            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
+            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+        )
+
         NavigationDrawerItem(
             icon = {
                 Icon(Icons.Filled.Settings, contentDescription = "Settings")
