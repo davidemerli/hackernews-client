@@ -10,14 +10,16 @@ class TimeDisplayUtils(private val context: Context) {
         time: LocalDateTime?,
         now: LocalDateTime = LocalDateTime.now(),
     ): String {
-        val unitMap = mapOf(ChronoUnit.YEARS to R.plurals.years_ago,
+        val unitMap = mapOf(
+            ChronoUnit.YEARS to R.plurals.years_ago,
             ChronoUnit.WEEKS to R.plurals.weeks_ago,
             ChronoUnit.DAYS to R.plurals.days_ago,
             ChronoUnit.HOURS to R.plurals.hours_ago,
-            ChronoUnit.MINUTES to R.plurals.minutes_ago)
+            ChronoUnit.MINUTES to R.plurals.minutes_ago
+        )
 
-        if(time == null) {
-            context.getString(R.string.time_unknown)
+        if (time == null) {
+            return context.getString(R.string.time_unknown)
         }
 
         return unitMap.firstNotNullOfOrNull { (unit, stringId) ->

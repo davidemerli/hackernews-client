@@ -7,7 +7,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -18,6 +17,7 @@ import it.devddk.hackernewsclient.domain.model.utils.ALL_QUERIES
 import it.devddk.hackernewsclient.pages.HackerNewsView
 import it.devddk.hackernewsclient.pages.NewsPage
 import it.devddk.hackernewsclient.pages.SearchPage
+import it.devddk.hackernewsclient.pages.SettingsPage
 import it.devddk.hackernewsclient.pages.SingleNewsPage
 import it.devddk.hackernewsclient.ui.theme.HackerNewsClientTheme
 
@@ -25,7 +25,6 @@ import it.devddk.hackernewsclient.ui.theme.HackerNewsClientTheme
 @ExperimentalMaterial3Api
 class MainActivity : ComponentActivity() {
 
-    @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -38,10 +37,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
     @Composable
-    @ExperimentalComposeUiApi
-    @ExperimentalMaterial3Api
     private fun AppRootNavigator() {
         val navController = rememberNavController()
 
@@ -51,15 +47,28 @@ class MainActivity : ComponentActivity() {
                     NewsPage(navController, route = HackerNewsView(query))
                 }
             }
-            composable("items/{itemId}",
-                arguments = listOf(navArgument("itemId") { type = NavType.IntType })
+
+            composable(
+                "items/{itemId}",
+                arguments = listOf(
+                    navArgument("itemId") {
+                        type = NavType.IntType
+                    }
+                )
             ) { backStackEntry ->
-                SingleNewsPage(navController, backStackEntry.arguments?.getInt("itemId")!!)
+                SingleNewsPage(
+                    navController = navController,
+                    id = backStackEntry.arguments?.getInt("itemId")!!
+                )
             }
+
             composable("search") {
                 SearchPage(navController = navController)
+            }
+
+            composable("settings") {
+                SettingsPage(navController = navController)
             }
         }
     }
 }
-

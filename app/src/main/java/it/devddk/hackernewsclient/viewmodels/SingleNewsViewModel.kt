@@ -14,7 +14,6 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicBoolean
 
 class SingleNewsViewModel : ViewModel(), KoinComponent {
 
@@ -35,10 +34,10 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
         while (stack.isNotEmpty()) {
             val nextId = stack.pop()!!
             val nextComment = map[nextId] ?: continue
-            if(nextComment.depth >= 0) {
+            if (nextComment.depth >= 0) {
                 result.add(nextComment)
             }
-            if(nextComment is CommentUiState.CommentLoaded && nextComment.expanded) {
+            if (nextComment is CommentUiState.CommentLoaded && nextComment.expanded) {
                 nextComment.item.kids.reversed().forEach { kidId ->
                     stack.push(kidId)
                 }
@@ -46,7 +45,6 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
         }
         return result
     }
-
 
     suspend fun setId(newId: Int?) {
         Timber.d("Set article $newId")
@@ -73,8 +71,8 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
     }
 
     suspend fun expandComment(idToExpand: Int, expanded: Boolean) {
-        //Timber.v("${if (expanded) "E" else "Une"}xpand item $idToExpand")
-        val rebuildTree : Boolean
+        // Timber.v("${if (expanded) "E" else "Une"}xpand item $idToExpand")
+        val rebuildTree: Boolean
         synchronized(mCommentsMap) {
             val commentToExpand = mCommentsMap[idToExpand]
             if (commentToExpand !is CommentUiState.CommentLoaded) {
@@ -100,11 +98,10 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
                 }
             }
         }
-        if(rebuildTree) {
+        if (rebuildTree) {
             updateCommentList()
         }
     }
-
 
     suspend fun getItem(id: ItemId, forceRefresh: Boolean = false) {
         val commentState = mCommentsMap[id]!!
@@ -120,7 +117,6 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
         }
     }
 
-
     private suspend fun updateCommentList() {
         Timber.d("Rebuild tree")
         when (val currUiState = uiState.value) {
@@ -135,7 +131,6 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
         }
     }
 }
-
 
 sealed class SingleNewsUiState {
     object Loading : SingleNewsUiState()

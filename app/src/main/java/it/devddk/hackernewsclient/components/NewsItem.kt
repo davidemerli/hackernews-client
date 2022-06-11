@@ -1,6 +1,7 @@
 package it.devddk.hackernewsclient.components
 
-import androidx.compose.foundation.Image
+import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,15 +10,13 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.FilterQuality
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.integerArrayResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -25,9 +24,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.rememberAsyncImagePainter
+import androidx.core.content.ContextCompat.startActivity
+import com.google.accompanist.placeholder.PlaceholderDefaults
+import com.google.accompanist.placeholder.PlaceholderHighlight
+import com.google.accompanist.placeholder.material.color
+import com.google.accompanist.placeholder.material.fade
+import com.google.accompanist.placeholder.material.placeholder
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.items.Item
+import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
 import java.net.URI
 
@@ -42,79 +47,286 @@ fun getDomainName(url: String): String {
     }
 }
 
+// enum with subtypes
+enum class ItemSubtype(val value: String) {
+    ASK_HN("Ask HN"), SHOW_HN("Show HN"), TELL_HN("Tell HN")
+}
+
+fun Item.subtype(): ItemSubtype? {
+    if (title != null) {
+        if (title!!.startsWith("Ask HN")) {
+            return ItemSubtype.ASK_HN
+        } else if (title!!.startsWith("Show HN")) {
+            return ItemSubtype.SHOW_HN
+        } else if (title!!.startsWith("Tell HN")) {
+            return ItemSubtype.TELL_HN
+        }
+    }
+
+    return null
+}
+
+val placeholderItem = Item(
+    0,
+    ItemType.STORY,
+    title = "_".repeat(30),
+    url = "https://news.ycombinator.com/",
+    by = "_".repeat(10),
+    time = null
+)
+
 @Composable
-@ExperimentalMaterial3Api
-fun NewsItem(item: Item, onClick: (() -> Unit)? = null) {
+fun ColorHint(item: Item) {
+    val palette: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
+
+    val backgroundColor = item.subtype()?.let {
+        palette[it.ordinal]
+    } ?: MaterialTheme.colorScheme.secondary
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .width(8.dp)
+            .fillMaxHeight()
+            .background(backgroundColor)
+    )
+}
+
+@Composable
+fun ItemDomain(item: Item, placeholder: Boolean = false) {
+    item.url?.let { url ->
+        val domain = getDomainName(url)
+
+        ClickableText(
+            text = AnnotatedString(domain),
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontStyle = FontStyle.Italic,
+                textDecoration = TextDecoration.Underline,
+            ),
+            maxLines = 1,
+            modifier = Modifier
+                .padding(bottom = 4.dp)
+                .placeholder(
+                    visible = placeholder,
+                    color = PlaceholderDefaults.color(contentAlpha = 0.5f),
+                    highlight = PlaceholderHighlight.fade(),
+                ),
+            onClick = { /*TODO*/ },
+        )
+    }
+}
+
+@Composable
+fun ItemTitle(item: Item, placeholder: Boolean = false) {
+    item.title?.let { title ->
+        Text(
+            title.trim(),
+            style = MaterialTheme.typography.bodyLarge.copy(
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold,
+                lineHeight = 19.5.sp
+            ),
+            modifier = Modifier.placeholder(
+                visible = placeholder,
+                color = PlaceholderDefaults.color(contentAlpha = 0.5f),
+                highlight = PlaceholderHighlight.fade(),
+            ),
+        )
+    }
+}
+
+fun shareStringContent(context: Context, content: String) {
+    val sendIntent: Intent = Intent().apply {
+        action = Intent.ACTION_SEND
+        putExtra(Intent.EXTRA_TEXT, content)
+        type = "text/plain"
+    }
+
+    val shareIntent = Intent.createChooser(sendIntent, null)
+    startActivity(context, shareIntent, null)
+}
+
+@Composable
+fun OptionsButton(item: Item, placeholder: Boolean = false) {
     val context = LocalContext.current
-    val roundedShape = RoundedCornerShape(16.dp)
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .wrapContentSize(Alignment.TopStart)
+            .offset(x = 10.dp, y = (-10).dp)
+    ) {
+        IconButton(
+            onClick = { expanded = !expanded },
+        ) {
+            Icon(
+                Icons.Filled.MoreVert,
+                contentDescription = "Options",
+                tint = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.placeholder(
+                    visible = placeholder,
+                    color = PlaceholderDefaults.color(contentAlpha = 0.5f),
+                    highlight = PlaceholderHighlight.fade(),
+                )
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            item.url?.let { url ->
+                DropdownMenuItem(
+                    text = { Text("Share Article") },
+                    leadingIcon = {
+                        Icon(Icons.Filled.Share, contentDescription = "Share Article")
+                    },
+                    onClick = {
+                        shareStringContent(context, url)
+                        expanded = false
+                    },
+                )
+            }
+            DropdownMenuItem(
+                text = { Text("Share HN link") },
+                leadingIcon = {
+                    Icon(Icons.Filled.Share, contentDescription = "Share HN link")
+                },
+                onClick = {
+                    shareStringContent(context, "https://news.ycombinator.com/item?id=${item.id}")
+                    expanded = false
+                },
+            )
+        }
+    }
+}
+
+@Composable
+fun ItemBy(item: Item, placeholder: Boolean = false) {
+    val context = LocalContext.current
 
     val userString = remember(item) {
-        val userId = item.by
-        if (userId != null) context.getString(R.string.author, userId)
-        else context.getString(R.string.author_unknown)
+        when (item.by) {
+            null -> context.getString(R.string.author_unknown)
+            else -> context.getString(R.string.author, item.by)
+        }
     }
 
-    val timeString = remember(item) {
-        TimeDisplayUtils(context).toDateTimeAgoInterval(item.time)
+    ClickableText(
+        text = AnnotatedString(userString),
+        style = MaterialTheme.typography.bodyMedium.copy(
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontStyle = FontStyle.Italic,
+            textDecoration = TextDecoration.Underline,
+        ),
+        modifier = Modifier.placeholder(
+            visible = placeholder,
+            color = PlaceholderDefaults.color(contentAlpha = 0.5f),
+            highlight = PlaceholderHighlight.fade(),
+        ),
+        onClick = { /*TODO*/ }
+    )
+}
+
+@Composable
+fun ItemPoints(item: Item, placeholder: Boolean = false) {
+    val context = LocalContext.current
+
+    val pointsString = remember(item) {
+        context.getString(R.string.points, item.score)
     }
 
-    val url = item.url
-    val points = item.score
-    val comments = item.descendants
+    Text(
+        pointsString,
+        style = MaterialTheme.typography.bodyMedium.copy(
+            fontWeight = FontWeight.Bold,
+        ),
+        textAlign = TextAlign.Center,
+        modifier = Modifier.placeholder(
+            visible = placeholder,
+            color = PlaceholderDefaults.color(contentAlpha = 0.5f),
+            highlight = PlaceholderHighlight.fade(),
+        ),
+    )
+}
 
-    val painter =
-        rememberAsyncImagePainter(
-            item.previewUrl,
-            filterQuality = FilterQuality.High,
-            contentScale = ContentScale.Crop,
-        )
+@Composable
+fun ItemTime(item: Item, placeholder: Boolean = false) {
+    val context = LocalContext.current
 
+    val timeString = remember(item) { TimeDisplayUtils(context).toDateTimeAgoInterval(item.time) }
+
+    Text(
+        timeString,
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.placeholder(
+            visible = placeholder,
+            color = PlaceholderDefaults.color(contentAlpha = 0.5f),
+            highlight = PlaceholderHighlight.fade(),
+        ),
+    )
+}
+
+@Composable
+fun ItemComments(item: Item, placeholder: Boolean = false) {
+    item.descendants?.let { comments ->
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.offset(x = 10.dp, y = 10.dp),
+        ) {
+            Text(
+                "$comments",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = MaterialTheme.colorScheme.secondary,
+                ),
+                modifier = Modifier
+                    .offset(x = 4.dp)
+                    .placeholder(
+                        visible = placeholder,
+                        color = PlaceholderDefaults.color(contentAlpha = 0.5f),
+                        highlight = PlaceholderHighlight.fade(),
+                    ),
+            )
+            IconButton(onClick = { /*TODO*/ }) {
+                Icon(
+                    Icons.Filled.Email,
+                    contentDescription = "Options",
+                    tint = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.placeholder(
+                        visible = placeholder,
+                        color = PlaceholderDefaults.color(contentAlpha = 0.5f),
+                        highlight = PlaceholderHighlight.fade(),
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+@ExperimentalMaterial3Api
+fun NewsItem(item: Item = placeholderItem, placeholder: Boolean, onClick: (() -> Unit) = {}) {
+    val roundedShape = RoundedCornerShape(16.dp)
 
     Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = roundedShape,
         modifier = Modifier
             .background(MaterialTheme.colorScheme.background)
             .fillMaxWidth()
-            .clickable { onClick?.let { it() } }
+            .clickable(onClick = onClick)
             .padding(2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = roundedShape,
-
-        ) {
+    ) {
         Row(
             Modifier
                 .padding(10.dp)
+                .height(IntrinsicSize.Max)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Box(
-                    Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .fillMaxWidth(0.1f)
-                        .height(96.dp)
-                        .background(MaterialTheme.colorScheme.secondary)
-                ) {
-                    Image(
-                        painter = painter,
-                        modifier = Modifier.fillMaxSize(),
-                        contentDescription = "My content description",
-                        contentScale = ContentScale.Crop
-                    )
-                }
-                Text(
-                    "${points.toString()} pt",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                    ),
-                    textAlign = TextAlign.Center,
-                )
-            }
+            ColorHint(item = item)
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(IntrinsicSize.Min)
                     .padding(start = 8.dp),
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
@@ -122,41 +334,12 @@ fun NewsItem(item: Item, onClick: (() -> Unit)? = null) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth(0.85f)
-                            .fillMaxHeight(),
-                    ) {
-                        url?.let {
-                            ClickableText(
-                                text = AnnotatedString(getDomainName(url)),
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontStyle = FontStyle.Italic,
-                                    textDecoration = TextDecoration.Underline,
-                                ),
-                                maxLines = 1,
-                                onClick = {/*TODO*/ }
-                            )
-                        }
-                        Text(
-                            item.title?.trim() ?: R.string.title_unknown.toString(),
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.SemiBold,
-                                lineHeight = 19.5.sp
-                            ),
-                        )
+                    Column(modifier = Modifier.fillMaxWidth(0.85f)) {
+                        ItemDomain(item, placeholder = placeholder)
+
+                        ItemTitle(item, placeholder = placeholder)
                     }
-                    IconButton(
-                        modifier = Modifier.offset(x = 10.dp, y = (-10).dp),
-                        onClick = { /*TODO*/ }) {
-                        Icon(
-                            Icons.Filled.MoreVert,
-                            contentDescription = "Options",
-                            tint = MaterialTheme.colorScheme.secondary,
-                        )
-                    }
+                    OptionsButton(item, placeholder = placeholder)
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -164,279 +347,21 @@ fun NewsItem(item: Item, onClick: (() -> Unit)? = null) {
                     verticalAlignment = Alignment.Bottom
                 ) {
                     Row {
-                        ClickableText(
-                            text = AnnotatedString(userString),
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontStyle = FontStyle.Italic,
-                                textDecoration = TextDecoration.Underline,
-                            ),
-                            onClick = { /*TODO*/ }
-                        )
+                        ItemPoints(item, placeholder = placeholder)
+
                         Text(
-                            " - $timeString",
-                            style = MaterialTheme.typography.bodyMedium
+                            text = " - ",
+
                         )
+
+                        ItemBy(item, placeholder = placeholder)
+
+                        Text(text = " - ", modifier = Modifier.padding(start = 4.dp))
+
+                        ItemTime(item, placeholder = placeholder)
                     }
-                    comments?.let {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.offset(x = 10.dp, y = 10.dp),
-                        ) {
-                            Text(
-                                "$comments",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.secondary,
-                                ),
-                                modifier = Modifier.offset(x = 4.dp),
-                            )
-                            IconButton(
-                                onClick = { /*TODO*/ }) {
-                                Icon(
-                                    Icons.Filled.Email,
-                                    contentDescription = "Options",
-                                    tint = MaterialTheme.colorScheme.secondary,
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-fun LoadingItem() {
-    val context = LocalContext.current
-    val roundedShape = RoundedCornerShape(16.dp)
-
-    val userString = "Loading..."
-
-    val timeString = "Bho"
-
-    val url = "www.loading.com"
-    val points = 0
-    val comments = 0
-
-    Card(
-        modifier = Modifier
-            .background(color = Color.Green)
-            .wrapContentHeight()
-            .fillMaxWidth()
-            .padding(2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = roundedShape,
-
-        ) {
-        Row(
-            Modifier
-                .padding(10.dp)
-                .height(IntrinsicSize.Min)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row {
-                Column(
-                    modifier = Modifier
-                        .fillMaxHeight(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Box(
-                        Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .fillMaxHeight()
-                            .background(Color.Red)
-                    )
-                    Text(
-                        "$points pt",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                        ),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-                }
-                Column(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.875f)
-                        .padding(start = 8.dp),
-                    verticalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Column {
-                        Text(
-                            "lading item",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                lineHeight = 19.5.sp
-                            ),
-                        )
-                        Text(
-                            getDomainName(url),
-                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
-                            // ellipsis ?
-                        )
-                    }
-                    Text(
-                        "$userString - $timeString",
-                        style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
-                        modifier = Modifier.padding(bottom = 0.dp)
-                    )
-                }
-            }
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.Bottom,
-                horizontalAlignment = Alignment.End
-            ) {
-                IconButton(onClick = { /*TODO*/ }) {
-                    Icon(
-                        Icons.Filled.MoreVert,
-                        contentDescription = "More",
-                        tint = MaterialTheme.colorScheme.secondary,
-                    )
-                }
-                Row(verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End) {
-                    Text(
-                        "$comments",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = MaterialTheme.colorScheme.secondary
-                        ),
-                        modifier = Modifier.padding(bottom = 2.dp)
-                    )
-                    IconButton(onClick = { /*TODO*/ }) {
-                        Icon(
-                            Icons.Filled.Email,
-                            contentDescription = "Comments",
-                            tint = MaterialTheme.colorScheme.secondary,
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-fun ErrorItem() {
-    val context = LocalContext.current
-    val roundedShape = RoundedCornerShape(16.dp)
-
-    val userString = "Error..."
-
-    val timeString = "Bho"
-
-    val url = "www.loading.com"
-    val points = 0
-    val comments = 0
-
-    Card(
-        modifier = Modifier
-            .background(color = Color.Yellow)
-            .wrapContentHeight()
-            .fillMaxWidth()
-            .padding(2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = roundedShape,
-
-        ) {
-        Row(
-            Modifier
-                .padding(10.dp)
-                .height(IntrinsicSize.Min)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row {
-                Column(
-                    modifier = Modifier
-                        .fillMaxHeight(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Box(
-                        Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .fillMaxHeight()
-                            .background(Color.Red)
-                    )
-                    Text(
-                        "$points pt",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                        ),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-                }
-                Column(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.875f)
-                        .padding(start = 8.dp),
-                    verticalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Column {
-                        Text(
-                            "lading item",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                lineHeight = 19.5.sp
-                            ),
-                        )
-                        Text(
-                            getDomainName(url),
-                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
-                            // ellipsis ?
-                        )
-                    }
-                    Text(
-                        "$userString - $timeString",
-                        style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
-                        modifier = Modifier.padding(bottom = 0.dp)
-                    )
-                }
-            }
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.Bottom,
-                horizontalAlignment = Alignment.End
-            ) {
-                IconButton(onClick = { /*TODO*/ }) {
-                    Icon(
-                        Icons.Filled.MoreVert,
-                        contentDescription = "More",
-                        tint = MaterialTheme.colorScheme.secondary,
-                    )
-                }
-                Row(verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End) {
-                    Text(
-                        "$comments",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = MaterialTheme.colorScheme.secondary
-                        ),
-                        modifier = Modifier.padding(bottom = 2.dp)
-                    )
-                    IconButton(onClick = { /*TODO*/ }) {
-                        Icon(
-                            Icons.Filled.Email,
-                            contentDescription = "Comments",
-                            tint = MaterialTheme.colorScheme.secondary,
-                        )
-                    }
+                    ItemComments(item, placeholder = placeholder)
                 }
             }
         }
@@ -476,9 +401,7 @@ fun NewsItemTall(item: Item) {
         border = CardDefaults.outlinedCardBorder(),
         shape = roundedShape
     ) {
-        Row(
-            modifier = Modifier.padding(start = 8.dp)
-        ) {
+        Row(modifier = Modifier.padding(start = 8.dp)) {
             Column {
                 url?.let {
                     Text(
@@ -497,52 +420,42 @@ fun NewsItemTall(item: Item) {
                         ) {
                             Text(
                                 "Ask HN",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                ),
+                                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onPrimary),
                                 modifier = Modifier.padding(horizontal = 2.dp, vertical = 6.dp)
                             )
                         }
                     }
                 }
-                Box(Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(if (isAskHN) 90.dp else 110.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.secondary)
+                Box(
+                    Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(if (isAskHN) 90.dp else 110.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.secondary)
                 )
             }
             Column(Modifier.padding(start = 2.dp)) {
-                IconButton(
-                    onClick = { /*TODO*/ }) {
+                IconButton(onClick = { /*TODO*/ }) {
                     Icon(
                         Icons.Filled.Star,
                         contentDescription = "More",
                     )
                 }
-                IconButton(
-                    onClick = { /*TODO*/ },
-                    Modifier.offset(y = -(4).dp)
-                ) {
-                    Icon(
-                        Icons.Filled.Share,
-                        contentDescription = "More",
-                    )
-                }
-                IconButton(
-                    onClick = { /*TODO*/ },
-                    Modifier.offset(y = -(8).dp)
-                ) {
-                    Icon(
-                        Icons.Filled.MoreVert,
-                        contentDescription = "More",
-                    )
-                }
+                IconButton(onClick = { /*TODO*/ }, Modifier.offset(y = -(4).dp)) {
+                Icon(
+                    Icons.Filled.Share,
+                    contentDescription = "More",
+                )
+            }
+                IconButton(onClick = { /*TODO*/ }, Modifier.offset(y = -(8).dp)) {
+                Icon(
+                    Icons.Filled.MoreVert,
+                    contentDescription = "More",
+                )
+            }
             }
         }
-        Column(
-            Modifier.padding(start = 10.dp)
-        ) {
+        Column(Modifier.padding(start = 10.dp)) {
             Text(
                 title ?: "title_fail",
                 style = MaterialTheme.typography.bodyLarge.copy(
@@ -566,7 +479,7 @@ fun NewsItemTall(item: Item) {
                         modifier = Modifier.padding(bottom = 2.dp)
                     )
                     Text(
-                        "${points.toString()} pt - 5 minutes read",
+                        "$points pt - 5 minutes read",
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
@@ -575,15 +488,14 @@ fun NewsItemTall(item: Item) {
                     modifier = Modifier.fillMaxHeight(),
                     verticalArrangement = Arrangement.Bottom
                 ) {
-                    IconButton(
-                        onClick = { /*TODO*/ }) {
-                        Row(verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(end = 8.dp)) {
+                    IconButton(onClick = { /*TODO*/ }) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
                             Text(
                                 "$comments",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = MaterialTheme.colorScheme.secondary
-                                ),
+                                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.secondary),
                                 modifier = Modifier.padding(bottom = 2.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))

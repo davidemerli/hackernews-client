@@ -10,7 +10,6 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import timber.log.Timber
 
-
 class HNReaderApplication : Application() {
 
     override fun onCreate() {
@@ -19,7 +18,11 @@ class HNReaderApplication : Application() {
             // declare used Android context
             androidContext(this@HNReaderApplication)
             // declare modules
-            modules(interactionModule, networkingModule, repositoryModule)
+            modules(
+                interactionModule,
+                networkingModule,
+                repositoryModule,
+            )
         }
 
         if (BuildConfig.DEBUG) {
@@ -28,7 +31,6 @@ class HNReaderApplication : Application() {
             Timber.plant(Timber.DebugTree())
         }
     }
-
 
     inner class DevelopmentTree : Timber.Tree() {
         override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
@@ -42,7 +44,5 @@ class HNReaderApplication : Application() {
                 Log.println(priority, tag, t.stackTraceToString())
             }
         }
-
     }
-
 }
