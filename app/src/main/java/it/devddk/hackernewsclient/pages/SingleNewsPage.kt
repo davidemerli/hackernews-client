@@ -129,10 +129,9 @@ fun SingleNewsPage(navController: NavController, id: Int?) {
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 fun TabbedView(item: Item, navController: NavController) {
-    // TODO: remove article when item.url is null and remove horizontal paging
-    val tabs = listOf("Article", "Comments")
+    val tabs = item.url?.let { listOf("Article", "Comments") } ?: listOf("Comments")
     val coroutineScope = rememberCoroutineScope()
     val pagerState = rememberPagerState()
 
@@ -143,43 +142,53 @@ fun TabbedView(item: Item, navController: NavController) {
         Column(
             modifier = Modifier.padding(top = it.calculateTopPadding())
         ) {
-            TabRow(
-                selectedTabIndex = pagerState.currentPage,
-                indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
-                        Modifier.pagerTabIndicatorOffset(
-                            pagerState,
-                            tabPositions,
-                        ),
-                        color = MaterialTheme.colorScheme.secondary,
-                    )
-                }
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = pagerState.currentPage == index,
-                        onClick = {
-                            coroutineScope.launch {
-                                pagerState.animateScrollToPage(index)
+            item.url?.let {
+                TabRow(
+                    selectedTabIndex = pagerState.currentPage,
+                    indicator = { tabPositions ->
+                        TabRowDefaults.Indicator(
+                            Modifier.pagerTabIndicatorOffset(
+                                pagerState,
+                                tabPositions,
+                            ),
+                            color = MaterialTheme.colorScheme.secondary,
+                        )
+                    }
+                ) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = pagerState.currentPage == index,
+                            onClick = {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            },
+                            text = {
+                                Text(text = title,
+                                    color = MaterialTheme.colorScheme.secondary)
                             }
-                        },
-                        text = { Text(text = title, color = MaterialTheme.colorScheme.secondary) }
-                    )
+                        )
+                    }
                 }
             }
-            HorizontalPager(
-                count = 2,
-                state = pagerState,
-                modifier = Modifier.fillMaxHeight()
-            ) { index ->
-                when (index) {
-                    0 -> {
-                        ArticleView(item)
-                    }
-                    1 -> {
-                        CommentsView(item)
+
+            if (item.url != null) {
+                HorizontalPager(
+                    count = item.url?.let { 2 } ?: 1,
+                    state = pagerState,
+                    modifier = Modifier.fillMaxHeight()
+                ) { index ->
+                    when (index) {
+                        0 -> {
+                            ArticleView(item)
+                        }
+                        1 -> {
+                            CommentsView(item)
+                        }
                     }
                 }
+            } else {
+                CommentsView(item)
             }
         }
     }
