@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -51,6 +50,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.content.ContextCompat.startActivity
 import com.google.accompanist.placeholder.PlaceholderDefaults
 import com.google.accompanist.placeholder.PlaceholderHighlight
@@ -103,7 +103,7 @@ val placeholderItem = Item(
 )
 
 @Composable
-fun ColorHint(item: Item) {
+fun ColorHint(modifier: Modifier = Modifier, item: Item) {
     val palette: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
 
     val backgroundColor = item.subtype()?.let {
@@ -111,7 +111,7 @@ fun ColorHint(item: Item) {
     } ?: MaterialTheme.colorScheme.primary
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(8.dp))
             .width(8.dp)
             .fillMaxHeight()
@@ -120,7 +120,7 @@ fun ColorHint(item: Item) {
 }
 
 @Composable
-fun ItemDomain(item: Item, placeholder: Boolean = false) {
+fun ItemDomain(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = false) {
     item.url?.let { url ->
         val domain = getDomainName(url)
 
@@ -131,11 +131,12 @@ fun ItemDomain(item: Item, placeholder: Boolean = false) {
                 textDecoration = TextDecoration.Underline,
             ),
             maxLines = 1,
-            modifier = Modifier
+            modifier = modifier
                 .padding(bottom = 4.dp)
                 .placeholder(
                     visible = placeholder,
-                    color = PlaceholderDefaults.color(contentAlpha = 0.5f),
+                    color = PlaceholderDefaults.color(contentAlpha = 0.8f),
+                    shape = RoundedCornerShape(8.dp),
                     highlight = PlaceholderHighlight.fade(),
                 ),
             onClick = { /*TODO*/ },
@@ -144,7 +145,7 @@ fun ItemDomain(item: Item, placeholder: Boolean = false) {
 }
 
 @Composable
-fun ItemTitle(item: Item, placeholder: Boolean = false) {
+fun ItemTitle(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = false) {
     item.title?.let { title ->
         Text(
             title.trim(),
@@ -153,9 +154,10 @@ fun ItemTitle(item: Item, placeholder: Boolean = false) {
                 fontWeight = FontWeight.SemiBold,
                 lineHeight = 19.5.sp
             ),
-            modifier = Modifier.placeholder(
+            modifier = modifier.placeholder(
                 visible = placeholder,
-                color = PlaceholderDefaults.color(contentAlpha = 0.5f),
+                color = PlaceholderDefaults.color(contentAlpha = 0.8f),
+                shape = RoundedCornerShape(8.dp),
                 highlight = PlaceholderHighlight.fade(),
             ),
         )
@@ -174,12 +176,12 @@ fun shareStringContent(context: Context, content: String) {
 }
 
 @Composable
-fun OptionsButton(item: Item, placeholder: Boolean = false) {
+fun OptionsButton(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = false) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .wrapContentSize(Alignment.TopStart)
             .offset(x = 10.dp, y = (-10).dp)
     ) {
@@ -192,7 +194,8 @@ fun OptionsButton(item: Item, placeholder: Boolean = false) {
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.placeholder(
                     visible = placeholder,
-                    color = PlaceholderDefaults.color(contentAlpha = 0.5f),
+                    color = PlaceholderDefaults.color(contentAlpha = 0.8f),
+                    shape = RoundedCornerShape(8.dp),
                     highlight = PlaceholderHighlight.fade(),
                 )
             )
@@ -225,7 +228,7 @@ fun OptionsButton(item: Item, placeholder: Boolean = false) {
 }
 
 @Composable
-fun ItemBy(item: Item, placeholder: Boolean = false) {
+fun ItemBy(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = false) {
     val context = LocalContext.current
 
     val userString = remember(item) {
@@ -241,9 +244,10 @@ fun ItemBy(item: Item, placeholder: Boolean = false) {
             color = MaterialTheme.colorScheme.tertiary,
             textDecoration = TextDecoration.Underline,
         ),
-        modifier = Modifier.placeholder(
+        modifier = modifier.placeholder(
             visible = placeholder,
-            color = PlaceholderDefaults.color(contentAlpha = 0.5f),
+            color = PlaceholderDefaults.color(contentAlpha = 0.8f),
+            shape = RoundedCornerShape(8.dp),
             highlight = PlaceholderHighlight.fade(),
         ),
         onClick = { /*TODO*/ }
@@ -251,7 +255,7 @@ fun ItemBy(item: Item, placeholder: Boolean = false) {
 }
 
 @Composable
-fun ItemPoints(item: Item, placeholder: Boolean = false) {
+fun ItemPoints(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = false) {
     val context = LocalContext.current
 
     val pointsString = remember(item) {
@@ -264,16 +268,17 @@ fun ItemPoints(item: Item, placeholder: Boolean = false) {
             fontWeight = FontWeight.Bold,
         ),
         textAlign = TextAlign.Center,
-        modifier = Modifier.placeholder(
+        modifier = modifier.placeholder(
             visible = placeholder,
-            color = PlaceholderDefaults.color(contentAlpha = 0.5f),
+            color = PlaceholderDefaults.color(contentAlpha = 0.8f),
+            shape = RoundedCornerShape(8.dp),
             highlight = PlaceholderHighlight.fade(),
         ),
     )
 }
 
 @Composable
-fun ItemTime(item: Item, placeholder: Boolean = false) {
+fun ItemTime(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = false) {
     val context = LocalContext.current
 
     val timeString = remember(item) { TimeDisplayUtils(context).toDateTimeAgoInterval(item.time) }
@@ -281,20 +286,21 @@ fun ItemTime(item: Item, placeholder: Boolean = false) {
     Text(
         timeString,
         style = MaterialTheme.typography.bodyMedium,
-        modifier = Modifier.placeholder(
+        modifier = modifier.placeholder(
             visible = placeholder,
-            color = PlaceholderDefaults.color(contentAlpha = 0.5f),
+            color = PlaceholderDefaults.color(contentAlpha = 0.8f),
+            shape = RoundedCornerShape(8.dp),
             highlight = PlaceholderHighlight.fade(),
         ),
     )
 }
 
 @Composable
-fun ItemComments(item: Item, placeholder: Boolean = false) {
+fun ItemComments(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = false) {
     item.descendants?.let { comments ->
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.offset(x = 10.dp, y = 10.dp),
+            modifier = modifier.offset(x = 10.dp, y = 10.dp),
         ) {
             Text(
                 "$comments",
@@ -305,7 +311,8 @@ fun ItemComments(item: Item, placeholder: Boolean = false) {
                     .offset(x = 4.dp)
                     .placeholder(
                         visible = placeholder,
-                        color = PlaceholderDefaults.color(contentAlpha = 0.5f),
+                        color = PlaceholderDefaults.color(contentAlpha = 0.8f),
+                        shape = RoundedCornerShape(8.dp),
                         highlight = PlaceholderHighlight.fade(),
                     ),
             )
@@ -316,7 +323,8 @@ fun ItemComments(item: Item, placeholder: Boolean = false) {
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.placeholder(
                         visible = placeholder,
-                        color = PlaceholderDefaults.color(contentAlpha = 0.5f),
+                        color = PlaceholderDefaults.color(contentAlpha = 0.8f),
+                        shape = RoundedCornerShape(8.dp),
                         highlight = PlaceholderHighlight.fade(),
                     )
                 )
@@ -326,75 +334,89 @@ fun ItemComments(item: Item, placeholder: Boolean = false) {
 }
 
 @Composable
-@ExperimentalMaterial3Api
-fun NewsItem(item: Item = placeholderItem, placeholder: Boolean, onClick: (() -> Unit) = {}) {
-    val roundedShape = RoundedCornerShape(16.dp)
+fun NewsItem(
+    item: Item = placeholderItem,
+    placeholder: Boolean = false,
+    onClick: () -> Unit = {},
+) {
 
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = roundedShape,
+    ConstraintLayout(
         modifier = Modifier
-            .background(MaterialTheme.colorScheme.background)
+            .height(128.dp)
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(2.dp),
+            .padding(horizontal = 6.dp, vertical = 8.dp)
     ) {
-        Row(
-            Modifier
-                .padding(10.dp)
-                .height(IntrinsicSize.Max)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            ColorHint(item = item)
+        val (colorHint, domain, title, bottomInfo, comments, more) = createRefs()
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Min)
-                    .padding(start = 8.dp),
-                verticalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(modifier = Modifier.fillMaxWidth(0.85f)) {
-                        ItemDomain(item, placeholder = placeholder)
-
-                        ItemTitle(item, placeholder = placeholder)
-                    }
-                    OptionsButton(item, placeholder = placeholder)
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    Row {
-                        ItemPoints(item, placeholder = placeholder)
-
-                        Text(
-                            text = " - ",
-
-                        )
-
-                        ItemBy(item, placeholder = placeholder)
-
-                        Text(text = " - ", modifier = Modifier.padding(start = 4.dp))
-
-                        ItemTime(item, placeholder = placeholder)
-                    }
-
-                    ItemComments(item, placeholder = placeholder)
-                }
+        ColorHint(
+            item = item,
+            modifier = Modifier.constrainAs(colorHint) {
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+                start.linkTo(parent.start)
             }
+        )
+
+        ItemDomain(
+            item = item, placeholder = placeholder,
+            modifier = Modifier.constrainAs(domain) {
+                top.linkTo(parent.top)
+                start.linkTo(colorHint.end, margin = 6.dp)
+            }
+        )
+
+        ItemTitle(
+            item = item, placeholder = placeholder,
+            modifier = Modifier
+                .padding(end = 56.dp) // to avoid overlapping with the dropdown menu
+                .constrainAs(title) {
+                    top.linkTo(domain.bottom)
+                    start.linkTo(colorHint.end, margin = 6.dp)
+                }
+        )
+
+        Row(
+            modifier = Modifier.constrainAs(bottomInfo) {
+                bottom.linkTo(parent.bottom)
+                start.linkTo(colorHint.end, margin = 6.dp)
+            }
+        ) {
+            ItemPoints(item = item, placeholder = placeholder)
+
+            Text(text = " - ")
+
+            ItemBy(item = item, placeholder = placeholder)
+
+            Text(text = " - ", modifier = Modifier.padding(start = 4.dp))
+
+            ItemTime(item = item, placeholder = placeholder)
+        }
+
+        // putting an animated placeholder also on those lags a bit much
+        if (!placeholder) {
+            OptionsButton(
+                item = item,
+                modifier = Modifier.constrainAs(comments) {
+                    top.linkTo(parent.top)
+                    end.linkTo(parent.end)
+                }
+            )
+
+            ItemComments(
+                item = item,
+                modifier = Modifier.constrainAs(more) {
+                    bottom.linkTo(parent.bottom)
+                    end.linkTo(parent.end)
+                }
+            )
         }
     }
 }
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
+@Deprecated("Needs to be completely rewritten")
 fun NewsItemTall(item: Item) {
     val context = LocalContext.current
     val roundedShape = RoundedCornerShape(16.dp)
@@ -467,17 +489,17 @@ fun NewsItemTall(item: Item) {
                     )
                 }
                 IconButton(onClick = { /*TODO*/ }, Modifier.offset(y = -(4).dp)) {
-                Icon(
-                    Icons.Filled.Share,
-                    contentDescription = "More",
-                )
-            }
+                    Icon(
+                        Icons.Filled.Share,
+                        contentDescription = "More",
+                    )
+                }
                 IconButton(onClick = { /*TODO*/ }, Modifier.offset(y = -(8).dp)) {
-                Icon(
-                    Icons.Filled.MoreVert,
-                    contentDescription = "More",
-                )
-            }
+                    Icon(
+                        Icons.Filled.MoreVert,
+                        contentDescription = "More",
+                    )
+                }
             }
         }
         Column(Modifier.padding(start = 10.dp)) {

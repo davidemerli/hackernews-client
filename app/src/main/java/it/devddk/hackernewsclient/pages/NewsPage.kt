@@ -36,7 +36,7 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
 
     val pageState = viewModel.pageState.collectAsState(NewsPageState.Loading)
 
-    val query = viewModel.query.collectAsState(initial = TopStories)
+    val query = viewModel.uiState.collectAsState(initial = TopStories)
 
     LaunchedEffect(route) {
         when (route) {
@@ -86,7 +86,6 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
         state = lazyListState
     ) {
         itemsIndexed(itemListState.value) { index, itemState ->
-
             when (itemState) {
                 is NewsItemState.ItemLoaded -> {
                     NewsItem(
