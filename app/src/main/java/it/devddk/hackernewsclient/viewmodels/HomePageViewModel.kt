@@ -41,8 +41,17 @@ class HomePageViewModel : ViewModel(), KoinComponent {
 
     val pageState: StateFlow<NewsPageState> = _uiState.transform { query ->
         emit(NewsPageState.Loading)
+
         getNewStories(query).fold(
             onSuccess = {
+                synchronized(itemList) {
+                    itemList.clear()
+
+                    it.indices.forEach { _ ->
+                        itemList.add(NewsItemState.Loading)
+                    }
+                }
+
                 emit(NewsPageState.NewsIdsLoaded(it))
             },
             onFailure = {
@@ -59,15 +68,8 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         val oldQuery = _uiState.value
 
         if (oldQuery != newQuery) {
-            synchronized(itemList) {
-                itemList.clear()
-
-                for (i in 0 until newQuery.maxAmount) {
-                    itemList.add(NewsItemState.Loading)
-                }
-            }
-
             _uiState.emit(newQuery)
+
             updateItemList()
         }
     }
