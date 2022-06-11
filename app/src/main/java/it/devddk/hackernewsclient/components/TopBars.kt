@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
@@ -112,9 +111,7 @@ fun SingleNewsPageTopBar(item: Item, navController: NavController) {
         },
         actions = {
             Box(
-                modifier = Modifier
-                    .wrapContentSize(Alignment.TopStart)
-                    .offset(x = 10.dp, y = (-10).dp)
+                modifier = Modifier.wrapContentSize(Alignment.TopStart)
             ) {
                 item.url?.let { url ->
                     IconButton(onClick = { openInBrowser(context = context, url = url) }) {
