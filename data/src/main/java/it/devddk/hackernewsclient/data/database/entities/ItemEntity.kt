@@ -9,7 +9,7 @@ import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import java.time.LocalDateTime
 
-@Entity(tableName = "items", primaryKeys = ["source", "id"])
+@Entity(tableName = "items", primaryKeys = ["id"])
 data class ItemEntity(
     val id: Int,
     val deleted: Boolean,

@@ -8,6 +8,8 @@ interface CollectionRepository {
 
     fun removeItemFromCollection(id: ItemId, collection: ItemCollectionTag)
 
-    fun getItemCollections(id: ItemId) : Set<ItemCollectionTag>
+    fun getCollectionsOfItem(id: ItemId) : Set<ItemCollectionTag>
+
+    fun getAllItemsForCollection(collection: ItemCollectionTag) : List<ItemId>
 
 }
