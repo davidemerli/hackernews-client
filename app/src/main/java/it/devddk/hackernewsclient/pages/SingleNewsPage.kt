@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalPagerApi::class)
+
 package it.devddk.hackernewsclient.pages
 
 import android.annotation.SuppressLint
@@ -14,31 +16,28 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AccountCircle
-import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.material3.Tab
+import androidx.compose.material3.TabPosition
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -51,10 +50,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.integerArrayResource
 import androidx.compose.ui.res.pluralStringResource
@@ -66,11 +65,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.PagerState
+import com.google.accompanist.pager.rememberPagerState
 import com.google.accompanist.placeholder.PlaceholderDefaults
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.color
@@ -84,6 +89,7 @@ import it.devddk.hackernewsclient.components.ItemDomain
 import it.devddk.hackernewsclient.components.ItemTime
 import it.devddk.hackernewsclient.components.ItemTitle
 import it.devddk.hackernewsclient.components.LinkifyText
+import it.devddk.hackernewsclient.components.SingleNewsPageTopBar
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.utils.SettingPrefs
@@ -92,6 +98,8 @@ import it.devddk.hackernewsclient.viewmodels.CommentUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
+import kotlin.math.absoluteValue
+import kotlin.math.max
 
 fun String.toSpanned(): String {
     return Html.fromHtml(this, Html.FROM_HTML_MODE_COMPACT).toString()
@@ -123,134 +131,155 @@ fun SingleNewsPage(navController: NavController, id: Int?) {
 @Composable
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 fun TabbedView(item: Item, navController: NavController) {
-    var tabIndex by remember { mutableStateOf(0) }
     // TODO: remove article when item.url is null and remove horizontal paging
     val tabs = listOf("Article", "Comments")
+    val coroutineScope = rememberCoroutineScope()
+    val pagerState = rememberPagerState()
 
-    val topBarScrollState = rememberTopAppBarScrollState()
-
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(topBarScrollState)
-    val scrollState = rememberLazyListState()
-
-    val mViewModel: SingleNewsViewModel = viewModel()
-    val comments = mViewModel.commentList.collectAsState(emptyList())
-
-    val context = LocalContext.current
-    val dataStore = SettingPrefs(context)
-
-    val depthSize = dataStore.depth.collectAsState(initial = SettingPrefs.DEFAULT_DEPTH)
-
-    Scaffold(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection), topBar = {
-        SmallTopAppBar(
-            scrollBehavior = scrollBehavior,
-            modifier = Modifier.wrapContentHeight(Alignment.Bottom),
-            title = { },
-            navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Rounded.ArrowBack, "Back")
-                }
-            },
-            actions = {
-                IconButton(onClick = { }) {
-                    Icon(Icons.Rounded.AccountCircle, "Notifications")
-                }
-            },
-        )
-    }, containerColor = MaterialTheme.colorScheme.background) {
-    LazyColumn(
-        state = scrollState,
-        modifier = Modifier.padding(top = it.calculateTopPadding())
+    Scaffold(
+        topBar = { SingleNewsPageTopBar(item, navController) },
+        containerColor = MaterialTheme.colorScheme.background
     ) {
-        // TODO: replace with horizontal pager
-        stickyHeader {
+        Column(
+            modifier = Modifier.padding(top = it.calculateTopPadding())
+        ) {
             TabRow(
-                selectedTabIndex = tabIndex,
-                containerColor = MaterialTheme.colorScheme.background,
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+                selectedTabIndex = pagerState.currentPage,
+                indicator = { tabPositions ->
+                    TabRowDefaults.Indicator(
+                        Modifier.pagerTabIndicatorOffset(
+                            pagerState,
+                            tabPositions,
+                        ),
+                        color = MaterialTheme.colorScheme.secondary,
+                    )
+                }
             ) {
                 tabs.forEachIndexed { index, title ->
-                    Tab(selected = tabIndex == index, onClick = { tabIndex = index }, text = {
-                        Text(text = title, color = MaterialTheme.colorScheme.secondary)
-                    })
-                }
-            }
-        }
-
-        when (tabIndex) {
-            0 -> {
-                item { ArticleView(item) }
-            }
-            1 -> {
-                item {
-                    Column(modifier = Modifier.padding(8.dp)) {
-                        ItemDomain(item = item)
-                        ItemTitle(item = item)
-                        Row {
-                            ItemBy(item)
-
-                            Text(text = " - ")
-
-                            ItemTime(item)
-                        }
-                    }
-
-                    ArticleDescription(item = item)
-                }
-
-                itemsIndexed(comments.value, key = { _, item -> item.itemId }) { _, comment ->
-                    Box(modifier = Modifier.animateItemPlacement()) {
-                        if (comment !is CommentUiState.CommentLoaded) {
-                            LaunchedEffect(comment.itemId) {
-                                mViewModel.getItem(comment.itemId)
+                    Tab(
+                        selected = pagerState.currentPage == index,
+                        onClick = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(index)
                             }
-                        }
-
-                        ExpandableComment(
-                            comment = comment,
-                            rootItem = item,
-                            depthSize = depthSize.value.toInt()
-                        )
-                    }
-                }
-
-                item {
-                    Text(
-                        "< end of comments >",
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.secondary,
-                        ),
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth()
+                        },
+                        text = { Text(text = title, color = MaterialTheme.colorScheme.secondary) }
                     )
+                }
+            }
+            HorizontalPager(
+                count = 2,
+                state = pagerState,
+                modifier = Modifier.fillMaxHeight()
+            ) { index ->
+                when (index) {
+                    0 -> {
+                        ArticleView(item)
+                    }
+                    1 -> {
+                        CommentsView(item)
+                    }
                 }
             }
         }
     }
 }
+
+@Composable
+@OptIn(ExperimentalFoundationApi::class, ExperimentalFoundationApi::class)
+fun CommentsView(item: Item) {
+    val context = LocalContext.current
+    val dataStore = SettingPrefs(context)
+    val depthSize = dataStore.depth.collectAsState(initial = SettingPrefs.DEFAULT_DEPTH)
+
+    val mViewModel: SingleNewsViewModel = viewModel()
+    val comments = mViewModel.commentList.collectAsState(emptyList())
+
+    val scrollState = rememberLazyListState()
+
+    LazyColumn(
+        state = scrollState,
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        item {
+            Column(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxHeight()
+            ) {
+                ItemDomain(item = item)
+                ItemTitle(item = item)
+                Row {
+                    ItemBy(item)
+
+                    Text(text = " - ")
+
+                    ItemTime(item)
+                }
+                ArticleDescription(item = item)
+            }
+        }
+
+        itemsIndexed(
+            comments.value,
+            key = { _, item -> item.itemId }
+        ) { _, comment ->
+            Box(modifier = Modifier.animateItemPlacement()) {
+                if (comment !is CommentUiState.CommentLoaded) {
+                    LaunchedEffect(comment.itemId) {
+                        mViewModel.getItem(comment.itemId)
+                    }
+                }
+
+                ExpandableComment(
+                    comment = comment,
+                    rootItem = item,
+                    depthSize = depthSize.value.toInt()
+                )
+            }
+        }
+
+        item {
+            Text(
+                "< end of comments >",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.secondary,
+                ),
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth()
+            )
+        }
+    }
 }
 
 @Composable
 @SuppressLint("SetJavaScriptEnabled")
 fun ArticleView(item: Item) {
-    item.url?.let { url ->
-        val viewState = rememberWebViewState(url = url)
+    val scrollState = rememberLazyListState()
+    val viewState = rememberWebViewState(url = item.url ?: "")
 
-        if (viewState.isLoading) {
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.secondary
+    if (viewState.isLoading) {
+        LinearProgressIndicator(
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.secondary
+        )
+    }
+
+    // Using a lazycol avoids scrolling problems when in horizontal pager
+    LazyColumn(
+        state = scrollState
+    ) {
+        item {
+            WebView(
+                state = viewState,
+                onCreated = {
+                    it.settings.javaScriptEnabled = true
+                    it.settings.domStorageEnabled = true
+                }
             )
         }
-
-        // Using a lazycol avoids scrolling problems when in horizontal pager
-
-        WebView(state = viewState, onCreated = {
-            it.loadUrl(item.url ?: "")
-            it.settings.javaScriptEnabled = true
-            it.settings.domStorageEnabled = true
-        })
     }
 }
 
@@ -494,3 +523,42 @@ fun Loading() {
 fun isFromYCombinator(url: String): Boolean {
     return url.matches("https://news\\.ycombinator\\.com/item\\?id=\\d{8}".toRegex())
 }
+
+@ExperimentalPagerApi
+fun Modifier.pagerTabIndicatorOffset(
+    pagerState: PagerState,
+    tabPositions: List<TabPosition>,
+): Modifier = composed {
+    // If there are no pages, nothing to show
+    if (pagerState.pageCount == 0) return@composed this
+
+    val targetIndicatorOffset: Dp
+    val indicatorWidth: Dp
+
+    val currentTab = tabPositions[minOf(tabPositions.lastIndex, pagerState.currentPage)]
+    val targetPage = pagerState.targetPage
+    val targetTab = tabPositions.getOrNull(targetPage)
+
+    if (targetTab != null) {
+        // The distance between the target and current page. If the pager is animating over many
+        // items this could be > 1
+        val targetDistance = (targetPage - pagerState.currentPage).absoluteValue
+        // Our normalized fraction over the target distance
+        val fraction = (pagerState.currentPageOffset / max(targetDistance, 1)).absoluteValue
+
+        targetIndicatorOffset = lerp(currentTab.left, targetTab.left, fraction)
+        indicatorWidth = lerp(currentTab.width, targetTab.width, fraction).absoluteValue
+    } else {
+        // Otherwise we just use the current tab/page
+        targetIndicatorOffset = currentTab.left
+        indicatorWidth = currentTab.width
+    }
+
+    fillMaxWidth()
+        .wrapContentSize(Alignment.BottomStart)
+        .offset(x = targetIndicatorOffset)
+        .width(indicatorWidth)
+}
+
+private inline val Dp.absoluteValue: Dp
+    get() = value.absoluteValue.dp

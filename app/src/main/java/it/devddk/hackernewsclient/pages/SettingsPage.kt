@@ -39,7 +39,8 @@ fun depthPreference(): Preference.PreferenceItem.SeekBarPreference {
         summary = "Controls the tab size when viewing nested comments",
         singleLineTitle = true,
         icon = {
-            Icon(imageVector = Icons.Filled.ClearAll,
+            Icon(
+                imageVector = Icons.Filled.ClearAll,
                 contentDescription = null,
                 modifier = Modifier
                     .padding(8.dp)
@@ -67,9 +68,11 @@ fun preferredViewPreference(): Preference.PreferenceItem.ListPreference {
         summary = "Which view to open by default when opening a story",
         singleLineTitle = true,
         icon = {
-            Icon(imageVector = Icons.Filled.Wysiwyg,
+            Icon(
+                imageVector = Icons.Filled.Wysiwyg,
                 contentDescription = null,
-                modifier = Modifier.padding(8.dp))
+                modifier = Modifier.padding(8.dp)
+            )
         },
         request = preferredViewPreference,
         entries = mapOf(
@@ -95,13 +98,15 @@ fun SettingsPage(navController: NavController) {
         Scaffold(topBar = {
             HomePageTopBar(navController = navController, state = drawerState, query = "Settings")
         }) {
-            PreferenceScreen(items = listOf(
-                depthPreference(),
-                preferredViewPreference(),
-            ),
+            PreferenceScreen(
+                items = listOf(
+                    depthPreference(),
+                    preferredViewPreference(),
+                ),
                 dataStore = dataStore,
                 statusBarPadding = true,
-                modifier = Modifier.padding(top = it.calculateTopPadding()))
+                modifier = Modifier.padding(top = it.calculateTopPadding())
+            )
         }
     }
 }
