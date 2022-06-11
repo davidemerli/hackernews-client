@@ -77,9 +77,5 @@ fun HackerNewsClientTheme(
         DarkThemeColors
     }
 
-    MaterialTheme(
-        colorScheme = colors,
-        typography = AppTypography,
-        content = content
-    )
+    MaterialTheme(colorScheme = colors, typography = AppTypography, content = content)
 }

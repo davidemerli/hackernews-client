@@ -4,13 +4,41 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.MailOutline
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,7 +46,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.integerArrayResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -81,7 +108,7 @@ fun ColorHint(item: Item) {
 
     val backgroundColor = item.subtype()?.let {
         palette[it.ordinal]
-    } ?: MaterialTheme.colorScheme.secondary
+    } ?: MaterialTheme.colorScheme.primary
 
     Box(
         modifier = Modifier
@@ -100,8 +127,7 @@ fun ItemDomain(item: Item, placeholder: Boolean = false) {
         ClickableText(
             text = AnnotatedString(domain),
             style = MaterialTheme.typography.bodyMedium.copy(
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontStyle = FontStyle.Italic,
+                color = MaterialTheme.colorScheme.secondary,
                 textDecoration = TextDecoration.Underline,
             ),
             maxLines = 1,
@@ -163,7 +189,7 @@ fun OptionsButton(item: Item, placeholder: Boolean = false) {
             Icon(
                 Icons.Filled.MoreVert,
                 contentDescription = "Options",
-                tint = MaterialTheme.colorScheme.secondary,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.placeholder(
                     visible = placeholder,
                     color = PlaceholderDefaults.color(contentAlpha = 0.5f),
@@ -212,8 +238,7 @@ fun ItemBy(item: Item, placeholder: Boolean = false) {
     ClickableText(
         text = AnnotatedString(userString),
         style = MaterialTheme.typography.bodyMedium.copy(
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontStyle = FontStyle.Italic,
+            color = MaterialTheme.colorScheme.tertiary,
             textDecoration = TextDecoration.Underline,
         ),
         modifier = Modifier.placeholder(
@@ -274,7 +299,7 @@ fun ItemComments(item: Item, placeholder: Boolean = false) {
             Text(
                 "$comments",
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color = MaterialTheme.colorScheme.secondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
                 modifier = Modifier
                     .offset(x = 4.dp)
@@ -288,7 +313,7 @@ fun ItemComments(item: Item, placeholder: Boolean = false) {
                 Icon(
                     Icons.Filled.Email,
                     contentDescription = "Options",
-                    tint = MaterialTheme.colorScheme.secondary,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.placeholder(
                         visible = placeholder,
                         color = PlaceholderDefaults.color(contentAlpha = 0.5f),
@@ -431,7 +456,7 @@ fun NewsItemTall(item: Item) {
                         .fillMaxWidth(0.8f)
                         .height(if (isAskHN) 90.dp else 110.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.secondary)
+                        .background(MaterialTheme.colorScheme.primary)
                 )
             }
             Column(Modifier.padding(start = 2.dp)) {
@@ -495,14 +520,14 @@ fun NewsItemTall(item: Item) {
                         ) {
                             Text(
                                 "$comments",
-                                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.secondary),
+                                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.primary),
                                 modifier = Modifier.padding(bottom = 2.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Icon(
                                 Icons.Filled.MailOutline,
                                 contentDescription = "Comments",
-                                tint = MaterialTheme.colorScheme.secondary,
+                                tint = MaterialTheme.colorScheme.primary,
                             )
                         }
                     }
