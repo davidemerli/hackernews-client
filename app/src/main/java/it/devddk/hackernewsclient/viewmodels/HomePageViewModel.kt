@@ -9,7 +9,15 @@ import it.devddk.hackernewsclient.domain.model.utils.CollectionQueryType
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.domain.model.utils.TopStories
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -17,17 +25,21 @@ import timber.log.Timber
 
 class HomePageViewModel : ViewModel(), KoinComponent {
 
-    companion object {
-        const val DEFAULT_REQUEST_UNTIL = 20
-    }
+    // internal state
+    private val itemList: MutableList<NewsItemState> = MutableList(500) { NewsItemState.Loading }
 
+    // use cases
     private val getNewStories: GetNewStoriesUseCase by inject()
-    private val getItem: GetItemUseCase by inject()
+    private val getItemById: GetItemUseCase by inject()
 
-    private val _query: MutableStateFlow<CollectionQueryType> = MutableStateFlow(TopStories)
-    val query = _query.asStateFlow()
+    // state flows
+    private val _uiState: MutableStateFlow<CollectionQueryType> = MutableStateFlow(TopStories)
+    val uiState = _uiState.asStateFlow()
 
-    val pageState: StateFlow<NewsPageState> = _query.transform { query ->
+    private val _itemListFlow: MutableSharedFlow<List<NewsItemState>> = MutableSharedFlow(1)
+    val itemListFlow = _itemListFlow.asSharedFlow()
+
+    val pageState: StateFlow<NewsPageState> = _uiState.transform { query ->
         emit(NewsPageState.Loading)
         getNewStories(query).fold(
             onSuccess = {
@@ -37,41 +49,46 @@ class HomePageViewModel : ViewModel(), KoinComponent {
                 emit(NewsPageState.NewsIdsError(it))
             }
         )
-    }.flowOn(Dispatchers.IO)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), NewsPageState.Loading)
-
-    private val itemList: MutableList<NewsItemState> = MutableList(500) { NewsItemState.Loading }
-    private val _itemListFlow: MutableSharedFlow<List<NewsItemState>> = MutableSharedFlow(1)
-    val itemListFlow = _itemListFlow.asSharedFlow()
+    }.flowOn(Dispatchers.IO).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = NewsPageState.Loading
+    )
 
     suspend fun setQuery(newQuery: CollectionQueryType) {
-        val oldQuery = _query.value
+        val oldQuery = _uiState.value
+
         if (oldQuery != newQuery) {
             synchronized(itemList) {
                 itemList.clear()
+
                 for (i in 0 until newQuery.maxAmount) {
                     itemList.add(NewsItemState.Loading)
                 }
             }
-            _query.emit(newQuery)
+
+            _uiState.emit(newQuery)
             updateItemList()
         }
     }
 
     suspend fun requestItem(index: Int) {
         Timber.d("Requesting item $index")
+
         val currPageState = pageState.value
-        if (currPageState !is NewsPageState.NewsIdsLoaded) {
-            return
-        }
+
+        // avoid requesting item if the page is not loaded
+        if (currPageState !is NewsPageState.NewsIdsLoaded) return
+
         synchronized(itemList) {
-            if (itemList[index] is NewsItemState.ItemLoaded) {
-                return
-            }
+            // avoid requesting item if it's already loaded
+            if (itemList[index] is NewsItemState.ItemLoaded) return
         }
+
         val itemId = currPageState.itemsId[index]
+
         withContext(Dispatchers.IO) {
-            getItem(itemId).fold(
+            getItemById(itemId).fold(
                 onSuccess = {
                     synchronized(itemList) {
                         itemList[index] = NewsItemState.ItemLoaded(it)
@@ -84,14 +101,17 @@ class HomePageViewModel : ViewModel(), KoinComponent {
                 }
             )
         }
+
         updateItemList()
     }
 
     private suspend fun updateItemList() {
         val result: List<NewsItemState>
+
         synchronized(itemList) {
             result = itemList.toList()
         }
+
         _itemListFlow.emit(result)
     }
 }
