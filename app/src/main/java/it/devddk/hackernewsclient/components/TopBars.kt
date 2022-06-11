@@ -181,7 +181,7 @@ fun HNModalNavigatorPanel(
                         contentDescription = query
                     )
                 },
-                label = { Text(HackerNewsView(it).route) },
+                label = { Text(ROUTE_TITLES[HackerNewsView(it).route]!!) },
                 selected = HackerNewsView(it).route == query,
                 onClick = { navController.navigate(HackerNewsView(it).route) },
                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
@@ -209,4 +209,13 @@ val ROUTE_ICONS = mapOf(
     "ShowStories" to Icons.Filled.Dashboard,
     "JobStories" to Icons.Filled.Work,
     "Settings" to Icons.Filled.Settings
+)
+
+val ROUTE_TITLES = mapOf(
+    "TopStories" to "Top Stories",
+    "NewStories" to "New Stories",
+    "BestStories" to "Best Stories",
+    "AskStories" to "Ask HN",
+    "ShowStories" to "Show HN",
+    "JobStories" to "HN Jobs",
 )
