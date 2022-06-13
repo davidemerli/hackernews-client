@@ -88,6 +88,21 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
+            composable(
+                "items/preloaded/{item}/comments",
+                arguments = listOf(
+                    navArgument("item") {
+                        type = NavType.StringType
+                    }
+                )
+            ) { backStackEntry ->
+                SingleNewsPage(
+                    navController = navController,
+                    item = backStackEntry.arguments?.getString("item")!!.urlDecode().decodeJson(Item::class.java),
+                    selectedView = "comments"
+                )
+            }
+
             composable("search") {
                 SearchPage(navController = navController)
             }

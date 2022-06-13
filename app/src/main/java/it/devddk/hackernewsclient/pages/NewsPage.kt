@@ -100,6 +100,9 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
                         onClick = {
                             navController.navigate("items/preloaded/${itemState.item.encodeJson().urlEncode()}")
                         },
+                        onClickComments = {
+                            navController.navigate("items/preloaded/${itemState.item.encodeJson().urlEncode()}/comments")
+                        },
                         placeholder = false
                     )
                 }
