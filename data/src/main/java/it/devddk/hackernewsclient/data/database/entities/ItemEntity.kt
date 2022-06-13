@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.data.database.entities
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import it.devddk.hackernewsclient.data.networking.base.DomainMapper
@@ -13,7 +14,47 @@ import java.time.LocalDateTime
 data class ItemEntity(
     val id: Int,
     val deleted: Boolean,
-    val by: String?,
+    @ColumnInfo(name= "author") val by: String?,
+    val type: String,
+    val time: LocalDateTime?,
+    val dead: Boolean,
+    val parent: Int?,
+    val text: String?,
+    val kids: List<Int>,
+    val title: String?,
+    val descendants: Int?,
+    val parts: List<Int>,
+    val poll: Int?,
+    val score: Int?,
+    val url: String?,
+    val htmlPage: String?
+) : DomainMapper<Item> {
+    override fun mapToDomainModel(): Item {
+        return Item(
+            id,
+            type.toItemType() ?: ItemType.STORY,
+            deleted,
+            by,
+            time,
+            dead,
+            parent,
+            text,
+            kids,
+            title,
+            descendants,
+            parts,
+            poll,
+            score,
+            url,
+            htmlPage = htmlPage
+        )
+    }
+}
+
+data class ItemEntityWithoutHtmlPage(
+    val id: Int,
+    val deleted: Boolean,
+    @ColumnInfo(name= "author") val by: String?,
     val type: String,
     val time: LocalDateTime?,
     val dead: Boolean,
@@ -43,8 +84,8 @@ data class ItemEntity(
             parts,
             poll,
             score,
-            url
+            url,
+            htmlPage = null
         )
     }
-
 }
