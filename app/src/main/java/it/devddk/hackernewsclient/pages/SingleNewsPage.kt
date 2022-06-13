@@ -164,8 +164,10 @@ fun TabbedView(item: Item, navController: NavController) {
                                 }
                             },
                             text = {
-                                Text(text = title,
-                                    color = MaterialTheme.colorScheme.secondary)
+                                Text(
+                                    text = title,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
                             }
                         )
                     }
@@ -219,11 +221,11 @@ fun CommentsView(item: Item) {
                 ItemDomain(item = item)
                 ItemTitle(item = item)
                 Row {
-                    ItemBy(item)
+                    ItemBy(item = item)
 
                     Text(text = " - ")
 
-                    ItemTime(item)
+                    ItemTime(item = item)
                 }
                 ArticleDescription(item = item)
             }
@@ -236,7 +238,7 @@ fun CommentsView(item: Item) {
             Box(modifier = Modifier.animateItemPlacement()) {
                 if (comment !is CommentUiState.CommentLoaded) {
                     LaunchedEffect(comment.itemId) {
-                        mViewModel.getItem(comment.itemId)
+                        mViewModel.requestItem(comment.itemId)
                     }
                 }
 
@@ -483,7 +485,7 @@ fun CommentCard(
                     .padding(4.dp)
                     .placeholder(
                         visible = placeholder,
-                        color = PlaceholderDefaults.color(contentColor = MaterialTheme.colorScheme.secondary),
+                        color = PlaceholderDefaults.color(contentAlpha = 0.8f),
                         shape = RoundedCornerShape(8.dp),
                         highlight = PlaceholderHighlight.shimmer(),
                     ),
@@ -503,7 +505,7 @@ fun CommentCard(
                         .padding(4.dp)
                         .placeholder(
                             visible = placeholder,
-                            color = PlaceholderDefaults.color(contentColor = MaterialTheme.colorScheme.secondary),
+                            color = PlaceholderDefaults.color(contentAlpha = 0.8f),
                             shape = RoundedCornerShape(8.dp),
                             highlight = PlaceholderHighlight.shimmer(),
                         ),
