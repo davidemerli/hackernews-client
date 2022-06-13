@@ -149,7 +149,7 @@ fun TabbedView(item: Item, navController: NavController, selectedView: String?) 
     }
 
     Scaffold(
-        topBar = { SingleNewsPageTopBar(item, navController) },
+        topBar = { if (!fullScreenWebView) { SingleNewsPageTopBar(item, navController) } },
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             if (tabs[pagerState.currentPage] == "Article") {
