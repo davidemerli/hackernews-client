@@ -83,7 +83,7 @@ fun SegmentedButtons(
                 if (selectedValue == i) {
                     Icon(
                         Icons.Filled.Check,
-                        "Selected ${choice}",
+                        "Selected $choice",
                         modifier = Modifier.size(20.dp)
                     )
                 }
