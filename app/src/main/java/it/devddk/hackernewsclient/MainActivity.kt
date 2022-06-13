@@ -83,6 +83,20 @@ class MainActivity : ComponentActivity() {
             composable("feedback") {
                 FeedbackPage(navController = navController)
             }
+
+            composable(
+                "feedback/{itemId}",
+                arguments = listOf(
+                    navArgument("itemId") {
+                        type = NavType.IntType
+                    }
+                )
+            ) { backStackEntry ->
+                FeedbackPage(
+                    navController = navController,
+                    itemId = backStackEntry.arguments?.getInt("itemId")!!
+                )
+            }
         }
     }
 }
