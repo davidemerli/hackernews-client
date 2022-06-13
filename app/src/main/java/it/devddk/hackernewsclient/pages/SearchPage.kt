@@ -5,14 +5,33 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallTopAppBar
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import it.devddk.hackernewsclient.components.NewsItem
@@ -58,10 +77,11 @@ fun SearchPage(navController: NavController) {
             item {
                 Text(
                     if (searchQuery.length < 3) {
-                        "Type at least 3 chars..."
+                        "Type at least 3 chars to start searching"
                     } else {
                         "Results for $searchQuery"
-                    }
+                    },
+                    modifier = Modifier.padding(8.dp)
                 )
             }
 
@@ -74,6 +94,7 @@ fun SearchPage(navController: NavController) {
                     is SearchResultUiState.Loading -> {
                         Text("Loading More...")
                     }
+
                     is SearchResultUiState.ResultLoaded -> {
                         ResultItem(
                             result.result.item,
@@ -83,6 +104,7 @@ fun SearchPage(navController: NavController) {
                             }
                         )
                     }
+
                     null -> {
                     }
                 }
@@ -92,7 +114,6 @@ fun SearchPage(navController: NavController) {
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 fun ResultItem(item: Item, onClick: () -> Unit = {}) {
     when (item.type) {
         ItemType.STORY -> {
@@ -112,13 +133,13 @@ fun SearchBar(
     onBackClick: () -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
+    val focusRequester = remember { FocusRequester() }
 
     SmallTopAppBar(
         title = {
             TextField(
                 value = searchQuery,
                 onValueChange = onQueryChange,
-                modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.textFieldColors(
                     containerColor = MaterialTheme.colorScheme.background,
                     unfocusedIndicatorColor = MaterialTheme.colorScheme.background,
@@ -128,8 +149,16 @@ fun SearchBar(
                 ),
                 singleLine = true,
                 // dismiss keyboard on submit
-                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester),
             )
+
+            LaunchedEffect(searchQuery) {
+                focusRequester.requestFocus()
+            }
         },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
