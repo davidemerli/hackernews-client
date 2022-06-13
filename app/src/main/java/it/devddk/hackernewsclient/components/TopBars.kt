@@ -4,19 +4,23 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.OpenInBrowser
+import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.QuestionAnswer
+import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.rounded.AccountCircle
@@ -113,13 +117,16 @@ fun SingleNewsPageTopBar(item: Item, navController: NavController) {
             }
         },
         actions = {
+            IconButton(onClick = {
+                navController.navigate("feedback/${item.id}")
+            }) {
+                Icon(Icons.Filled.ReportProblem, "Report Problem")
+            }
             Box(
                 modifier = Modifier.wrapContentSize(Alignment.TopStart)
             ) {
-                item.url?.let { url ->
-                    IconButton(onClick = { openInBrowser(context = context, url = url) }) {
-                        Icon(Icons.Filled.OpenInBrowser, "Open in browser")
-                    }
+                IconButton(onClick = { openInBrowserExpanded = !openInBrowserExpanded }) {
+                    Icon(Icons.Filled.OpenInNew, "Open in browser")
                 }
 
                 DropdownMenu(
@@ -128,9 +135,12 @@ fun SingleNewsPageTopBar(item: Item, navController: NavController) {
                 ) {
                     item.url?.let { url ->
                         DropdownMenuItem(
-                            text = { Text("Share Article") },
+                            text = { Text("Open Article in browser") },
                             leadingIcon = {
-                                Icon(Icons.Filled.Share, contentDescription = "Share Article")
+                                Icon(
+                                    Icons.Filled.OpenInBrowser,
+                                    contentDescription = "Open Article in browser"
+                                )
                             },
                             onClick = {
                                 openInBrowser(context, url)
@@ -139,9 +149,12 @@ fun SingleNewsPageTopBar(item: Item, navController: NavController) {
                         )
                     }
                     DropdownMenuItem(
-                        text = { Text("Share HN link") },
+                        text = { Text("Open HN link in browser") },
                         leadingIcon = {
-                            Icon(Icons.Filled.Share, contentDescription = "Share HN link")
+                            Icon(
+                                Icons.Filled.OpenInBrowser,
+                                contentDescription = "Open HN link in browser"
+                            )
                         },
                         onClick = {
                             openInBrowser(
@@ -173,49 +186,60 @@ fun HNModalNavigatorPanel(
     query: String,
     content: @Composable () -> Unit,
 ) {
-    ModalNavigationDrawer(drawerState = state, gesturesEnabled = state.isOpen, drawerContent = {
-        Text(text = stringResource(R.string.app_name), modifier = Modifier.padding(28.dp))
+    val scrollState = rememberScrollState()
 
-        ALL_QUERIES.forEach {
-            NavigationDrawerItem(
-                icon = {
-                    Icon(
-                        imageVector = ROUTE_ICONS[HackerNewsView(it).route]!!,
-                        contentDescription = query
+    ModalNavigationDrawer(
+        drawerState = state,
+        gesturesEnabled = state.isOpen,
+        drawerContent = {
+            // sadly I think we cannot use a scrollable modifier on the ColumnScope provided by drawerContent
+            Column(
+                modifier = Modifier.verticalScroll(scrollState)
+            ) {
+                Text(text = stringResource(R.string.app_name), modifier = Modifier.padding(28.dp))
+
+                ALL_QUERIES.forEach {
+                    NavigationDrawerItem(
+                        icon = {
+                            Icon(
+                                imageVector = ROUTE_ICONS[HackerNewsView(it).route]!!,
+                                contentDescription = query
+                            )
+                        },
+                        label = { Text(ROUTE_TITLES[HackerNewsView(it).route]!!) },
+                        selected = HackerNewsView(it).route == query,
+                        onClick = { navController.navigate(HackerNewsView(it).route) },
+                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                     )
-                },
-                label = { Text(ROUTE_TITLES[HackerNewsView(it).route]!!) },
-                selected = HackerNewsView(it).route == query,
-                onClick = { navController.navigate(HackerNewsView(it).route) },
-                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-            )
+                }
+
+                Divider(
+                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                )
+
+                NavigationDrawerItem(
+                    icon = {
+                        Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                    },
+                    label = { Text("Settings") },
+                    selected = query == "Settings",
+                    onClick = { navController.navigate("settings") },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+
+                NavigationDrawerItem(
+                    icon = {
+                        Icon(Icons.Filled.Feedback, contentDescription = "Feedback")
+                    },
+                    label = { Text("Feedback") },
+                    selected = query == "Feedback",
+                    onClick = { navController.navigate("feedback") },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+            }
         }
-
-        Divider(
-            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
-            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-        )
-
-        NavigationDrawerItem(
-            icon = {
-                Icon(Icons.Filled.Settings, contentDescription = "Settings")
-            },
-            label = { Text("Settings") },
-            selected = query == "Settings",
-            onClick = { navController.navigate("settings") },
-            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-        )
-
-        NavigationDrawerItem(
-            icon = {
-                Icon(Icons.Filled.Feedback, contentDescription = "Feedback")
-            },
-            label = { Text("Feedback") },
-            selected = query == "Feedback",
-            onClick = { navController.navigate("feedback") },
-            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-        )
-    }) {
+    ) {
         content()
     }
 }
