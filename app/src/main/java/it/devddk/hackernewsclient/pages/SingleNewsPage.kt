@@ -142,7 +142,7 @@ fun TabbedView(item: Item, navController: NavController) {
     if (tabs.size > 1) {
         LaunchedEffect(preferredView) {
             coroutineScope.launch {
-                pagerState.scrollToPage(if (preferredView.value == "Article") 0 else 1)
+                pagerState.scrollToPage(if (preferredView.value == "article") 0 else 1)
             }
         }
     }
