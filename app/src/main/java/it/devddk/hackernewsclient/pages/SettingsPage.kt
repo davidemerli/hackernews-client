@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.navigation.NavController
@@ -24,14 +25,18 @@ import de.schnettler.datastore.manager.PreferenceRequest
 import it.devddk.hackernewsclient.components.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.components.HomePageTopBar
 import it.devddk.hackernewsclient.utils.SettingPrefs
+import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.DEFAULT_DEPTH
+import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.DEFAULT_PREFERRED_VIEW
+import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.WEBVIEW_DEFAULTS
+import java.util.*
 
 fun depthPreference(): Preference.PreferenceItem.SeekBarPreference {
     val depthPreference = PreferenceRequest(
         key = floatPreferencesKey("comment_depth_size"),
-        defaultValue = SettingPrefs.DEFAULT_DEPTH,
+        defaultValue = DEFAULT_DEPTH,
     )
 
-    val min = SettingPrefs.DEFAULT_DEPTH
+    val min = DEFAULT_DEPTH
     val max = 24.0f
 
     return Preference.PreferenceItem.SeekBarPreference(
@@ -60,7 +65,7 @@ fun depthPreference(): Preference.PreferenceItem.SeekBarPreference {
 fun preferredViewPreference(): Preference.PreferenceItem.ListPreference {
     val preferredViewPreference = PreferenceRequest(
         key = stringPreferencesKey("preferred_view"),
-        defaultValue = SettingPrefs.DEFAULT_PREFERRED_VIEW,
+        defaultValue = DEFAULT_PREFERRED_VIEW,
     )
 
     return Preference.PreferenceItem.ListPreference(
@@ -82,6 +87,25 @@ fun preferredViewPreference(): Preference.PreferenceItem.ListPreference {
     )
 }
 
+fun webviewTogglePreference(
+    setting: String,
+    title: String? = null,
+    summary: String,
+): Preference.PreferenceItem.SwitchPreference {
+    val preferenceRequest = PreferenceRequest(
+        key = booleanPreferencesKey(setting),
+        defaultValue = WEBVIEW_DEFAULTS[setting]!!,
+    )
+
+    return Preference.PreferenceItem.SwitchPreference(
+        title = title ?: setting.camelToTitle(),
+        summary = summary,
+        singleLineTitle = false,
+        request = preferenceRequest,
+        icon = {}
+    )
+}
+
 @Composable
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 fun SettingsPage(navController: NavController) {
@@ -95,13 +119,25 @@ fun SettingsPage(navController: NavController) {
         state = drawerState,
         query = "Settings",
     ) {
-        Scaffold(topBar = {
-            HomePageTopBar(navController = navController, state = drawerState, query = "Settings")
-        }) {
+        Scaffold(
+            topBar = {
+                HomePageTopBar(
+                    navController = navController,
+                    state = drawerState,
+                    query = "Settings"
+                )
+            }
+        ) {
             PreferenceScreen(
                 items = listOf(
                     depthPreference(),
                     preferredViewPreference(),
+                    Preference.PreferenceGroup(
+                        title = "Webview",
+                        preferenceItems = WEBVIEW_DEFAULTS.keys.map { pref ->
+                            webviewTogglePreference(setting = pref, summary = "")
+                        }
+                    )
                 ),
                 dataStore = dataStore,
                 statusBarPadding = true,
@@ -109,4 +145,12 @@ fun SettingsPage(navController: NavController) {
             )
         }
     }
+}
+
+val camelRegex = "(?<=[a-zA-Z])[A-Z]".toRegex()
+
+// String extensions
+fun String.camelToTitle(): String {
+    return camelRegex.replace(this) { " ${it.value}" }
+        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
 }

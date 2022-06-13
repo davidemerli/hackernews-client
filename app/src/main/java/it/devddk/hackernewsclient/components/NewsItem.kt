@@ -93,7 +93,7 @@ fun Item.subtype(): ItemSubtype? {
     return null
 }
 
-val placeholderItem = Item(
+private val placeholderItem = Item(
     0,
     ItemType.STORY,
     title = "_".repeat(30),
