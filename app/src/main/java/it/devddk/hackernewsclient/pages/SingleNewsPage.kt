@@ -101,6 +101,17 @@ fun SingleNewsPage(navController: NavController, id: Int?) {
 }
 
 @Composable
+fun SingleNewsPage(navController: NavController, item: Item) {
+    val viewModel: SingleNewsViewModel = viewModel()
+
+    LaunchedEffect(item.id) {
+        viewModel.setId(item.id)
+    }
+
+    TabbedView(item = item, navController = navController)
+}
+
+@Composable
 fun Error(throwable: Throwable) {
     Text("Error")
 }
