@@ -6,7 +6,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import it.devddk.hackernewsclient.data.database.entities.ItemCollectionEntity
-import it.devddk.hackernewsclient.domain.model.items.ItemCollectionTag
 
 @Dao
 interface ItemCollectionEntityDao {
