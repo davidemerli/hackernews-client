@@ -11,4 +11,12 @@ val databaseModule = module {
         Room.databaseBuilder(androidContext(), LocalDatabase::class.java, "local")
             .fallbackToDestructiveMigration().build()
     }
+
+    single {
+        get<LocalDatabase>().itemCollectionDao()
+    }
+
+    single {
+        get<LocalDatabase>().itemEntityDao()
+    }
 }

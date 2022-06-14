@@ -1,6 +1,7 @@
 package it.devddk.hackernewsclient.data.repository.item
 
 import com.google.firebase.database.DatabaseReference
+import it.devddk.hackernewsclient.data.database.dao.ItemEntityDao
 import it.devddk.hackernewsclient.data.networking.model.ItemResponse
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.repository.ItemRepository
@@ -14,6 +15,7 @@ import java.lang.Exception
 class ItemRepositoryImpl : ItemRepository, KoinComponent {
 
     private val items: DatabaseReference by inject(named("item"))
+    private val itemDao: ItemEntityDao by inject()
 
     override suspend fun getItemById(itemId: Int): Result<Item> {
         return try {
@@ -26,5 +28,12 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
             Timber.d(e)
             Result.failure(e)
         }
+    }
+
+    override suspend fun saveItem(item: Item) {
+        if(item.url != null && item.htmlPage == null) {
+            item.copy(htmlPage = )
+        }
+        itemDao.getHtml()
     }
 }
