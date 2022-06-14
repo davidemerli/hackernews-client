@@ -183,6 +183,7 @@ fun CommentCard(
     // if (item.dead) return
 
     val context = LocalContext.current
+    val numKids = item.kids.size
 
     val paddingStart = (depth * depthSize).dp + 2.dp
 
@@ -196,6 +197,7 @@ fun CommentCard(
             0.9f
         )
     )
+
 
     Row(
         modifier = Modifier
@@ -252,7 +254,7 @@ fun CommentCard(
                     overflow = TextOverflow.Visible,
                     linkColor = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier
-                        .padding(4.dp)
+                        .padding(top = 4.dp, start= 4.dp, end = 4.dp, bottom = if (numKids > 0) 4.dp else 16.dp)
                         .placeholder(
                             visible = placeholder,
                             color = PlaceholderDefaults.color(contentAlpha = 0.8f),
@@ -262,7 +264,6 @@ fun CommentCard(
                 )
             }
 
-            val numKids = item.kids.size
 
             if (numKids > 0) {
                 ExpandChildren(expanded = expanded, numKids = numKids, onClick = onClick)
