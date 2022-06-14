@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.components
 
+import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -35,6 +36,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.TextToolbar
+import androidx.compose.ui.platform.TextToolbarStatus
 import androidx.compose.ui.res.integerArrayResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -243,6 +246,9 @@ fun CommentCard(
                 )
             )
 
+//            CompositionLocalProvider(
+//                LocalTextToolbar provides CustomTextToolbar(LocalView.current)
+//            ) {
             SelectionContainer {
                 LinkifyText(
                     text = text.toSpanned(),
@@ -259,6 +265,7 @@ fun CommentCard(
                         ),
                 )
             }
+//            }
 
             val numKids = item.kids.size
 
@@ -267,4 +274,22 @@ fun CommentCard(
             }
         }
     }
+}
+
+class CustomTextToolbar(private val view: View) : TextToolbar {
+    override fun hide() {
+        println("hide")
+    }
+
+    override fun showMenu(
+        rect: androidx.compose.ui.geometry.Rect,
+        onCopyRequested: (() -> Unit)?,
+        onPasteRequested: (() -> Unit)?,
+        onCutRequested: (() -> Unit)?,
+        onSelectAllRequested: (() -> Unit)?,
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override val status: TextToolbarStatus = TextToolbarStatus.Hidden
 }
