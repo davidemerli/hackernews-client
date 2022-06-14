@@ -1,6 +1,6 @@
 package it.devddk.hackernewsclient.components
 
-import android.view.View
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,14 +36,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.TextToolbar
-import androidx.compose.ui.platform.TextToolbarStatus
 import androidx.compose.ui.res.integerArrayResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -67,15 +64,13 @@ import kotlinx.coroutines.launch
 fun Item.isExpandable() = kids.isNotEmpty()
 fun CommentUiState.isExpandable() = this is CommentUiState.CommentLoaded && this.item.isExpandable()
 
-private val placeholderItem = Item(
-    0,
+private val placeholderItem = Item(0,
     ItemType.COMMENT,
     title = "_".repeat(30),
     url = "https://news.ycombinator.com/",
     by = "_".repeat(10),
     text = "_".repeat(100),
-    time = null
-)
+    time = null)
 
 @Composable
 fun ExpandableComment(
@@ -110,12 +105,10 @@ fun ExpandableComment(
                 placeholder = false,
             )
         }
-        is CommentUiState.Error -> Text(
-            "< ERROR >",
+        is CommentUiState.Error -> Text("< ERROR >",
             modifier = Modifier
                 .padding(16.dp)
-                .fillMaxWidth()
-        )
+                .fillMaxWidth())
         // TODO: use placeholder CommentCard
         is CommentUiState.Loading -> CommentCard(
             placeholderItem,
@@ -133,44 +126,36 @@ fun ExpandableComment(
 fun DepthIndicator(depth: Int) {
     val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
 
-    Box(
-        modifier = Modifier
-            .width(10.dp)
-            .fillMaxHeight()
-            .padding(end = 4.dp)
-            .clip(RoundedCornerShape(topStart = 4.dp, bottomStart = 4.dp))
-            .background(depthColors[depth % depthColors.size])
-    )
+    Box(modifier = Modifier
+        .width(10.dp)
+        .fillMaxHeight()
+        .padding(end = 4.dp)
+        .clip(RoundedCornerShape(topStart = 4.dp, bottomStart = 4.dp))
+        .background(depthColors[depth % depthColors.size]))
 }
 
 @Composable
 @OptIn(ExperimentalComposeUiApi::class)
 fun ExpandChildren(expanded: Boolean, numKids: Int, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .height(48.dp)
-            .padding(vertical = 4.dp)
-            .clickable { onClick() }
-    ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
+    Box(modifier = Modifier
+        .height(48.dp)
+        .padding(vertical = 4.dp)
+        .clickable { onClick() }) {
+        Row(modifier = Modifier.fillMaxSize(),
             horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                pluralStringResource(R.plurals.comments, numKids, numKids),
-                style = MaterialTheme.typography.bodySmall
-            )
+            verticalAlignment = Alignment.CenterVertically) {
+            Text(pluralStringResource(R.plurals.comments, numKids, numKids),
+                style = MaterialTheme.typography.bodySmall)
 
-            Icon(
-                if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
-                if (expanded) stringResource(R.string.close_comments) else stringResource(R.string.open_comments)
-            )
+            Icon(if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+                if (expanded) stringResource(R.string.close_comments) else stringResource(R.string.open_comments))
         }
     }
 }
 
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
+// TODO: use ConstrainedLayout and add a "more" button with options such as "return to root"
 fun CommentCard(
     item: Item,
     depth: Int = 0,
@@ -180,31 +165,26 @@ fun CommentCard(
     onClick: () -> Unit = {},
     placeholder: Boolean = false,
 ) {
-    if (item.deleted) return
-    if (item.dead) return
+    // if (item.deleted) return
+    // if (item.dead) return
 
     val context = LocalContext.current
+    val numKids = item.kids.size
 
     val paddingStart = (depth * depthSize).dp + 2.dp
 
     val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
 
     // obtains a background color for the comments which is a slight tint of the colorScheme secondary color
-    val commentBackground = Color(
-        ColorUtils.blendARGB(
-            MaterialTheme.colorScheme.secondary.toArgb(),
-            MaterialTheme.colorScheme.background.toArgb(),
-            0.9f
-        )
-    )
+    val commentBackground = Color(ColorUtils.blendARGB(MaterialTheme.colorScheme.secondary.toArgb(),
+        MaterialTheme.colorScheme.background.toArgb(),
+        0.9f))
 
-    Row(
-        modifier = Modifier
-            .height(IntrinsicSize.Min)
-            .padding(start = paddingStart, top = 4.dp, end = 4.dp, bottom = 4.dp)
-            .clip(RoundedCornerShape(4.dp))
-            .background(commentBackground)
-    ) {
+    Row(modifier = Modifier
+        .height(IntrinsicSize.Min)
+        .padding(start = paddingStart, top = 4.dp, end = 4.dp, bottom = 4.dp)
+        .clip(RoundedCornerShape(4.dp))
+        .background(commentBackground)) {
         DepthIndicator(depth = depth)
 
         val text = item.text ?: "< deleted comment >"
@@ -218,20 +198,16 @@ fun CommentCard(
         val byString = "${item.by}${if (isOriginalPoster) " (OP)" else ""}"
 
         Column(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = buildAnnotatedString {
-                    pushStyle(
-                        SpanStyle(
-                            textDecoration = TextDecoration.Underline,
-                            fontStyle = if (isOriginalPoster) FontStyle.Normal else FontStyle.Italic,
-                            fontWeight = if (isOriginalPoster) FontWeight.Black else FontWeight.SemiBold,
-                        )
-                    )
-                    append(byString)
-                    pop()
-                    append(" • ")
-                    append(timeString)
-                },
+            Text(text = buildAnnotatedString {
+                pushStyle(SpanStyle(
+                    textDecoration = TextDecoration.Underline,
+                    fontWeight = if (isOriginalPoster) FontWeight.Black else FontWeight.SemiBold,
+                ))
+                append(byString)
+                pop()
+                append(" • ")
+                append(timeString)
+            },
                 modifier = Modifier
                     .padding(4.dp)
                     .placeholder(
@@ -241,10 +217,8 @@ fun CommentCard(
                         highlight = PlaceholderHighlight.fade(),
                     ),
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (isOriginalPoster) MaterialTheme.colorScheme.primary else depthColors[depth % depthColors.size].copy(
-                    alpha = 1f
-                )
-            )
+                color = if (isOriginalPoster) MaterialTheme.colorScheme.tertiary
+                else depthColors[depth % depthColors.size].copy(alpha = 1f))
 
 //            CompositionLocalProvider(
 //                LocalTextToolbar provides CustomTextToolbar(LocalView.current)
@@ -256,7 +230,10 @@ fun CommentCard(
                     overflow = TextOverflow.Visible,
                     linkColor = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier
-                        .padding(4.dp)
+                        .padding(top = 4.dp,
+                            start = 4.dp,
+                            end = 4.dp,
+                            bottom = if (numKids > 0) 4.dp else 16.dp)
                         .placeholder(
                             visible = placeholder,
                             color = PlaceholderDefaults.color(contentAlpha = 0.8f),
@@ -267,29 +244,9 @@ fun CommentCard(
             }
 //            }
 
-            val numKids = item.kids.size
-
             if (numKids > 0) {
                 ExpandChildren(expanded = expanded, numKids = numKids, onClick = onClick)
             }
         }
     }
-}
-
-class CustomTextToolbar(private val view: View) : TextToolbar {
-    override fun hide() {
-        println("hide")
-    }
-
-    override fun showMenu(
-        rect: androidx.compose.ui.geometry.Rect,
-        onCopyRequested: (() -> Unit)?,
-        onPasteRequested: (() -> Unit)?,
-        onCutRequested: (() -> Unit)?,
-        onSelectAllRequested: (() -> Unit)?,
-    ) {
-        TODO("Not yet implemented")
-    }
-
-    override val status: TextToolbarStatus = TextToolbarStatus.Hidden
 }

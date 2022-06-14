@@ -60,6 +60,9 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.8.0'
     implementation 'androidx.appcompat:appcompat:1.4.2'
 
+    // serialization
+    implementation 'com.google.code.gson:gson:2.9.0'
+
     // ACCOMPANIST
     implementation "com.google.accompanist:accompanist-systemuicontroller:0.24.10-beta"
     implementation "com.google.accompanist:accompanist-webview:0.24.8-beta"
@@ -122,4 +125,5 @@ dependencies {
 
     implementation 'org.jsoup:jsoup:1.13.1'
 }
+
 apply plugin: 'com.google.gms.google-services'
