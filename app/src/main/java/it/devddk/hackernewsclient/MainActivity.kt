@@ -8,11 +8,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavDeepLink
+import androidx.navigation.NavDeepLinkBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import it.devddk.hackernewsclient.domain.model.items.Item
@@ -109,6 +112,23 @@ class MainActivity : ComponentActivity() {
 
             composable("settings") {
                 SettingsPage(navController = navController)
+            }
+
+            composable(
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "https://news.ycombinator.com/item?id={itemId}"}
+                ),
+                arguments = listOf(
+                    navArgument("itemId") {
+                        type = NavType.IntType
+                    }
+                ),
+                route = "items/{itemId}"
+            ) { backStackEntry ->
+                SingleNewsPage(
+                    navController = navController,
+                    id = backStackEntry.arguments?.getInt("itemId")!!
+                )
             }
         }
     }
