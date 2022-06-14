@@ -62,6 +62,7 @@ import it.devddk.hackernewsclient.components.ItemTitle
 import it.devddk.hackernewsclient.components.LinkifyText
 import it.devddk.hackernewsclient.components.SingleNewsPageTopBar
 import it.devddk.hackernewsclient.components.WebViewWithPrefs
+import it.devddk.hackernewsclient.components.scrollbar
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.utils.SettingPrefs
 import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.DEFAULT_PREFERRED_VIEW
@@ -74,7 +75,7 @@ import kotlin.math.max
 import androidx.compose.foundation.layout.Row as Row1
 
 fun String.toSpanned(): String {
-    return Html.fromHtml(this, Html.FROM_HTML_MODE_COMPACT).toString()
+    return Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY).toString().trim()
 }
 
 @Composable
@@ -230,7 +231,12 @@ fun CommentsView(item: Item) {
 
     LazyColumn(
         state = scrollState,
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize()
+            //.scrollbar(
+            //    scrollState,
+            //    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            //    knobColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            //)
     ) {
         item {
             Column(

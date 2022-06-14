@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -40,7 +41,6 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -168,6 +168,8 @@ fun ExpandChildren(expanded: Boolean, numKids: Int, onClick: () -> Unit) {
 }
 
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
+// TODO: use ConstrainedLayout and add a "more" button with options such as "return to root"
 fun CommentCard(
     item: Item,
     depth: Int = 0,
@@ -177,8 +179,8 @@ fun CommentCard(
     onClick: () -> Unit = {},
     placeholder: Boolean = false,
 ) {
-    if (item.deleted) return
-    if (item.dead) return
+    // if (item.deleted) return
+    // if (item.dead) return
 
     val context = LocalContext.current
 
@@ -220,7 +222,6 @@ fun CommentCard(
                     pushStyle(
                         SpanStyle(
                             textDecoration = TextDecoration.Underline,
-                            fontStyle = if (isOriginalPoster) FontStyle.Normal else FontStyle.Italic,
                             fontWeight = if (isOriginalPoster) FontWeight.Black else FontWeight.SemiBold,
                         )
                     )
@@ -238,7 +239,8 @@ fun CommentCard(
                         highlight = PlaceholderHighlight.fade(),
                     ),
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (isOriginalPoster) MaterialTheme.colorScheme.primary else depthColors[depth % depthColors.size].copy(
+                color = if (isOriginalPoster) MaterialTheme.colorScheme.tertiary
+                else depthColors[depth % depthColors.size].copy(
                     alpha = 1f
                 )
             )
