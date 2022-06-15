@@ -74,11 +74,11 @@ import kotlin.math.max
 import androidx.compose.foundation.layout.Row as Row1
 
 fun String.toSpanned(): String {
-    return Html.fromHtml(this, Html.FROM_HTML_MODE_COMPACT).toString()
+    return Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY).toString().trim()
 }
 
 @Composable
-fun SingleNewsPage(navController: NavController, id: Int?) {
+fun SingleNewsPage(navController: NavController, id: Int?, selectedView: String? = null) {
 
     val mViewModel: SingleNewsViewModel = viewModel()
     val uiState = mViewModel.uiState.collectAsState(SingleNewsUiState.Loading)
@@ -95,9 +95,20 @@ fun SingleNewsPage(navController: NavController, id: Int?) {
             Loading()
         }
         is SingleNewsUiState.ItemLoaded -> {
-            TabbedView(uiStateValue.item, navController)
+            TabbedView(uiStateValue.item, navController, selectedView)
         }
     }
+}
+
+@Composable
+fun SingleNewsPage(navController: NavController, item: Item, selectedView: String? = null) {
+    val viewModel: SingleNewsViewModel = viewModel()
+
+    LaunchedEffect(item.id) {
+        viewModel.setId(item.id)
+    }
+
+    TabbedView(item = item, navController = navController, selectedView)
 }
 
 @Composable
@@ -115,10 +126,11 @@ fun Loading() {
     ExperimentalMaterial3Api::class,
     ExperimentalPagerApi::class,
 )
-fun TabbedView(item: Item, navController: NavController) {
+fun TabbedView(item: Item, navController: NavController, selectedView: String?) {
     val tabs = item.url?.let { listOf("Article", "Comments (${item.descendants ?: 0})") } ?: listOf(
         "Comments (${item.descendants ?: 0})"
     )
+
     val coroutineScope = rememberCoroutineScope()
     val pagerState = rememberPagerState()
 
@@ -126,18 +138,18 @@ fun TabbedView(item: Item, navController: NavController) {
     val webviewState = rememberWebViewState(url = item.url ?: "")
 
     val dataStore = SettingPrefs(LocalContext.current)
-    val preferredView = dataStore.preferredView.collectAsState(initial = DEFAULT_PREFERRED_VIEW)
+    val preferredView = selectedView ?: dataStore.preferredView.collectAsState(initial = DEFAULT_PREFERRED_VIEW).value
 
     if (tabs.size > 1) {
         LaunchedEffect(preferredView) {
             coroutineScope.launch {
-                pagerState.scrollToPage(if (preferredView.value == "Article") 0 else 1)
+                pagerState.scrollToPage(if (preferredView == "article") 0 else 1)
             }
         }
     }
 
     Scaffold(
-        topBar = { SingleNewsPageTopBar(item, navController) },
+        topBar = { if (!fullScreenWebView) { SingleNewsPageTopBar(item, navController) } },
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             if (tabs[pagerState.currentPage] == "Article") {
@@ -218,7 +230,12 @@ fun CommentsView(item: Item) {
 
     LazyColumn(
         state = scrollState,
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize()
+        // .scrollbar(
+        //    scrollState,
+        //    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+        //    knobColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        // )
     ) {
         item {
             Column(
