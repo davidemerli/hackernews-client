@@ -296,7 +296,7 @@ fun ItemTime(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = f
 }
 
 @Composable
-fun ItemComments(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = false) {
+fun ItemComments(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = false, onClick: () -> Unit) {
     item.descendants?.let { comments ->
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -316,7 +316,7 @@ fun ItemComments(modifier: Modifier = Modifier, item: Item, placeholder: Boolean
                         highlight = PlaceholderHighlight.fade(),
                     ),
             )
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = onClick) {
                 Icon(
                     Icons.Filled.Email,
                     contentDescription = "Options",
@@ -338,6 +338,7 @@ fun NewsItem(
     item: Item = placeholderItem,
     placeholder: Boolean = false,
     onClick: () -> Unit = {},
+    onClickComments: () -> Unit = {},
 ) {
 
     ConstraintLayout(
@@ -408,7 +409,8 @@ fun NewsItem(
                 modifier = Modifier.constrainAs(more) {
                     bottom.linkTo(parent.bottom)
                     end.linkTo(parent.end)
-                }
+                },
+                onClick = onClickComments
             )
         }
     }

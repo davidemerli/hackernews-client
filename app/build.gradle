@@ -60,6 +60,9 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.8.0'
     implementation 'androidx.appcompat:appcompat:1.4.2'
 
+    // serialization
+    implementation 'com.google.code.gson:gson:2.9.0'
+
     // ACCOMPANIST
     implementation "com.google.accompanist:accompanist-systemuicontroller:0.24.10-beta"
     implementation "com.google.accompanist:accompanist-webview:0.24.8-beta"
@@ -70,14 +73,14 @@ dependencies {
 
     // design
     implementation 'com.google.android.material:material:1.7.0-alpha02'
-    implementation 'androidx.compose.material:material-icons-extended:1.1.1'
+    implementation "androidx.compose.material3:material3:1.0.0-alpha13"
+    implementation "androidx.compose.material:material-icons-extended:$composeVersion"
     implementation "androidx.constraintlayout:constraintlayout-compose:1.1.0-alpha02"
 
     // jetpack compose
-    implementation "androidx.compose.ui:ui:1.1.1"
-    implementation "androidx.compose.material3:material3:1.0.0-alpha13"
-    implementation "androidx.compose.ui:ui-tooling-preview:1.1.1"
-    implementation("io.coil-kt:coil-compose:2.0.0")
+    implementation "androidx.compose.ui:ui:$composeVersion"
+    implementation "androidx.compose.ui:ui-tooling-preview:$composeVersion"
+    implementation "io.coil-kt:coil-compose:2.0.0"
 
     implementation project(path: ':domain')
     implementation 'com.google.firebase:firebase-crashlytics-ktx:18.2.9'
@@ -118,8 +121,9 @@ dependencies {
     // Desugaring to use java 8 features
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.4.1'
-    implementation 'androidx.compose.runtime:runtime-livedata:1.2.0-beta01'
+    implementation "androidx.compose.runtime:runtime-livedata:$composeVersion"
 
     implementation 'org.jsoup:jsoup:1.13.1'
 }
+
 apply plugin: 'com.google.gms.google-services'

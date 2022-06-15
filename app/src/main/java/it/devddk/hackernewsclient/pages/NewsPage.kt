@@ -14,6 +14,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -23,9 +24,12 @@ import it.devddk.hackernewsclient.components.HomePageTopBar
 import it.devddk.hackernewsclient.components.NewsItem
 import it.devddk.hackernewsclient.domain.model.utils.CollectionQueryType
 import it.devddk.hackernewsclient.domain.model.utils.TopStories
+import it.devddk.hackernewsclient.utils.encodeJson
+import it.devddk.hackernewsclient.utils.urlEncode
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.NewsPageState
+import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,6 +85,9 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
     val itemListState =
         viewModel.itemListFlow.collectAsState(initial = List(TopStories.maxAmount) { NewsItemState.Loading })
 
+    val singleNewsViewModel: SingleNewsViewModel = viewModel()
+    val coroutineScope = rememberCoroutineScope()
+
     LazyColumn(
         modifier = modifier,
         state = lazyListState
@@ -90,7 +97,12 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
                 is NewsItemState.ItemLoaded -> {
                     NewsItem(
                         itemState.item,
-                        onClick = { navController.navigate("items/${itemState.item.id}") },
+                        onClick = {
+                            navController.navigate("items/preloaded/${itemState.item.encodeJson().urlEncode()}")
+                        },
+                        onClickComments = {
+                            navController.navigate("items/preloaded/${itemState.item.encodeJson().urlEncode()}/comments")
+                        },
                         placeholder = false
                     )
                 }
