@@ -8,10 +8,9 @@ import org.koin.core.component.inject
 
 class FeedbackViewModel : ViewModel(), KoinComponent {
 
-    val postFeedback : PostFeedbackUseCase by inject()
+    val postFeedback: PostFeedbackUseCase by inject()
 
-
-    suspend fun submitFeedback(feedback : Feedback) : Result<Unit> {
+    suspend fun submitFeedback(feedback: Feedback): Result<Unit> {
         return postFeedback(feedback)
     }
 }

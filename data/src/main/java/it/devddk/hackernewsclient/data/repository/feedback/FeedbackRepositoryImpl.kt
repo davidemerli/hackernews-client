@@ -19,12 +19,16 @@ class FeedbackRepositoryImpl : FeedbackRepository, KoinComponent{
         return try {
             val feedbackEntity = FeedbackEntity(feedback.id, feedback.feedback, feedback.impact)
             val newRef = feedbackReference.push()
-            newRef.setValue(feedbackEntity).await()
+
+            // we do not await setValue since if the user is not connected to the internet,
+            // Firebase will just schedule the message and never return an error, and awaits until it is
+            // actually sent. We just assume it at sent.
+            newRef.setValue(feedbackEntity)
+
             Result.success(Unit)
         } catch (ex : Exception) {
             Timber.e(ex)
             Result.failure(ex)
         }
-
     }
 }

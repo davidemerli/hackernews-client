@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.pages
 
+import android.net.ConnectivityManager
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,6 +32,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import it.devddk.hackernewsclient.components.HNModalNavigatorPanel
@@ -53,6 +55,36 @@ fun FeedbackPage(navController: NavController, itemId: Int? = null) {
 
     val scrollState = rememberScrollState()
 
+    val submitFeedback: () -> Unit = {
+        coroutineScope.launch {
+            val feedback = Feedback(itemId, feedbackMessage, uxValueState.value ?: -1)
+
+            val connectivityManager = getSystemService(context, ConnectivityManager::class.java)
+            val text = if (connectivityManager?.isDefaultNetworkActive == true) {
+                "Thanks! Your feedback will be sent when you go back online."
+            } else "Thanks for the feedback!"
+
+            viewModel.postFeedback(feedback).fold(
+                onSuccess = {
+                    Toast.makeText(
+                        context,
+                        text,
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    navController.popBackStack()
+                },
+                onFailure = {
+                    Toast.makeText(
+                        context,
+                        "Failed to send feedback",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            )
+        }
+    }
+
     HNModalNavigatorPanel(
         navController = navController,
         state = drawerState,
@@ -71,24 +103,7 @@ fun FeedbackPage(navController: NavController, itemId: Int? = null) {
                 ExtendedFloatingActionButton(
                     text = { Text("Submit") },
                     icon = { Icon(Icons.Filled.Send, "Send Feedback") },
-                    onClick = {
-                        coroutineScope.launch {
-                            viewModel.postFeedback(Feedback(itemId,
-                                feedbackMessage,
-                                uxValueState.value ?: -1)).fold(
-                                onSuccess = {
-                                    Toast.makeText(context,
-                                        "Thanks for the feedback",
-                                        Toast.LENGTH_SHORT).show()
-                                    navController.popBackStack() },
-                                onFailure = {
-                                    Toast.makeText(context,
-                                        "Failed to send feedback",
-                                        Toast.LENGTH_SHORT).show()
-                                }
-                            )
-                        }
-                    },
+                    onClick = submitFeedback,
                 )
             }
         ) {
