@@ -73,14 +73,13 @@ fun HomePageTopBar(
     CenterAlignedTopAppBar(
         title = {
             Row {
-                Timber.d(query)
                 Icon(
                     ROUTE_ICONS[query]!!,
                     query,
-                    modifier = Modifier.padding(start = 4.dp, top = 4.dp, end = 4.dp)
+                    modifier = Modifier.padding(start = 4.dp, top = 4.dp, end = 6.dp)
                 )
 
-                Text(query)
+                Text(ROUTE_TITLES[query] ?: query)
             }
         },
         navigationIcon = {
