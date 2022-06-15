@@ -9,10 +9,9 @@ interface PostFeedbackUseCase {
     suspend operator fun invoke(feedback: Feedback) : Result<Unit>
 }
 
-
 class PostFeedbackUseCaseImpl : PostFeedbackUseCase, KoinComponent {
 
-    val feedbackRepository : FeedbackRepository by inject()
+    private val feedbackRepository : FeedbackRepository by inject()
 
     override suspend operator fun invoke(feedback: Feedback) : Result<Unit> {
         return feedbackRepository.sendFeedback(feedback)
