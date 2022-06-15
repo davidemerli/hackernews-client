@@ -34,13 +34,19 @@ val networkingModule = module {
     single {
         get<Retrofit>().create(AlgoliaSearchApi::class.java)
     }
-    single {
+    single(named("HN")) {
         Firebase.database("https://hacker-news.firebaseio.com/")
     }
+    single(named("ourDb")) {
+        Firebase.database("https://hackernews-client-82b42-default-rtdb.europe-west1.firebasedatabase.app/")
+    }
     single(named("item")) {
-        get<FirebaseDatabase>().getReference("v0/item")
+        get<FirebaseDatabase>(named("HN")).getReference("v0/item")
     }
     single(named("root")) {
-        get<FirebaseDatabase>().getReference("v0")
+        get<FirebaseDatabase>(named("HN")).getReference("v0")
+    }
+    single(named("feedback")) {
+        get<FirebaseDatabase>(named("ourDb")).getReference("feedback")
     }
 }

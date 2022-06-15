@@ -1,4 +1,7 @@
 package it.devddk.hackernewsclient.domain.model.feedback
 
-class Feedback {
-}
+data class Feedback(
+    val id: Int?,
+    val feedback: String,
+    val impact: Int
+)
