@@ -21,6 +21,7 @@ class SettingPrefs(private val context: Context) {
         // what does the user want to see first
         private val preferredViewKey = stringPreferencesKey("preferred_view")
 
+        // webview settings
         private val javaScriptEnabledKey = booleanPreferencesKey("javaScriptEnabled")
         private val domStorageEnabledKey = booleanPreferencesKey("domStorageEnabled")
         private val allowFileAccessKey = booleanPreferencesKey("allowFileAccess")
@@ -41,7 +42,7 @@ class SettingPrefs(private val context: Context) {
         private val supportMultipleWindowsKey = booleanPreferencesKey("supportMultipleWindows")
         private val supportZoomKey = booleanPreferencesKey("supportZoom")
 
-        const val DEFAULT_DEPTH = 6f
+        const val DEFAULT_DEPTH = 10f
         const val DEFAULT_PREFERRED_VIEW = "article"
 
         val WEBVIEW_DEFAULTS = mapOf(
@@ -51,19 +52,19 @@ class SettingPrefs(private val context: Context) {
             "blockNetworkImage" to false,
             "allowContentAccess" to false,
             "blockNetworkLoads" to false,
-            "builtInZoomControls" to false,
+            "builtInZoomControls" to true,
             "databaseEnabled" to false,
             "displayZoomControls" to false,
             "javaScriptCanOpenWindowsAutomatically" to false,
-            "loadWithOverviewMode" to false,
-            "loadsImagesAutomatically" to false,
+            "loadWithOverviewMode" to true,
+            "loadsImagesAutomatically" to true,
             "mediaPlaybackRequiresUserGesture" to false,
             "offscreenPreRaster" to false,
-            "useWideViewPort" to false,
+            "useWideViewPort" to true,
             "geolocationEnabled" to false,
             "needInitialFocus" to false,
             "supportMultipleWindows" to false,
-            "supportZoom" to false,
+            "supportZoom" to true,
         )
     }
 
