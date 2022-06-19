@@ -98,10 +98,18 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
                     NewsItem(
                         itemState.item,
                         onClick = {
-                            navController.navigate("items/preloaded/${itemState.item.encodeJson().urlEncode()}")
+                            navController.navigate(
+                                "items/preloaded/${
+                                itemState.item.encodeJson().urlEncode()
+                                }"
+                            )
                         },
                         onClickComments = {
-                            navController.navigate("items/preloaded/${itemState.item.encodeJson().urlEncode()}/comments")
+                            navController.navigate(
+                                "items/preloaded/${
+                                itemState.item.encodeJson().urlEncode()
+                                }/comments"
+                            )
                         },
                         placeholder = false
                     )

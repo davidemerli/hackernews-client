@@ -2,10 +2,14 @@ package it.devddk.hackernewsclient.components
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.SpringSpec
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,12 +22,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.FractionalThreshold
+import androidx.compose.material.SwipeableDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.rememberSwipeableState
+import androidx.compose.material.swipeable
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -43,11 +52,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.integerArrayResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -61,7 +72,9 @@ import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
+import timber.log.Timber
 import java.net.URI
+import kotlin.math.roundToInt
 
 fun getDomainName(url: String): String {
     return try {
@@ -296,7 +309,12 @@ fun ItemTime(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = f
 }
 
 @Composable
-fun ItemComments(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = false, onClick: () -> Unit) {
+fun ItemComments(
+    modifier: Modifier = Modifier,
+    item: Item,
+    placeholder: Boolean = false,
+    onClick: () -> Unit,
+) {
     item.descendants?.let { comments ->
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -334,84 +352,127 @@ fun ItemComments(modifier: Modifier = Modifier, item: Item, placeholder: Boolean
 }
 
 @Composable
+@OptIn(ExperimentalMaterialApi::class)
 fun NewsItem(
     item: Item = placeholderItem,
     placeholder: Boolean = false,
     onClick: () -> Unit = {},
     onClickComments: () -> Unit = {},
 ) {
+    val swipeableState = rememberSwipeableState(
+        0,
+        animationSpec = SpringSpec(
+            stiffness = Spring.StiffnessHigh
+        ),
+        confirmStateChange = {
+            Timber.d(it.toString())
+            false
+        }
+    )
 
-    ConstraintLayout(
+    BoxWithConstraints(
         modifier = Modifier
-            .height(128.dp)
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 6.dp, vertical = 8.dp)
+            .background(color = if ((swipeableState.progress.to - swipeableState.progress.from) * swipeableState.progress.fraction > 0.2f) Color.Yellow else MaterialTheme.colorScheme.surface)
     ) {
-        val (colorHint, domain, title, bottomInfo, comments, more) = createRefs()
 
-        ColorHint(
-            item = item,
-            modifier = Modifier.constrainAs(colorHint) {
-                top.linkTo(parent.top)
-                bottom.linkTo(parent.bottom)
-                start.linkTo(parent.start)
-            }
-        )
+        val sizePx = with(LocalDensity.current) { -(maxWidth).toPx() }
+        val anchors = mapOf(0f to 0, sizePx to 1, -sizePx to -1)
 
-        ItemDomain(
-            item = item, placeholder = placeholder,
-            modifier = Modifier.constrainAs(domain) {
-                top.linkTo(parent.top)
-                start.linkTo(colorHint.end, margin = 6.dp)
-            }
-        )
-
-        ItemTitle(
-            item = item, placeholder = placeholder,
+        ConstraintLayout(
             modifier = Modifier
-                .padding(end = 56.dp) // to avoid overlapping with the dropdown menu
-                .constrainAs(title) {
-                    top.linkTo(domain.bottom)
+                .height(128.dp)
+                .fillMaxWidth()
+                .swipeable(
+                    state = swipeableState,
+                    anchors = anchors,
+                    thresholds = { _, _ -> FractionalThreshold(0.2f) },
+                    resistance = SwipeableDefaults.resistanceConfig(anchors.keys, 1f, 0.3f),
+                    orientation = Orientation.Horizontal,
+                )
+                .clickable(onClick = onClick)
+                .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) }
+                .clip(RoundedCornerShape(8.dp))
+                .background(color = MaterialTheme.colorScheme.surface)
+                .padding(horizontal = 6.dp, vertical = 8.dp)
+        ) {
+            val (colorHint, domain, title, comments, more) = createRefs()
+
+            val (pt, by, time) = createRefs()
+
+            ColorHint(
+                item = item,
+                modifier = Modifier.constrainAs(colorHint) {
+                    top.linkTo(parent.top)
+                    bottom.linkTo(parent.bottom)
+                    start.linkTo(parent.start)
+                }
+            )
+
+            ItemDomain(
+                item = item, placeholder = placeholder,
+                modifier = Modifier.constrainAs(domain) {
+                    top.linkTo(parent.top)
                     start.linkTo(colorHint.end, margin = 6.dp)
                 }
-        )
+            )
 
-        Row(
-            modifier = Modifier.constrainAs(bottomInfo) {
-                bottom.linkTo(parent.bottom)
-                start.linkTo(colorHint.end, margin = 6.dp)
-            }
-        ) {
-            ItemPoints(item = item, placeholder = placeholder)
+            ItemTitle(
+                item = item, placeholder = placeholder,
+                modifier = Modifier
+                    .padding(end = 56.dp) // to avoid overlapping with the dropdown menu
+                    .constrainAs(title) {
+                        top.linkTo(domain.bottom)
+                        start.linkTo(colorHint.end, margin = 6.dp)
+                    }
+            )
 
-            Text(text = " - ")
-
-            ItemBy(item = item, placeholder = placeholder)
-
-            Text(text = " - ", modifier = Modifier.padding(start = 4.dp))
-
-            ItemTime(item = item, placeholder = placeholder)
-        }
-
-        // putting an animated placeholder also on those lags a bit much
-        if (!placeholder) {
-            OptionsButton(
+            ItemPoints(
                 item = item,
-                modifier = Modifier.constrainAs(comments) {
-                    top.linkTo(parent.top)
-                    end.linkTo(parent.end)
+                placeholder = placeholder,
+                modifier = Modifier.constrainAs(pt) {
+                    bottom.linkTo(parent.bottom)
+                    start.linkTo(colorHint.end, margin = 6.dp)
                 }
             )
 
-            ItemComments(
+            ItemBy(
                 item = item,
-                modifier = Modifier.constrainAs(more) {
+                placeholder = placeholder,
+                modifier = Modifier.constrainAs(by) {
                     bottom.linkTo(parent.bottom)
-                    end.linkTo(parent.end)
-                },
-                onClick = onClickComments
+                    start.linkTo(pt.end, margin = 6.dp)
+                }
             )
+
+            ItemTime(
+                item = item,
+                placeholder = placeholder,
+                modifier = Modifier.constrainAs(time) {
+                    bottom.linkTo(parent.bottom)
+                    start.linkTo(by.end, margin = 6.dp)
+                }
+            )
+
+            // putting an animated placeholder also on those lags a bit much
+            if (!placeholder) {
+                OptionsButton(
+                    item = item,
+                    modifier = Modifier.constrainAs(comments) {
+                        top.linkTo(parent.top)
+                        end.linkTo(parent.end)
+                    }
+                )
+
+                ItemComments(
+                    item = item,
+                    modifier = Modifier.constrainAs(more) {
+                        bottom.linkTo(parent.bottom)
+                        end.linkTo(parent.end)
+                    },
+                    onClick = onClickComments
+                )
+            }
         }
     }
 }

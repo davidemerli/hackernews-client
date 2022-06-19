@@ -59,7 +59,6 @@ import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.utils.ALL_QUERIES
 import it.devddk.hackernewsclient.pages.HackerNewsView
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)

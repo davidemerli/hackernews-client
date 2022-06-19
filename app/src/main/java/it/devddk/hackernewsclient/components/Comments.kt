@@ -39,7 +39,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.integerArrayResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -179,9 +178,6 @@ fun CommentCard(
     onClick: () -> Unit = {},
     placeholder: Boolean = false,
 ) {
-    // if (item.deleted) return
-    // if (item.dead) return
-
     val context = LocalContext.current
     val numKids = item.kids.size
 
@@ -198,6 +194,14 @@ fun CommentCard(
         )
     )
 
+    val timeString = remember(item) {
+        TimeDisplayUtils(context).toDateTimeAgoInterval(item.time)
+    }
+
+    val isOriginalPoster = rootItem.by == item.by
+
+    val byString = "${item.by}${if (isOriginalPoster) " (OP)" else ""}"
+
     Row(
         modifier = Modifier
             .height(IntrinsicSize.Min)
@@ -207,27 +211,21 @@ fun CommentCard(
     ) {
         DepthIndicator(depth = depth)
 
-        val text = item.text ?: "< deleted comment >"
-
-        val timeString = remember(item) {
-            TimeDisplayUtils(context).toDateTimeAgoInterval(item.time)
-        }
-
-        val isOriginalPoster = rootItem.by == item.by
-
-        val byString = "${item.by}${if (isOriginalPoster) " (OP)" else ""}"
-
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = buildAnnotatedString {
                     pushStyle(
-                        SpanStyle(
-                            textDecoration = TextDecoration.Underline,
+                        MaterialTheme.typography.titleMedium.copy(
+                            textDecoration = if (item.dead) TextDecoration.LineThrough else TextDecoration.Underline,
                             fontWeight = if (isOriginalPoster) FontWeight.Black else FontWeight.SemiBold,
-                        )
+                            color = if (isOriginalPoster) MaterialTheme.colorScheme.tertiary else depthColors[depth % depthColors.size].copy(
+                                alpha = 1f
+                            )
+                        ).toSpanStyle()
                     )
                     append(byString)
                     pop()
+                    pushStyle(MaterialTheme.typography.bodySmall.toSpanStyle())
                     append(" • ")
                     append(timeString)
                 },
@@ -240,38 +238,49 @@ fun CommentCard(
                         highlight = PlaceholderHighlight.fade(),
                     ),
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (isOriginalPoster) MaterialTheme.colorScheme.tertiary
-                else depthColors[depth % depthColors.size].copy(alpha = 1f)
             )
 
 //            CompositionLocalProvider(
 //                LocalTextToolbar provides CustomTextToolbar(LocalView.current)
 //            ) {
-            SelectionContainer {
-                LinkifyText(
-                    text = text.toSpanned(),
-                    style = MaterialTheme.typography.bodyMedium,
-                    overflow = TextOverflow.Visible,
-                    linkColor = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier
-                        .padding(
-                            top = 4.dp,
-                            start = 4.dp,
-                            end = 4.dp,
-                            bottom = if (numKids > 0) 4.dp else 16.dp
-                        )
-                        .placeholder(
-                            visible = placeholder,
-                            color = PlaceholderDefaults.color(contentAlpha = 0.8f),
-                            shape = RoundedCornerShape(8.dp),
-                            highlight = PlaceholderHighlight.fade(),
-                        ),
+            if (item.text.isNullOrBlank()) {
+                Text(
+                    if (item.dead) "< removed comment >" else if (item.deleted) "< deleted comment >" else "< empty comment >",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Thin
+                    ),
+                    modifier = Modifier.padding(4.dp)
                 )
+            } else {
+                SelectionContainer {
+                    LinkifyText(
+                        text = item.text!!.toSpanned(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        overflow = TextOverflow.Visible,
+                        linkColor = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(
+                                top = 4.dp,
+                                start = 4.dp,
+                                end = 4.dp,
+                                bottom = if (numKids > 0) 4.dp else 16.dp
+                            )
+                            .placeholder(
+                                visible = placeholder,
+                                color = PlaceholderDefaults.color(contentAlpha = 0.8f),
+                                shape = RoundedCornerShape(8.dp),
+                                highlight = PlaceholderHighlight.fade(),
+                            ),
+                    )
+                }
             }
-//            }
 
             if (numKids > 0) {
-                ExpandChildren(expanded = expanded, numKids = numKids, onClick = onClick)
+                ExpandChildren(
+                    expanded = expanded,
+                    numKids = numKids,
+                    onClick = onClick
+                )
             }
         }
     }
