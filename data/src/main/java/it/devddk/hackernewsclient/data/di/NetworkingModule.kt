@@ -35,7 +35,7 @@ val networkingModule = module {
         get<Retrofit>().create(AlgoliaSearchApi::class.java)
     }
     single(named("HN")) {
-        Firebase.database("https://hacker-news.firebaseio.com/")
+        Firebase.database("https://hacker-news.firebaseio.com/").apply { setPersistenceEnabled(true) }
     }
     single(named("ourDb")) {
         Firebase.database("https://hackernews-client-82b42-default-rtdb.europe-west1.firebasedatabase.app/")
