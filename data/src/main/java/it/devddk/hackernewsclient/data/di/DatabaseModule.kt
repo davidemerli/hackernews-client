@@ -2,6 +2,7 @@ package it.devddk.hackernewsclient.data.di
 
 import androidx.room.Room
 import it.devddk.hackernewsclient.data.database.LocalDatabase
+import it.devddk.hackernewsclient.data.database.dao.ItemCollectionEntityDao
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -12,11 +13,11 @@ val databaseModule = module {
             .fallbackToDestructiveMigration().build()
     }
 
-    single {
+    factory<ItemCollectionEntityDao> {
         get<LocalDatabase>().itemCollectionDao()
     }
 
-    single {
+    factory {
         get<LocalDatabase>().itemEntityDao()
     }
 }

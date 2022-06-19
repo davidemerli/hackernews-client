@@ -15,7 +15,7 @@ interface ItemEntityDao {
     suspend fun insertItem(entity: ItemEntity)
 
     @Query("SELECT * FROM items WHERE :itemId = items.id LIMIT 1")
-    suspend fun getItem(itemId: ItemId): ItemEntity
+    suspend fun getItem(itemId: ItemId): ItemEntity?
 
     @Query("SELECT id, deleted, author, type," +
             " time, dead, parent, text, kids, " +
