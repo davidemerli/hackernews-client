@@ -1,5 +1,7 @@
 package it.devddk.hackernewsclient.components
 
+import android.text.util.Linkify
+import android.widget.TextView
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,13 +17,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,8 +44,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.placeholder.PlaceholderDefaults
@@ -240,9 +242,6 @@ fun CommentCard(
                 style = MaterialTheme.typography.bodyLarge,
             )
 
-//            CompositionLocalProvider(
-//                LocalTextToolbar provides CustomTextToolbar(LocalView.current)
-//            ) {
             if (item.text.isNullOrBlank()) {
                 Text(
                     if (item.dead) "< removed comment >" else if (item.deleted) "< deleted comment >" else "< empty comment >",
@@ -252,27 +251,32 @@ fun CommentCard(
                     modifier = Modifier.padding(4.dp)
                 )
             } else {
-                SelectionContainer {
-                    LinkifyText(
-                        text = item.text!!.toSpanned(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        overflow = TextOverflow.Visible,
-                        linkColor = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier
-                            .padding(
-                                top = 4.dp,
-                                start = 4.dp,
-                                end = 4.dp,
-                                bottom = if (numKids > 0) 4.dp else 16.dp
-                            )
-                            .placeholder(
-                                visible = placeholder,
-                                color = PlaceholderDefaults.color(contentAlpha = 0.8f),
-                                shape = RoundedCornerShape(8.dp),
-                                highlight = PlaceholderHighlight.fade(),
-                            ),
-                    )
-                }
+                val primaryColor = MaterialTheme.colorScheme.tertiary
+                val textColor = MaterialTheme.colorScheme.contentColorFor(commentBackground)
+                AndroidView(
+                    factory = { TextView(context) },
+                    update = {
+                        it.text = item.text!!.toSpanned()
+                        it.setTextIsSelectable(true)
+                        Linkify.addLinks(it, Linkify.WEB_URLS)
+
+                        it.setLinkTextColor(primaryColor.toArgb())
+                        it.setTextColor(textColor.toArgb())
+                    },
+                    modifier = Modifier
+                        .padding(
+                            top = 4.dp,
+                            start = 4.dp,
+                            end = 4.dp,
+                            bottom = if (numKids > 0) 4.dp else 16.dp
+                        )
+                        .placeholder(
+                            visible = placeholder,
+                            color = PlaceholderDefaults.color(contentAlpha = 0.8f),
+                            shape = RoundedCornerShape(8.dp),
+                            highlight = PlaceholderHighlight.fade(),
+                        ),
+                )
             }
 
             if (numKids > 0) {
