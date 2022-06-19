@@ -8,6 +8,8 @@ import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.utils.CollectionQueryType
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.domain.model.utils.TopStories
+import it.devddk.hackernewsclient.domain.utils.getValue
+import it.devddk.hackernewsclient.domain.utils.requireValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.withContext
@@ -33,8 +36,13 @@ class HomePageViewModel : ViewModel(), KoinComponent {
     private val getItemById: GetItemUseCase by inject()
 
     // state flows
-    private val _uiState: MutableStateFlow<CollectionQueryType> = MutableStateFlow(TopStories)
-    val uiState = _uiState.asStateFlow()
+    private val _uiState: MutableSharedFlow<CollectionQueryType> =
+        MutableSharedFlow<CollectionQueryType>(1).apply {
+            onSubscription {
+                emit(TopStories)
+            }
+        }
+    val uiState = _uiState.asSharedFlow()
 
     private val _itemListFlow: MutableSharedFlow<List<NewsItemState>> = MutableSharedFlow(1)
     val itemListFlow = _itemListFlow.asSharedFlow()
@@ -65,7 +73,7 @@ class HomePageViewModel : ViewModel(), KoinComponent {
     )
 
     suspend fun setQuery(newQuery: CollectionQueryType) {
-        val oldQuery = _uiState.value
+        val oldQuery = _uiState.getValue()
 
         if (oldQuery != newQuery) {
             _uiState.emit(newQuery)
@@ -115,6 +123,18 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         }
 
         _itemListFlow.emit(result)
+    }
+
+    private suspend fun refresh() {
+        _uiState.emit(_uiState.requireValue())
+
+        updateItemList()
+    }
+
+    private suspend fun refresh(query: CollectionQueryType) {
+        _uiState.emit(query)
+
+        updateItemList()
     }
 }
 
