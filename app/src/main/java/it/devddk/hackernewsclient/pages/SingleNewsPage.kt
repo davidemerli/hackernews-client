@@ -1,6 +1,5 @@
 package it.devddk.hackernewsclient.pages
 
-import android.text.Html
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,6 +45,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
+import androidx.core.text.HtmlCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -74,7 +74,10 @@ import kotlin.math.max
 import androidx.compose.foundation.layout.Row as Row1
 
 fun String.toSpanned(): String {
-    return Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY).toString().trim()
+    return HtmlCompat.fromHtml(
+        this,
+        HtmlCompat.FROM_HTML_MODE_LEGACY
+    ).toString().trim()
 }
 
 @Composable
@@ -138,7 +141,8 @@ fun TabbedView(item: Item, navController: NavController, selectedView: String?) 
     val webviewState = rememberWebViewState(url = item.url ?: "")
 
     val dataStore = SettingPrefs(LocalContext.current)
-    val preferredView = selectedView ?: dataStore.preferredView.collectAsState(initial = DEFAULT_PREFERRED_VIEW).value
+    val preferredView = selectedView
+        ?: dataStore.preferredView.collectAsState(initial = DEFAULT_PREFERRED_VIEW).value
 
     if (tabs.size > 1) {
         LaunchedEffect(preferredView) {
@@ -149,7 +153,11 @@ fun TabbedView(item: Item, navController: NavController, selectedView: String?) 
     }
 
     Scaffold(
-        topBar = { if (!fullScreenWebView) { SingleNewsPageTopBar(item, navController) } },
+        topBar = {
+            if (!fullScreenWebView) {
+                SingleNewsPageTopBar(item, navController)
+            }
+        },
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             if (tabs[pagerState.currentPage] == "Article") {
