@@ -23,7 +23,6 @@ import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -251,17 +250,18 @@ fun CommentCard(
                     modifier = Modifier.padding(4.dp)
                 )
             } else {
-                val primaryColor = MaterialTheme.colorScheme.tertiary
-                val textColor = MaterialTheme.colorScheme.contentColorFor(commentBackground)
+                val linkColor = MaterialTheme.colorScheme.tertiary
+                val textColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
+
                 AndroidView(
                     factory = { TextView(context) },
                     update = {
+                        it.setLinkTextColor(linkColor.toArgb())
+                        it.setTextColor(textColor.toArgb())
+
                         it.text = item.text!!.toSpanned()
                         it.setTextIsSelectable(true)
                         Linkify.addLinks(it, Linkify.WEB_URLS)
-
-                        it.setLinkTextColor(primaryColor.toArgb())
-                        it.setTextColor(textColor.toArgb())
                     },
                     modifier = Modifier
                         .padding(
