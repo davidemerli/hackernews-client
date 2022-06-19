@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.QuestionAnswer
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TrendingUp
@@ -106,6 +107,8 @@ fun SingleNewsPageTopBar(item: Item, navController: NavController) {
     val context = LocalContext.current
     var openInBrowserExpanded by remember { mutableStateOf(false) }
 
+    val coroutineScope = rememberCoroutineScope()
+
     SmallTopAppBar(
         modifier = Modifier.wrapContentHeight(Alignment.Bottom),
         title = { },
@@ -115,6 +118,11 @@ fun SingleNewsPageTopBar(item: Item, navController: NavController) {
             }
         },
         actions = {
+            IconButton(onClick = {
+                //TODO
+            }) {
+                Icon(Icons.Filled.Refresh, "Refresh")
+            }
             IconButton(onClick = {
                 navController.navigate("feedback/${item.id}")
             }) {
