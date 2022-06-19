@@ -29,6 +29,7 @@ data class ItemEntity(
     val url: String?,
     val htmlPage: String?
 ) : DomainMapper<Item> {
+
     override fun mapToDomainModel(): Item {
         return Item(
             id,
@@ -50,6 +51,30 @@ data class ItemEntity(
         )
     }
 }
+
+
+fun Item.toItemEntity() : ItemEntity {
+    return ItemEntity(
+        id = id,
+        deleted = deleted,
+        by = by,
+        type = type.toString(),
+        time = time,
+        dead = dead,
+        parent = parent,
+        text = text,
+        kids = kids,
+        title = title,
+        descendants = descendants,
+        parts = parts,
+        poll = poll,
+        score = score,
+        url = url,
+        htmlPage = htmlPage)
+}
+
+
+
 
 data class ItemEntityWithoutHtmlPage(
     val id: Int,

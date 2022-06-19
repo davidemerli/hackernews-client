@@ -1,15 +1,15 @@
 package it.devddk.hackernewsclient.domain.repository
 
-import it.devddk.hackernewsclient.domain.model.items.ItemCollectionTag
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
+import it.devddk.hackernewsclient.domain.model.utils.SavedItemCollection
 
 interface CollectionRepository {
-    suspend fun addItemToCollection(id: ItemId, collection: ItemCollectionTag)
+    suspend fun addItemToCollection(id: ItemId, collection: SavedItemCollection)
 
-    suspend fun removeItemFromCollection(id: ItemId, collection: ItemCollectionTag)
+    suspend fun removeItemFromCollection(id: ItemId, collection: SavedItemCollection)
 
-    suspend fun getCollectionsOfItem(id: ItemId) : Set<ItemCollectionTag>
+    suspend fun getCollectionsOfItem(id: ItemId) : Set<SavedItemCollection>
 
-    suspend fun getAllItemsForCollection(collection: ItemCollectionTag) : List<ItemId>
+    suspend fun getAllItemsForCollection(collection: SavedItemCollection) : List<ItemId>
 
 }

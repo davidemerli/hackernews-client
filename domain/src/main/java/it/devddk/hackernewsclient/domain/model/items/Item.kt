@@ -1,6 +1,7 @@
 package it.devddk.hackernewsclient.domain.model.items
 
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
+import it.devddk.hackernewsclient.domain.model.utils.SavedItemCollection
 import java.time.LocalDateTime
 
 
@@ -21,7 +22,7 @@ data class Item(
     val score: Int? = null,
     val url: String? = null,
     val previewUrl: String? = null,
-    val collections : Set<ItemCollectionTag> = emptySet(),
+    val collections : Set<SavedItemCollection> = emptySet(),
     val htmlPage: String? = null
 ) {
 

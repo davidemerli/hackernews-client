@@ -12,7 +12,7 @@ import kotlin.coroutines.suspendCoroutine
 
 
 class HttpDownloader : KoinComponent {
-    val httpClient : OkHttpClient by inject()
+    private val httpClient : OkHttpClient by inject()
 
 
     private suspend fun downloadUrl(url : String) : Response {

@@ -59,7 +59,6 @@ dependencies {
     implementation "androidx.room:room-runtime:$roomVersion"
     implementation 'com.google.firebase:firebase-database-ktx:20.0.4'
     annotationProcessor "androidx.room:room-compiler:$roomVersion"
-    implementation "androidx.room:room-coroutines:$roomVersion"
     implementation "androidx.room:room-ktx:$roomVersion"
     kapt "androidx.room:room-compiler:$roomVersion"
 

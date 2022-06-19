@@ -11,6 +11,7 @@ interface DomainMapper<T : Any> {
 interface RoomMapper<out T : Any> {
     fun mapToRoomEntity(): T
 }
+
 /*
 
 /**

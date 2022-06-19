@@ -2,6 +2,7 @@ package it.devddk.hackernewsclient.data.repository.item
 
 import com.google.firebase.database.DatabaseReference
 import it.devddk.hackernewsclient.data.database.dao.ItemEntityDao
+import it.devddk.hackernewsclient.data.database.entities.toItemEntity
 import it.devddk.hackernewsclient.data.networking.model.ItemResponse
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.repository.ItemRepository
@@ -31,9 +32,10 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
     }
 
     override suspend fun saveItem(item: Item) {
+        val copiedItem : Item
         if(item.url != null && item.htmlPage == null) {
-            item.copy(htmlPage = )
+            copiedItem = item.copy(htmlPage = item.htmlPage)
         }
-        itemDao.getHtml()
+        itemDao.insertItem(item.toItemEntity())
     }
 }

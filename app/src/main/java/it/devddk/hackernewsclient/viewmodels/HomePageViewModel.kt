@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import it.devddk.hackernewsclient.domain.interaction.item.GetItemUseCase
 import it.devddk.hackernewsclient.domain.interaction.item.GetNewStoriesUseCase
 import it.devddk.hackernewsclient.domain.model.items.Item
-import it.devddk.hackernewsclient.domain.model.utils.CollectionQueryType
+import it.devddk.hackernewsclient.domain.model.utils.HNItemCollection
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.domain.model.utils.TopStories
 import kotlinx.coroutines.Dispatchers
@@ -33,7 +33,7 @@ class HomePageViewModel : ViewModel(), KoinComponent {
     private val getItemById: GetItemUseCase by inject()
 
     // state flows
-    private val _uiState: MutableStateFlow<CollectionQueryType> = MutableStateFlow(TopStories)
+    private val _uiState: MutableStateFlow<HNItemCollection> = MutableStateFlow(TopStories)
     val uiState = _uiState.asStateFlow()
 
     private val _itemListFlow: MutableSharedFlow<List<NewsItemState>> = MutableSharedFlow(1)
@@ -64,7 +64,7 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         initialValue = NewsPageState.Loading
     )
 
-    suspend fun setQuery(newQuery: CollectionQueryType) {
+    suspend fun setQuery(newQuery: HNItemCollection) {
         val oldQuery = _uiState.value
 
         if (oldQuery != newQuery) {

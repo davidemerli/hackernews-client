@@ -15,7 +15,7 @@ class StoryRepositoryImpl : StoryRepository, KoinComponent {
 
     val root: DatabaseReference by inject(named("root"))
 
-    override suspend fun getStories(query: CollectionQueryType): Result<List<ItemId>> {
+    override suspend fun getStories(query: HNItemCollection): Result<List<ItemId>> {
         return runCatching {
             val what = when (query) {
                 AskStories -> "askstories"

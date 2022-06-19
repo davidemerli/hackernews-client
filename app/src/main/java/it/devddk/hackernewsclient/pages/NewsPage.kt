@@ -22,7 +22,7 @@ import androidx.navigation.NavController
 import it.devddk.hackernewsclient.components.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.components.HomePageTopBar
 import it.devddk.hackernewsclient.components.NewsItem
-import it.devddk.hackernewsclient.domain.model.utils.CollectionQueryType
+import it.devddk.hackernewsclient.domain.model.utils.HNItemCollection
 import it.devddk.hackernewsclient.domain.model.utils.TopStories
 import it.devddk.hackernewsclient.utils.encodeJson
 import it.devddk.hackernewsclient.utils.urlEncode
@@ -146,6 +146,6 @@ fun LoadingScreen() {
 
 sealed class NewsPageRoutes
 
-data class HackerNewsView(val query: CollectionQueryType) : NewsPageRoutes() {
+data class HackerNewsView(val query: HNItemCollection) : NewsPageRoutes() {
     val route: String = query::class.java.simpleName
 }
