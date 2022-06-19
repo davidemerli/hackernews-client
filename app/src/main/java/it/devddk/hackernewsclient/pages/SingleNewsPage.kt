@@ -71,7 +71,8 @@ import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.max
-import androidx.compose.foundation.layout.Row as Row1
+import androidx.compose.foundation.layout.Row
+import it.devddk.hackernewsclient.components.CommentText
 
 fun String.toSpanned(): String {
     return HtmlCompat.fromHtml(
@@ -253,7 +254,7 @@ fun CommentsView(item: Item) {
             ) {
                 ItemDomain(item = item)
                 ItemTitle(item = item)
-                Row1 {
+                Row {
                     ItemBy(item = item)
 
                     Text(text = " - ")
@@ -298,18 +299,7 @@ fun CommentsView(item: Item) {
 @Composable
 fun ArticleDescription(item: Item) {
     if (!item.text.isNullOrBlank()) {
-        SelectionContainer {
-            LinkifyText(
-                item.text!!.toSpanned(),
-                modifier = Modifier.padding(8.dp),
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Light,
-                    lineHeight = 19.5.sp
-                ),
-                linkColor = MaterialTheme.colorScheme.secondary
-            )
-        }
+        CommentText(item = item)
     }
 }
 

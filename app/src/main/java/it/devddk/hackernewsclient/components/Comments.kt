@@ -7,11 +7,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -45,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.placeholder.PlaceholderDefaults
@@ -127,49 +126,6 @@ fun ExpandableComment(
 }
 
 @Composable
-fun DepthIndicator(depth: Int) {
-    val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
-
-    Box(
-        modifier = Modifier
-            .width(10.dp)
-            .fillMaxHeight()
-            .padding(end = 4.dp)
-            .clip(RoundedCornerShape(topStart = 4.dp, bottomStart = 4.dp))
-            .background(depthColors[depth % depthColors.size])
-    )
-}
-
-@Composable
-@OptIn(ExperimentalComposeUiApi::class)
-fun ExpandChildren(expanded: Boolean, numKids: Int, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .height(48.dp)
-            .padding(vertical = 4.dp)
-            .clickable { onClick() }
-    ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                pluralStringResource(R.plurals.comments, numKids, numKids),
-                style = MaterialTheme.typography.bodySmall
-            )
-
-            Icon(
-                if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
-                if (expanded) stringResource(R.string.close_comments) else stringResource(R.string.open_comments)
-            )
-        }
-    }
-}
-
-@Composable
-@OptIn(ExperimentalFoundationApi::class)
-// TODO: use ConstrainedLayout and add a "more" button with options such as "return to root"
 fun CommentCard(
     item: Item,
     depth: Int = 0,
@@ -179,12 +135,7 @@ fun CommentCard(
     onClick: () -> Unit = {},
     placeholder: Boolean = false,
 ) {
-    val context = LocalContext.current
-    val numKids = item.kids.size
-
     val paddingStart = (depth * depthSize).dp + 2.dp
-
-    val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
 
     // obtains a background color for the comments which is a slight tint of the colorScheme secondary color
     val commentBackground = Color(
@@ -195,97 +146,183 @@ fun CommentCard(
         )
     )
 
+    val isOriginalPoster = rootItem.by == item.by
+
+    ConstraintLayout(
+        modifier = Modifier
+            .height(IntrinsicSize.Min)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(4.dp))
+            .padding(paddingStart, 4.dp, 4.dp, 4.dp)
+            .background(commentBackground)
+    ) {
+        val (depthIndicator, title, text, expand) = createRefs()
+
+        DepthIndicator(
+            depth = depth,
+            modifier = Modifier.constrainAs(depthIndicator) {
+                start.linkTo(parent.start)
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+            }
+        )
+
+        CommentTitle(
+            item = item,
+            depth = depth,
+            isOriginalPoster = isOriginalPoster,
+            placeholder = placeholder,
+            modifier = Modifier.constrainAs(title) {
+                start.linkTo(depthIndicator.end, margin = 2.dp)
+                top.linkTo(parent.top, margin = 1.dp)
+            }
+        )
+
+        CommentText(
+            item = item,
+            placeholder = placeholder,
+            modifier = Modifier.fillMaxWidth().padding(end = 8.dp).constrainAs(text) {
+                start.linkTo(depthIndicator.end, margin = 2.dp)
+                top.linkTo(title.bottom, margin = 2.dp)
+            }
+        )
+
+        if (item.isExpandable()) {
+            ExpandButton(
+                expanded = expanded,
+                onClick = onClick,
+                item = item,
+                modifier = Modifier.constrainAs(expand) {
+                    start.linkTo(depthIndicator.end, margin = 2.dp)
+                    top.linkTo(text.bottom, margin = 6.dp)
+                    bottom.linkTo(parent.bottom, margin = 2.dp)
+                    end.linkTo(parent.end, margin = 2.dp)
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun CommentTitle(modifier: Modifier = Modifier, item: Item, depth: Int, isOriginalPoster: Boolean, placeholder: Boolean = false) {
+    val context = LocalContext.current
+
+    val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
+    val byString = "${item.by}${if (isOriginalPoster) " (OP)" else ""}"
+
     val timeString = remember(item) {
         TimeDisplayUtils(context).toDateTimeAgoInterval(item.time)
     }
 
-    val isOriginalPoster = rootItem.by == item.by
-
-    val byString = "${item.by}${if (isOriginalPoster) " (OP)" else ""}"
-
-    Row(
-        modifier = Modifier
-            .height(IntrinsicSize.Min)
-            .padding(start = paddingStart, top = 4.dp, end = 4.dp, bottom = 4.dp)
-            .clip(RoundedCornerShape(4.dp))
-            .background(commentBackground)
-    ) {
-        DepthIndicator(depth = depth)
-
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = buildAnnotatedString {
-                    pushStyle(
-                        MaterialTheme.typography.titleMedium.copy(
-                            textDecoration = if (item.dead) TextDecoration.LineThrough else TextDecoration.Underline,
-                            fontWeight = if (isOriginalPoster) FontWeight.Black else FontWeight.SemiBold,
-                            color = if (isOriginalPoster) MaterialTheme.colorScheme.tertiary else depthColors[depth % depthColors.size].copy(
-                                alpha = 1f
-                            )
-                        ).toSpanStyle()
+    Text(
+        text = buildAnnotatedString {
+            pushStyle(
+                MaterialTheme.typography.titleMedium.copy(
+                    textDecoration = if (item.dead) TextDecoration.LineThrough else TextDecoration.Underline,
+                    fontWeight = if (isOriginalPoster) FontWeight.Black else FontWeight.SemiBold,
+                    color = if (isOriginalPoster) MaterialTheme.colorScheme.tertiary else depthColors[depth % depthColors.size].copy(
+                        alpha = 1f
                     )
-                    append(byString)
-                    pop()
-                    pushStyle(MaterialTheme.typography.bodySmall.toSpanStyle())
-                    append(" • ")
-                    append(timeString)
-                },
-                modifier = Modifier
-                    .padding(4.dp)
-                    .placeholder(
-                        visible = placeholder,
-                        color = PlaceholderDefaults.color(contentAlpha = 0.8f),
-                        shape = RoundedCornerShape(8.dp),
-                        highlight = PlaceholderHighlight.fade(),
-                    ),
-                style = MaterialTheme.typography.bodyLarge,
+                ).toSpanStyle()
             )
+            append(byString)
+            pop()
+            pushStyle(MaterialTheme.typography.bodySmall.toSpanStyle())
+            append(" • ")
+            append(timeString)
+        },
+        modifier = modifier
+            .padding(4.dp)
+            .placeholder(
+                visible = placeholder,
+                color = PlaceholderDefaults.color(contentAlpha = 0.6f),
+                shape = RoundedCornerShape(8.dp),
+                highlight = PlaceholderHighlight.fade(),
+            ),
+        style = MaterialTheme.typography.bodyLarge,
+    )
+}
 
-            if (item.text.isNullOrBlank()) {
-                Text(
-                    if (item.dead) "< removed comment >" else if (item.deleted) "< deleted comment >" else "< empty comment >",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Thin
-                    ),
-                    modifier = Modifier.padding(4.dp)
-                )
-            } else {
-                val linkColor = MaterialTheme.colorScheme.tertiary
-                val textColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
+@Composable
+fun CommentText(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = false) {
+    val context = LocalContext.current
 
-                AndroidView(
-                    factory = { TextView(context) },
-                    update = {
-                        it.setLinkTextColor(linkColor.toArgb())
-                        it.setTextColor(textColor.toArgb())
+    val linkColor = MaterialTheme.colorScheme.tertiary
+    val textColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
+    val highlightColor = MaterialTheme.colorScheme.tertiaryContainer
 
-                        it.text = item.text!!.toSpanned()
-                        it.setTextIsSelectable(true)
-                        Linkify.addLinks(it, Linkify.WEB_URLS)
-                    },
-                    modifier = Modifier
-                        .padding(
-                            top = 4.dp,
-                            start = 4.dp,
-                            end = 4.dp,
-                            bottom = if (numKids > 0) 4.dp else 16.dp
-                        )
-                        .placeholder(
-                            visible = placeholder,
-                            color = PlaceholderDefaults.color(contentAlpha = 0.8f),
-                            shape = RoundedCornerShape(8.dp),
-                            highlight = PlaceholderHighlight.fade(),
-                        ),
-                )
-            }
-
-            if (numKids > 0) {
-                ExpandChildren(
-                    expanded = expanded,
-                    numKids = numKids,
-                    onClick = onClick
-                )
-            }
-        }
+    if (item.text.isNullOrBlank()) {
+        return Text(
+            if (item.dead) "< removed comment >" else if (item.deleted) "< deleted comment >" else "< empty comment >",
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.Thin
+            ),
+            modifier = Modifier.padding(4.dp)
+        )
     }
+
+    AndroidView(
+        factory = { TextView(context) },
+        update = {
+            it.setLinkTextColor(linkColor.toArgb())
+            it.setTextColor(textColor.toArgb())
+            it.highlightColor = highlightColor.toArgb()
+
+            it.text = item.text!!.toSpanned()
+            it.setTextIsSelectable(true)
+            Linkify.addLinks(it, Linkify.WEB_URLS)
+        },
+        modifier = modifier
+            .padding(
+                top = 4.dp,
+                start = 4.dp,
+                end = 4.dp,
+                bottom = if (item.kids.isNotEmpty()) 4.dp else 16.dp
+            )
+            .placeholder(
+                visible = placeholder,
+                color = PlaceholderDefaults.color(contentAlpha = 0.6f),
+                shape = RoundedCornerShape(8.dp),
+                highlight = PlaceholderHighlight.fade(),
+            ),
+    )
+}
+
+@Composable
+@OptIn(ExperimentalComposeUiApi::class)
+fun ExpandButton(modifier: Modifier = Modifier, expanded: Boolean, item: Item, onClick: () -> Unit) {
+    Row(
+        modifier =
+        modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .padding(vertical = 4.dp)
+            .clickable { onClick() },
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            pluralStringResource(R.plurals.comments, item.kids.size, item.kids.size),
+            style = MaterialTheme.typography.bodySmall
+        )
+
+        Icon(
+            if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+            if (expanded) stringResource(R.string.close_comments) else stringResource(R.string.open_comments)
+        )
+    }
+}
+
+@Composable
+fun DepthIndicator(modifier: Modifier = Modifier, depth: Int) {
+    val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
+
+    Box(
+        modifier = modifier
+            .width(10.dp)
+            .fillMaxHeight()
+            .padding(end = 4.dp)
+            .clip(RoundedCornerShape(topStart = 4.dp, bottomStart = 4.dp))
+            .background(depthColors[depth % depthColors.size])
+    )
 }
