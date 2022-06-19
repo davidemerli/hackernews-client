@@ -6,7 +6,6 @@ import it.devddk.hackernewsclient.data.networking.utils.convertTimestamp
 import it.devddk.hackernewsclient.data.networking.utils.toItemType
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
-import it.devddk.hackernewsclient.domain.model.items.StoryItem
 import it.devddk.hackernewsclient.domain.model.search.*
 import timber.log.Timber
 
@@ -56,8 +55,7 @@ data class SearchResponse(
             parts = emptyList(),
             poll = null,
             score = hit.points,
-            url = hit.url,
-            previewUrl = null
+            url = hit.url
         )
     }
 }
