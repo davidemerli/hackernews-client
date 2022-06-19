@@ -97,7 +97,7 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
         onRefresh = {
             coroutineScope.launch {
                 Timber.d("refreshing")
-                //TODO: implement refresh on viewmodel
+                // TODO: implement refresh on viewmodel
             }
         },
     ) {
@@ -113,14 +113,14 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
                             onClick = {
                                 navController.navigate(
                                     "items/preloaded/${
-                                        itemState.item.encodeJson().urlEncode()
+                                    itemState.item.encodeJson().urlEncode()
                                     }"
                                 )
                             },
                             onClickComments = {
                                 navController.navigate(
                                     "items/preloaded/${
-                                        itemState.item.encodeJson().urlEncode()
+                                    itemState.item.encodeJson().urlEncode()
                                     }/comments"
                                 )
                             },

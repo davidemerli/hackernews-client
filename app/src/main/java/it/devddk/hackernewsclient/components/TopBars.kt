@@ -119,7 +119,7 @@ fun SingleNewsPageTopBar(item: Item, navController: NavController) {
         },
         actions = {
             IconButton(onClick = {
-                //TODO
+                // TODO
             }) {
                 Icon(Icons.Filled.Refresh, "Refresh")
             }
