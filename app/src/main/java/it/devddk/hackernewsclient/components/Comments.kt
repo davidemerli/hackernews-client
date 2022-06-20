@@ -419,7 +419,7 @@ fun MoreOptions(
                             },
                             onClick = {
                                 coroutineScope.launch {
-                                    listState.animateScrollToItem(index, -2)
+                                    listState.animateScrollToItem(index)
                                 }
                                 expanded = false
                             }
@@ -454,7 +454,7 @@ fun MoreOptions(
 
                                     Timber.d(
                                         "INDEX: ${
-                                        comments.value.map { it.itemId }.indexOf(temp.itemId)
+                                            comments.value.map { it.itemId }.indexOf(temp.itemId)
                                         }"
                                     )
 

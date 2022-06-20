@@ -27,6 +27,8 @@ import androidx.compose.material3.TabPosition
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -78,7 +80,12 @@ fun String.toSpanned(): String {
 }
 
 @Composable
-fun SingleNewsPage(navController: NavController, id: Int?, selectedView: String? = null) {
+fun ArticlePage(
+    navController: NavController,
+    windowSizeClass: WindowSizeClass,
+    id: Int?,
+    selectedView: String? = null,
+) {
 
     val mViewModel: SingleNewsViewModel = viewModel()
     val uiState = mViewModel.uiState.collectAsState(SingleNewsUiState.Loading)
@@ -95,20 +102,65 @@ fun SingleNewsPage(navController: NavController, id: Int?, selectedView: String?
             Loading()
         }
         is SingleNewsUiState.ItemLoaded -> {
-            TabbedView(uiStateValue.item, navController, selectedView)
+            ArticlePage(
+                item = uiStateValue.item,
+                navController = navController,
+                windowSizeClass = windowSizeClass,
+                selectedView = selectedView,
+            )
         }
     }
 }
 
 @Composable
-fun SingleNewsPage(navController: NavController, item: Item, selectedView: String? = null) {
+@OptIn(ExperimentalMaterial3Api::class)
+fun ArticlePage(
+    navController: NavController,
+    windowSizeClass: WindowSizeClass,
+    item: Item,
+    selectedView: String? = null,
+) {
     val viewModel: SingleNewsViewModel = viewModel()
+    val webviewState = rememberWebViewState(item.url ?: "")
 
     LaunchedEffect(item.id) {
         viewModel.setId(item.id)
     }
 
-    TabbedView(item = item, navController = navController, selectedView)
+    when (windowSizeClass.widthSizeClass) {
+        WindowWidthSizeClass.Compact,
+        WindowWidthSizeClass.Medium,
+        -> {
+            TabbedView(item = item, navController = navController, selectedView)
+        }
+        WindowWidthSizeClass.Expanded -> {
+            Scaffold(
+                topBar = {
+                    SingleNewsPageTopBar(
+                        item = item,
+                        navController = navController,
+                    )
+                }
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = it.calculateTopPadding())
+                ) {
+                    ArticleView(
+                        modifier = Modifier.fillMaxWidth(0.5f),
+                        webviewState = webviewState
+                    )
+
+                    CommentsView(
+                        modifier = Modifier.fillMaxWidth(),
+                        item = item,
+                        navController = navController
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -172,7 +224,7 @@ fun TabbedView(item: Item, navController: NavController, selectedView: String?) 
         Column(modifier = Modifier.padding(top = it.calculateTopPadding())) {
             if (item.url != null) {
                 if (fullScreenWebView) {
-                    WebViewWithPrefs(webviewState, false)
+                    WebViewWithPrefs(webviewState = webviewState)
                 } else {
                     item.url?.let {
                         TabRow(
@@ -206,16 +258,24 @@ fun TabbedView(item: Item, navController: NavController, selectedView: String?) 
                     ) { index ->
                         when (index) {
                             0 -> {
-                                ArticleView(item, webviewState)
+                                ArticleView(
+                                    webviewState = webviewState
+                                )
                             }
                             1 -> {
-                                CommentsView(item, navController = navController)
+                                CommentsView(
+                                    item = item,
+                                    navController = navController
+                                )
                             }
                         }
                     }
                 }
             } else {
-                CommentsView(item, navController = navController)
+                CommentsView(
+                    item = item,
+                    navController = navController
+                )
             }
         }
     }
@@ -223,7 +283,11 @@ fun TabbedView(item: Item, navController: NavController, selectedView: String?) 
 
 @Composable
 @OptIn(ExperimentalFoundationApi::class, ExperimentalFoundationApi::class)
-fun CommentsView(item: Item, navController: NavController) {
+fun CommentsView(
+    modifier: Modifier = Modifier,
+    item: Item,
+    navController: NavController,
+) {
     val context = LocalContext.current
     val dataStore = SettingPrefs(context)
     val depthSize = dataStore.depth.collectAsState(initial = SettingPrefs.DEFAULT_DEPTH)
@@ -235,7 +299,7 @@ fun CommentsView(item: Item, navController: NavController) {
 
     LazyColumn(
         state = scrollState,
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
         // .scrollbar(
         //    scrollState,
         //    trackColor = MaterialTheme.colorScheme.surfaceVariant,

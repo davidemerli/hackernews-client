@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -36,7 +37,11 @@ import timber.log.Timber
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun NewsPage(navController: NavController, route: NewsPageRoutes) {
+fun NewsPage(
+    navController: NavController,
+    windowSizeClass: WindowSizeClass,
+    route: NewsPageRoutes,
+) {
     val viewModel: HomePageViewModel = viewModel()
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -66,7 +71,6 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
             },
             containerColor = MaterialTheme.colorScheme.background,
         ) {
-
             when (pageState.value) {
                 is NewsPageState.Loading -> LoadingScreen()
                 is NewsPageState.NewsIdsError -> ErrorScreen()
@@ -141,8 +145,6 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
                     thickness = 0.5.dp
                 )
-
-                itemListState.value[index]
             }
         }
     }

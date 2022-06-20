@@ -7,6 +7,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -18,24 +21,27 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.utils.ALL_QUERIES
+import it.devddk.hackernewsclient.pages.ArticlePage
 import it.devddk.hackernewsclient.pages.FeedbackPage
 import it.devddk.hackernewsclient.pages.HackerNewsView
 import it.devddk.hackernewsclient.pages.NewsPage
 import it.devddk.hackernewsclient.pages.SearchPage
 import it.devddk.hackernewsclient.pages.SettingsPage
-import it.devddk.hackernewsclient.pages.SingleNewsPage
 import it.devddk.hackernewsclient.ui.theme.HackerNewsClientTheme
 import it.devddk.hackernewsclient.utils.decodeJson
 import it.devddk.hackernewsclient.utils.urlDecode
 
 @ExperimentalPagerApi
 @ExperimentalMaterial3Api
+@ExperimentalMaterial3WindowSizeClassApi
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
+            val windowSizeClass = calculateWindowSizeClass(this)
+
             HackerNewsClientTheme {
                 val systemUiController = rememberSystemUiController()
 
@@ -45,20 +51,24 @@ class MainActivity : ComponentActivity() {
                 )
 
                 Surface(color = MaterialTheme.colorScheme.background) {
-                    AppRootNavigator()
+                    AppRootNavigator(windowSizeClass)
                 }
             }
         }
     }
 
     @Composable
-    private fun AppRootNavigator() {
+    private fun AppRootNavigator(windowSizeClass: WindowSizeClass) {
         val navController = rememberNavController()
 
         NavHost(navController = navController, "TopStories") {
             ALL_QUERIES.forEach { query ->
                 composable(route = HackerNewsView(query).route) {
-                    NewsPage(navController, route = HackerNewsView(query))
+                    NewsPage(
+                        navController = navController,
+                        windowSizeClass = windowSizeClass,
+                        route = HackerNewsView(query)
+                    )
                 }
             }
 
@@ -70,8 +80,9 @@ class MainActivity : ComponentActivity() {
                     }
                 )
             ) { backStackEntry ->
-                SingleNewsPage(
+                ArticlePage(
                     navController = navController,
+                    windowSizeClass = windowSizeClass,
                     id = backStackEntry.arguments?.getInt("itemId")!!
                 )
             }
@@ -84,9 +95,11 @@ class MainActivity : ComponentActivity() {
                     }
                 )
             ) { backStackEntry ->
-                SingleNewsPage(
+                ArticlePage(
                     navController = navController,
-                    item = backStackEntry.arguments?.getString("item")!!.urlDecode().decodeJson(Item::class.java)
+                    windowSizeClass = windowSizeClass,
+                    item = backStackEntry.arguments?.getString("item")!!.urlDecode()
+                        .decodeJson(Item::class.java)
                 )
             }
 
@@ -98,9 +111,11 @@ class MainActivity : ComponentActivity() {
                     }
                 )
             ) { backStackEntry ->
-                SingleNewsPage(
+                ArticlePage(
                     navController = navController,
-                    item = backStackEntry.arguments?.getString("item")!!.urlDecode().decodeJson(Item::class.java),
+                    windowSizeClass = windowSizeClass,
+                    item = backStackEntry.arguments?.getString("item")!!.urlDecode()
+                        .decodeJson(Item::class.java),
                     selectedView = "comments"
                 )
             }
@@ -142,8 +157,9 @@ class MainActivity : ComponentActivity() {
                 ),
                 route = "items/{itemId}"
             ) { backStackEntry ->
-                SingleNewsPage(
+                ArticlePage(
                     navController = navController,
+                    windowSizeClass = windowSizeClass,
                     id = backStackEntry.arguments?.getInt("itemId")!!
                 )
             }

@@ -4,10 +4,9 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -17,37 +16,43 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.WebViewState
-import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.utils.SettingPrefs
 import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.WEBVIEW_DEFAULTS
 import timber.log.Timber
 
 @Composable
 @SuppressLint("SetJavaScriptEnabled")
-fun ArticleView(item: Item, webviewState: WebViewState) {
-
+fun ArticleView(
+    modifier: Modifier = Modifier,
+    webviewState: WebViewState,
+) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier,
     ) {
         if (webviewState.isLoading) {
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.secondary,
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.secondary
             )
         }
+
+        WebViewWithPrefs(
+            webviewState = webviewState
+        )
     }
 
-    WebViewWithPrefs(webviewState)
 }
 
 @Composable
-fun WebViewWithPrefs(webviewState: WebViewState, saveVerticalScroll: Boolean = true) {
+fun WebViewWithPrefs(
+    modifier: Modifier = Modifier,
+    webviewState: WebViewState,
+) {
     val context = LocalContext.current
     val verticalScrollState = rememberScrollState()
     val dataStore = SettingPrefs(context)
-
-    val modifier = if (saveVerticalScroll) Modifier.verticalScroll(verticalScrollState) else Modifier
 
     val javaScriptEnabled =
         dataStore.javaScriptEnabled.collectAsState(initial = WEBVIEW_DEFAULTS["javaScriptEnabled"]!!)
@@ -176,7 +181,7 @@ fun WebViewWithPrefs(webviewState: WebViewState, saveVerticalScroll: Boolean = t
                 webview.settings.loadsImagesAutomatically = loadsImagesAutomatically.value
                 webview.settings.mediaPlaybackRequiresUserGesture =
                     mediaPlaybackRequiresUserGesture.value
-                webview.settings.offscreenPreRaster = offscreenPreRaster.value
+//                webview.settings.offscreenPreRaster = offscreenPreRaster.value
                 webview.settings.useWideViewPort = useWideViewPort.value
                 webview.settings.setGeolocationEnabled(geolocationEnabled.value)
                 webview.settings.setNeedInitialFocus(needInitialFocus.value)
