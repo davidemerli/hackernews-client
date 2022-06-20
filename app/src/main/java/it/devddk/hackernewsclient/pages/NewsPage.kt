@@ -19,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import it.devddk.hackernewsclient.components.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.components.HomePageTopBar
 import it.devddk.hackernewsclient.components.NewsItem
@@ -29,7 +31,8 @@ import it.devddk.hackernewsclient.utils.urlEncode
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.NewsPageState
-import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -85,9 +88,20 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
     val itemListState =
         viewModel.itemListFlow.collectAsState(initial = List(TopStories.maxAmount) { NewsItemState.Loading })
 
-    val singleNewsViewModel: SingleNewsViewModel = viewModel()
     val coroutineScope = rememberCoroutineScope()
 
+
+    val refreshState = rememberSwipeRefreshState(isRefreshing = false)
+
+    SwipeRefresh(
+        state = refreshState,
+        onRefresh = {
+            coroutineScope.launch {
+                Timber.d("refreshing")
+                // TODO: implement refresh on viewmodel
+            }
+        },
+    ) {
     LazyColumn(
         modifier = modifier,
         state = lazyListState
@@ -115,17 +129,18 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
                         viewModel.requestItem(index)
                     }
 
-                    NewsItem(placeholder = true)
+                        NewsItem(placeholder = true)
+                    }
                 }
+
+                Divider(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
+                    thickness = 0.5.dp
+                )
+
+                itemListState.value[index]
             }
-
-            Divider(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
-                thickness = 0.5.dp
-            )
-
-            itemListState.value[index]
         }
     }
 }
