@@ -46,6 +46,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.content.ContextCompat.startActivity
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.placeholder.PlaceholderDefaults
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.color
@@ -71,7 +73,11 @@ import com.google.accompanist.placeholder.material.placeholder
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
+import it.devddk.hackernewsclient.domain.model.items.favorite
+import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
+import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.net.URI
 import kotlin.math.roundToInt
@@ -192,6 +198,8 @@ fun shareStringContent(context: Context, content: String) {
 fun OptionsButton(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = false) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
+    val viewModel : HomePageViewModel = viewModel()
+    val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = modifier
@@ -233,6 +241,22 @@ fun OptionsButton(modifier: Modifier = Modifier, item: Item, placeholder: Boolea
                 },
                 onClick = {
                     shareStringContent(context, "https://news.ycombinator.com/item?id=${item.id}")
+                    expanded = false
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(if(item.collections.favorite) "Remove from favorite" else "Add to favorite") },
+                leadingIcon = {
+                    Icon(Icons.Filled.Share, contentDescription = "Share HN link")
+                },
+                onClick = {
+                    coroutineScope.launch {
+                        if(!item.collections.favorite) {
+                            viewModel.addToFavorite(item.id, UserDefinedItemCollection.Favorite)
+                        } else {
+                            viewModel.removeFromFavorite(item.id, UserDefinedItemCollection.Favorite)
+                        }
+                    }
                     expanded = false
                 },
             )

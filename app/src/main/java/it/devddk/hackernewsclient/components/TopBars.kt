@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.OpenInBrowser
@@ -56,7 +57,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.items.Item
-import it.devddk.hackernewsclient.domain.model.utils.ALL_QUERIES
+import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
 import it.devddk.hackernewsclient.pages.HackerNewsView
 import kotlinx.coroutines.launch
 
@@ -250,7 +251,8 @@ val ROUTE_ICONS = mapOf(
     "ShowStories" to Icons.Filled.Dashboard,
     "JobStories" to Icons.Filled.Work,
     "Settings" to Icons.Filled.Settings,
-    "Feedback" to Icons.Filled.Feedback
+    "Feedback" to Icons.Filled.Feedback,
+    "Favorite" to Icons.Filled.Favorite
 )
 
 val ROUTE_TITLES = mapOf(
@@ -260,4 +262,5 @@ val ROUTE_TITLES = mapOf(
     "AskStories" to "Ask HN",
     "ShowStories" to "Show HN",
     "JobStories" to "HN Jobs",
+    "Favorite" to "Favorite"
 )

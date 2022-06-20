@@ -22,8 +22,8 @@ import androidx.navigation.NavController
 import it.devddk.hackernewsclient.components.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.components.HomePageTopBar
 import it.devddk.hackernewsclient.components.NewsItem
-import it.devddk.hackernewsclient.domain.model.utils.HNItemCollection
-import it.devddk.hackernewsclient.domain.model.utils.TopStories
+import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
+import it.devddk.hackernewsclient.domain.model.collection.TopStories
 import it.devddk.hackernewsclient.utils.encodeJson
 import it.devddk.hackernewsclient.utils.urlEncode
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
@@ -40,7 +40,7 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
 
     val pageState = viewModel.pageState.collectAsState(NewsPageState.Loading)
 
-    val query = viewModel.uiState.collectAsState(initial = TopStories)
+    val query = viewModel.currentQuery.collectAsState(initial = TopStories)
 
     LaunchedEffect(route) {
         when (route) {
@@ -99,16 +99,12 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
                         itemState.item,
                         onClick = {
                             navController.navigate(
-                                "items/preloaded/${
-                                itemState.item.encodeJson().urlEncode()
-                                }"
+                                "items/${itemState.item.id}"
                             )
                         },
                         onClickComments = {
                             navController.navigate(
-                                "items/preloaded/${
-                                itemState.item.encodeJson().urlEncode()
-                                }/comments"
+                                "items/${itemState.item.id}/comments"
                             )
                         },
                         placeholder = false
@@ -146,6 +142,6 @@ fun LoadingScreen() {
 
 sealed class NewsPageRoutes
 
-data class HackerNewsView(val query: HNItemCollection) : NewsPageRoutes() {
+data class HackerNewsView(val query: ItemCollection) : NewsPageRoutes() {
     val route: String = query::class.java.simpleName
 }
