@@ -3,6 +3,7 @@ package it.devddk.hackernewsclient.pages
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
@@ -39,12 +39,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
-import androidx.compose.ui.unit.sp
 import androidx.core.text.HtmlCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -54,12 +52,12 @@ import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import com.google.accompanist.web.rememberWebViewState
 import it.devddk.hackernewsclient.components.ArticleView
+import it.devddk.hackernewsclient.components.CommentText
 import it.devddk.hackernewsclient.components.ExpandableComment
 import it.devddk.hackernewsclient.components.ItemBy
 import it.devddk.hackernewsclient.components.ItemDomain
 import it.devddk.hackernewsclient.components.ItemTime
 import it.devddk.hackernewsclient.components.ItemTitle
-import it.devddk.hackernewsclient.components.LinkifyText
 import it.devddk.hackernewsclient.components.SingleNewsPageTopBar
 import it.devddk.hackernewsclient.components.WebViewWithPrefs
 import it.devddk.hackernewsclient.domain.model.items.Item
@@ -71,8 +69,6 @@ import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.max
-import androidx.compose.foundation.layout.Row
-import it.devddk.hackernewsclient.components.CommentText
 
 fun String.toSpanned(): String {
     return HtmlCompat.fromHtml(
@@ -213,13 +209,13 @@ fun TabbedView(item: Item, navController: NavController, selectedView: String?) 
                                 ArticleView(item, webviewState)
                             }
                             1 -> {
-                                CommentsView(item)
+                                CommentsView(item, navController = navController)
                             }
                         }
                     }
                 }
             } else {
-                CommentsView(item)
+                CommentsView(item, navController = navController)
             }
         }
     }
@@ -227,7 +223,7 @@ fun TabbedView(item: Item, navController: NavController, selectedView: String?) 
 
 @Composable
 @OptIn(ExperimentalFoundationApi::class, ExperimentalFoundationApi::class)
-fun CommentsView(item: Item) {
+fun CommentsView(item: Item, navController: NavController) {
     val context = LocalContext.current
     val dataStore = SettingPrefs(context)
     val depthSize = dataStore.depth.collectAsState(initial = SettingPrefs.DEFAULT_DEPTH)
@@ -276,7 +272,9 @@ fun CommentsView(item: Item) {
                 ExpandableComment(
                     comment = comment,
                     rootItem = item,
-                    depthSize = depthSize.value.toInt()
+                    depthSize = depthSize.value.toInt(),
+                    listState = scrollState,
+                    navController = navController,
                 )
             }
         }
