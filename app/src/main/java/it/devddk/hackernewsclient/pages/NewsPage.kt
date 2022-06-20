@@ -98,7 +98,7 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
         onRefresh = {
             coroutineScope.launch {
                 Timber.d("refreshing")
-                // TODO: implement refresh on viewmodel
+                viewModel.refreshPage()
             }
         },
     ) {

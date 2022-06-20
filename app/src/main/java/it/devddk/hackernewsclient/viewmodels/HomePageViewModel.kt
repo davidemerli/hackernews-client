@@ -6,11 +6,15 @@ import it.devddk.hackernewsclient.domain.interaction.collection.AddItemToCollect
 import it.devddk.hackernewsclient.domain.interaction.collection.RemoveItemFromCollectionUseCase
 import it.devddk.hackernewsclient.domain.interaction.item.GetItemUseCase
 import it.devddk.hackernewsclient.domain.interaction.item.GetNewStoriesUseCase
+import it.devddk.hackernewsclient.domain.interaction.item.RefreshAllItemsUseCase
+import it.devddk.hackernewsclient.domain.interaction.item.RefreshAllItemsUseCaseImpl
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.domain.model.collection.TopStories
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
+import it.devddk.hackernewsclient.domain.utils.getValue
+import it.devddk.hackernewsclient.domain.utils.requireValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +23,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.withContext
@@ -38,10 +44,13 @@ class HomePageViewModel : ViewModel(), KoinComponent {
     private val getItemById: GetItemUseCase by inject()
     private val addToCollection: AddItemToCollectionUseCase by inject()
     private val removeFromCollection: RemoveItemFromCollectionUseCase by inject()
+    private val refreshAllItems: RefreshAllItemsUseCase by inject()
 
     // state flows
-    private val _currentQuery: MutableStateFlow<ItemCollection> = MutableStateFlow(TopStories)
-    val currentQuery = _currentQuery.asStateFlow()
+    private val _currentQuery: MutableSharedFlow<ItemCollection> = MutableSharedFlow<ItemCollection>(1).apply {
+        onSubscription { emit(TopStories) }
+    }
+    val currentQuery = _currentQuery.asSharedFlow()
 
     private val _itemListFlow: MutableSharedFlow<List<NewsItemState>> = MutableSharedFlow(1)
     val itemListFlow = _itemListFlow.asSharedFlow()
@@ -72,7 +81,7 @@ class HomePageViewModel : ViewModel(), KoinComponent {
     )
 
     suspend fun setQuery(newQuery: ItemCollection) {
-        val oldQuery = _currentQuery.value
+        val oldQuery = _currentQuery.getValue()
 
         if (oldQuery != newQuery) {
             _currentQuery.emit(newQuery)
@@ -124,6 +133,12 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         }
     }
 
+    suspend fun refreshPage() {
+        refreshAllItems()
+        _currentQuery.emit(_currentQuery.requireValue())
+        updateItemList()
+    }
+
     suspend fun addToFavorite(itemId: Int, collection: UserDefinedItemCollection) {
         getItemIfLoaded(itemId)
             ?: throw IllegalStateException("Cannot add to favourite a non loaded item")
@@ -155,7 +170,6 @@ class HomePageViewModel : ViewModel(), KoinComponent {
 
     private suspend fun updateItemList() {
         val outputList: List<NewsItemState>?
-        Timber.d("Updatimg List")
         synchronized(items) {
             val itemState = pageState.value as? NewsPageState.NewsIdsLoaded
             outputList = itemState?.itemsId?.map { id ->

@@ -159,4 +159,8 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
             }
         }
     }
+
+    override suspend fun invalidateCache() {
+        cache.evictAll()
+    }
 }
