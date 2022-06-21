@@ -26,8 +26,6 @@ import it.devddk.hackernewsclient.components.HomePageTopBar
 import it.devddk.hackernewsclient.components.NewsItem
 import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
 import it.devddk.hackernewsclient.domain.model.collection.TopStories
-import it.devddk.hackernewsclient.utils.encodeJson
-import it.devddk.hackernewsclient.utils.urlEncode
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.NewsPageState
@@ -90,7 +88,6 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
 
     val coroutineScope = rememberCoroutineScope()
 
-
     val refreshState = rememberSwipeRefreshState(isRefreshing = false)
 
     SwipeRefresh(
@@ -102,32 +99,32 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
             }
         },
     ) {
-    LazyColumn(
-        modifier = modifier,
-        state = lazyListState
-    ) {
-        itemsIndexed(itemListState.value) { index, itemState ->
-            when (itemState) {
-                is NewsItemState.ItemLoaded -> {
-                    NewsItem(
-                        itemState.item,
-                        onClick = {
-                            navController.navigate(
-                                "items/${itemState.item.id}"
-                            )
-                        },
-                        onClickComments = {
-                            navController.navigate(
-                                "items/${itemState.item.id}/comments"
-                            )
-                        },
-                        placeholder = false
-                    )
-                }
-                is NewsItemState.Loading, is NewsItemState.ItemError -> {
-                    LaunchedEffect(index) {
-                        viewModel.requestItem(index)
+        LazyColumn(
+            modifier = modifier,
+            state = lazyListState
+        ) {
+            itemsIndexed(itemListState.value) { index, itemState ->
+                when (itemState) {
+                    is NewsItemState.ItemLoaded -> {
+                        NewsItem(
+                            itemState.item,
+                            onClick = {
+                                navController.navigate(
+                                    "items/${itemState.item.id}"
+                                )
+                            },
+                            onClickComments = {
+                                navController.navigate(
+                                    "items/${itemState.item.id}/comments"
+                                )
+                            },
+                            placeholder = false
+                        )
                     }
+                    is NewsItemState.Loading, is NewsItemState.ItemError -> {
+                        LaunchedEffect(index) {
+                            viewModel.requestItem(index)
+                        }
 
                         NewsItem(placeholder = true)
                     }

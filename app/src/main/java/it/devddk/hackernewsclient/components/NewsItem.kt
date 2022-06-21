@@ -71,10 +71,10 @@ import com.google.accompanist.placeholder.material.color
 import com.google.accompanist.placeholder.material.fade
 import com.google.accompanist.placeholder.material.placeholder
 import it.devddk.hackernewsclient.R
+import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.items.favorite
-import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import kotlinx.coroutines.launch
@@ -198,7 +198,7 @@ fun shareStringContent(context: Context, content: String) {
 fun OptionsButton(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = false) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
-    val viewModel : HomePageViewModel = viewModel()
+    val viewModel: HomePageViewModel = viewModel()
     val coroutineScope = rememberCoroutineScope()
 
     Box(
@@ -245,13 +245,13 @@ fun OptionsButton(modifier: Modifier = Modifier, item: Item, placeholder: Boolea
                 },
             )
             DropdownMenuItem(
-                text = { Text(if(item.collections.favorite) "Remove from favorite" else "Add to favorite") },
+                text = { Text(if (item.collections.favorite) "Remove from favorite" else "Add to favorite") },
                 leadingIcon = {
                     Icon(Icons.Filled.Share, contentDescription = "Share HN link")
                 },
                 onClick = {
                     coroutineScope.launch {
-                        if(!item.collections.favorite) {
+                        if (!item.collections.favorite) {
                             viewModel.addToFavorite(item.id, UserDefinedItemCollection.Favorite)
                         } else {
                             viewModel.removeFromFavorite(item.id, UserDefinedItemCollection.Favorite)

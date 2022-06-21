@@ -57,8 +57,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import it.devddk.hackernewsclient.R
-import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
+import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.pages.HackerNewsView
 import kotlinx.coroutines.launch
 

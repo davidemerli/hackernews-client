@@ -152,7 +152,6 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         }
     }
 
-
     suspend fun removeFromFavorite(itemId: ItemId, collection: UserDefinedItemCollection) {
         getItemIfLoaded(itemId)
             ?: throw IllegalStateException("Cannot remove from favourite a non loaded item")
@@ -183,10 +182,7 @@ class HomePageViewModel : ViewModel(), KoinComponent {
             Timber.d("Updated List")
             _itemListFlow.emit(outputList)
         }
-
     }
-
-
 }
 
 sealed class NewsPageState {
