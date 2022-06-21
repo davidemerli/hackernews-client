@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,10 +28,14 @@ import androidx.compose.material.FractionalThreshold
 import androidx.compose.material.SwipeableDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Update
+import androidx.compose.material.icons.filled.UpdateDisabled
 import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
 import androidx.compose.material3.Card
@@ -43,6 +48,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,6 +81,7 @@ import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollect
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.items.favorite
+import it.devddk.hackernewsclient.domain.model.items.readLater
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import kotlinx.coroutines.launch
@@ -122,6 +129,231 @@ private val placeholderItem = Item(
 )
 
 @Composable
+@OptIn(ExperimentalMaterialApi::class)
+fun NewsItem(
+    item: Item = placeholderItem,
+    placeholder: Boolean = false,
+    onClick: () -> Unit = {},
+    onClickComments: () -> Unit = {},
+) {
+    val swipeableState = rememberSwipeableState(
+        0,
+        animationSpec = SpringSpec(
+            stiffness = Spring.StiffnessHigh
+        ),
+        confirmStateChange = {
+            Timber.d(it.toString())
+            false
+        }
+    )
+
+    val coroutineScope = rememberCoroutineScope()
+    val viewModel: HomePageViewModel = viewModel()
+
+    val favorite = remember { mutableStateOf(item.collections.favorite) }
+    val readLater = remember { mutableStateOf(item.collections.readLater) }
+
+    fun onFavoriteClick(favorite: MutableState<Boolean>) {
+        favorite.value = !favorite.value
+
+        coroutineScope.launch {
+            if (favorite.value) {
+                viewModel.addToFavorites(
+                    item.id,
+                    UserDefinedItemCollection.Favorites
+                )
+            } else {
+                viewModel.removeFromFavorites(
+                    item.id,
+                    UserDefinedItemCollection.Favorites
+                )
+            }
+        }
+    }
+
+    fun onReadLaterClick(readLater: MutableState<Boolean>) {
+        coroutineScope.launch {
+            readLater.value = !readLater.value
+
+            if (readLater.value) {
+                viewModel.addToFavorites(
+                    item.id,
+                    UserDefinedItemCollection.ReadLater
+                )
+            } else {
+                viewModel.removeFromFavorites(
+                    item.id,
+                    UserDefinedItemCollection.ReadLater
+                )
+            }
+
+        }
+    }
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(color = if ((swipeableState.progress.to - swipeableState.progress.from) * swipeableState.progress.fraction > 0.2f) Color.Yellow else MaterialTheme.colorScheme.surface)
+    ) {
+
+        val sizePx = with(LocalDensity.current) { -(maxWidth).toPx() }
+        val anchors = mapOf(0f to 0, sizePx to 1, -sizePx to -1)
+
+        ConstraintLayout(
+            modifier = Modifier
+                .height(128.dp)
+                .fillMaxWidth()
+                .swipeable(
+                    state = swipeableState,
+                    anchors = anchors,
+                    thresholds = { _, _ -> FractionalThreshold(0.2f) },
+                    resistance = SwipeableDefaults.resistanceConfig(anchors.keys, 1f, 0.3f),
+                    orientation = Orientation.Horizontal,
+                )
+                .clickable(onClick = onClick)
+                .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) }
+                .clip(RoundedCornerShape(8.dp))
+                .background(color = MaterialTheme.colorScheme.surface)
+                .padding(horizontal = 6.dp, vertical = 4.dp)
+        ) {
+            val (statusIcons, colorHint, domain, title) = createRefs()
+            val (comments, more) = createRefs()
+
+            val (pt, by, time) = createRefs()
+
+            ColorHint(
+                item = item,
+                modifier = Modifier
+                    .constrainAs(colorHint) {
+                        start.linkTo(parent.start)
+                        bottom.linkTo(parent.bottom)
+                    }
+            )
+
+            ItemDomain(
+                item = item,
+                placeholder = placeholder,
+                modifier = Modifier
+                    .constrainAs(domain) {
+                        top.linkTo(parent.top)
+                        start.linkTo(statusIcons.end, margin = 2.dp)
+                        if (favorite.value or readLater.value) {
+                            bottom.linkTo(statusIcons.bottom)
+                        }
+                    }
+            )
+
+            StatusIcons(
+                favorite = favorite.value,
+                readLater = readLater.value,
+                placeholder = placeholder,
+                modifier = Modifier
+                    .constrainAs(statusIcons) {
+                        top.linkTo(parent.top)
+                        start.linkTo(colorHint.end, margin = 4.dp)
+                    }
+                    .offset(y = -(1).dp)
+            )
+
+            ItemTitle(
+                item = item, placeholder = placeholder,
+                modifier = Modifier
+                    .padding(end = 56.dp) // to avoid overlapping with the dropdown menu
+                    .constrainAs(title) {
+                        top.linkTo(domain.bottom, margin = -(4).dp)
+                        start.linkTo(colorHint.end, margin = 6.dp)
+                    }
+            )
+
+            ItemPoints(
+                item = item,
+                placeholder = placeholder,
+                modifier = Modifier.constrainAs(pt) {
+                    bottom.linkTo(parent.bottom)
+                    start.linkTo(colorHint.end, margin = 6.dp)
+                }
+            )
+
+            ItemBy(
+                item = item,
+                placeholder = placeholder,
+                modifier = Modifier.constrainAs(by) {
+                    bottom.linkTo(parent.bottom)
+                    start.linkTo(pt.end, margin = 6.dp)
+                }
+            )
+
+            ItemTime(
+                item = item,
+                placeholder = placeholder,
+                modifier = Modifier.constrainAs(time) {
+                    bottom.linkTo(parent.bottom)
+                    start.linkTo(by.end, margin = 6.dp)
+                }
+            )
+
+            // putting an animated placeholder also on those lags a bit much
+            if (!placeholder) {
+                OptionsButton(
+                    item = item,
+                    favorite = favorite.value,
+                    readLater = readLater.value,
+                    onFavoriteClick = { onFavoriteClick(favorite) },
+                    onReadLaterClick = { onReadLaterClick(readLater) },
+                    modifier = Modifier.constrainAs(comments) {
+                        top.linkTo(parent.top)
+                        end.linkTo(parent.end)
+                    }
+                )
+
+                ItemComments(
+                    item = item,
+                    modifier = Modifier.constrainAs(more) {
+                        bottom.linkTo(parent.bottom)
+                        end.linkTo(parent.end)
+                    },
+                    onClick = onClickComments
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun StatusIcons(
+    modifier: Modifier = Modifier,
+    favorite: Boolean,
+    readLater: Boolean,
+    placeholder: Boolean = false,
+) {
+    Row(
+        modifier = modifier,
+    ) {
+        if (!placeholder && favorite) {
+            Icon(
+                Icons.Filled.Favorite,
+                contentDescription = "Favorite",
+                tint = Color.Red,
+                modifier = Modifier
+                    .size(24.dp)
+                    .padding(end = 1.dp)
+            )
+        }
+
+        if (!placeholder && readLater) {
+            Icon(
+                Icons.Filled.Update,
+                contentDescription = "Read later",
+                tint = Color.Green,
+                modifier = Modifier
+                    .size(24.dp)
+                    .padding(end = 1.dp)
+            )
+        }
+    }
+}
+
+@Composable
 fun ColorHint(modifier: Modifier = Modifier, item: Item) {
     val palette: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
 
@@ -131,15 +363,19 @@ fun ColorHint(modifier: Modifier = Modifier, item: Item) {
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
             .width(8.dp)
             .fillMaxHeight()
+            .clip(RoundedCornerShape(8.dp))
             .background(backgroundColor)
     )
 }
 
 @Composable
-fun ItemDomain(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = false) {
+fun ItemDomain(
+    modifier: Modifier = Modifier,
+    item: Item,
+    placeholder: Boolean = false,
+) {
     item.url?.let { url ->
         val domain = getDomainName(url)
 
@@ -195,7 +431,15 @@ fun shareStringContent(context: Context, content: String) {
 }
 
 @Composable
-fun OptionsButton(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = false) {
+fun OptionsButton(
+    modifier: Modifier = Modifier,
+    favorite: Boolean,
+    readLater: Boolean,
+    onFavoriteClick: () -> Unit,
+    onReadLaterClick: () -> Unit,
+    item: Item,
+    placeholder: Boolean = false,
+) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
     val viewModel: HomePageViewModel = viewModel()
@@ -222,6 +466,30 @@ fun OptionsButton(modifier: Modifier = Modifier, item: Item, placeholder: Boolea
             )
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = {
+                    Text(if (!favorite) "Add to favorites" else "Remove from favorites")
+                },
+                leadingIcon = {
+                    Icon(
+                        if (!favorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                        contentDescription = "Favorite",
+                    )
+                },
+                onClick = { onFavoriteClick(); expanded = false },
+            )
+            DropdownMenuItem(
+                text = {
+                    Text(if (!readLater) "Read later" else "Remove from read later")
+                },
+                leadingIcon = {
+                    Icon(
+                        if (!readLater) Icons.Filled.Update else Icons.Filled.UpdateDisabled,
+                        contentDescription = "Read later",
+                    )
+                },
+                onClick = { onReadLaterClick(); expanded = false },
+            )
             item.url?.let { url ->
                 DropdownMenuItem(
                     text = { Text("Share Article") },
@@ -241,22 +509,6 @@ fun OptionsButton(modifier: Modifier = Modifier, item: Item, placeholder: Boolea
                 },
                 onClick = {
                     shareStringContent(context, "https://news.ycombinator.com/item?id=${item.id}")
-                    expanded = false
-                },
-            )
-            DropdownMenuItem(
-                text = { Text(if (item.collections.favorite) "Remove from favorite" else "Add to favorite") },
-                leadingIcon = {
-                    Icon(Icons.Filled.Share, contentDescription = "Share HN link")
-                },
-                onClick = {
-                    coroutineScope.launch {
-                        if (!item.collections.favorite) {
-                            viewModel.addToFavorite(item.id, UserDefinedItemCollection.Favorite)
-                        } else {
-                            viewModel.removeFromFavorite(item.id, UserDefinedItemCollection.Favorite)
-                        }
-                    }
                     expanded = false
                 },
             )
@@ -376,132 +628,6 @@ fun ItemComments(
 }
 
 @Composable
-@OptIn(ExperimentalMaterialApi::class)
-fun NewsItem(
-    item: Item = placeholderItem,
-    placeholder: Boolean = false,
-    onClick: () -> Unit = {},
-    onClickComments: () -> Unit = {},
-) {
-    val swipeableState = rememberSwipeableState(
-        0,
-        animationSpec = SpringSpec(
-            stiffness = Spring.StiffnessHigh
-        ),
-        confirmStateChange = {
-            Timber.d(it.toString())
-            false
-        }
-    )
-
-    BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(color = if ((swipeableState.progress.to - swipeableState.progress.from) * swipeableState.progress.fraction > 0.2f) Color.Yellow else MaterialTheme.colorScheme.surface)
-    ) {
-
-        val sizePx = with(LocalDensity.current) { -(maxWidth).toPx() }
-        val anchors = mapOf(0f to 0, sizePx to 1, -sizePx to -1)
-
-        ConstraintLayout(
-            modifier = Modifier
-                .height(128.dp)
-                .fillMaxWidth()
-                .swipeable(
-                    state = swipeableState,
-                    anchors = anchors,
-                    thresholds = { _, _ -> FractionalThreshold(0.2f) },
-                    resistance = SwipeableDefaults.resistanceConfig(anchors.keys, 1f, 0.3f),
-                    orientation = Orientation.Horizontal,
-                )
-                .clickable(onClick = onClick)
-                .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) }
-                .clip(RoundedCornerShape(8.dp))
-                .background(color = MaterialTheme.colorScheme.surface)
-                .padding(horizontal = 6.dp, vertical = 8.dp)
-        ) {
-            val (colorHint, domain, title, comments, more) = createRefs()
-
-            val (pt, by, time) = createRefs()
-
-            ColorHint(
-                item = item,
-                modifier = Modifier.constrainAs(colorHint) {
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                    start.linkTo(parent.start)
-                }
-            )
-
-            ItemDomain(
-                item = item, placeholder = placeholder,
-                modifier = Modifier.constrainAs(domain) {
-                    top.linkTo(parent.top)
-                    start.linkTo(colorHint.end, margin = 6.dp)
-                }
-            )
-
-            ItemTitle(
-                item = item, placeholder = placeholder,
-                modifier = Modifier
-                    .padding(end = 56.dp) // to avoid overlapping with the dropdown menu
-                    .constrainAs(title) {
-                        top.linkTo(domain.bottom)
-                        start.linkTo(colorHint.end, margin = 6.dp)
-                    }
-            )
-
-            ItemPoints(
-                item = item,
-                placeholder = placeholder,
-                modifier = Modifier.constrainAs(pt) {
-                    bottom.linkTo(parent.bottom)
-                    start.linkTo(colorHint.end, margin = 6.dp)
-                }
-            )
-
-            ItemBy(
-                item = item,
-                placeholder = placeholder,
-                modifier = Modifier.constrainAs(by) {
-                    bottom.linkTo(parent.bottom)
-                    start.linkTo(pt.end, margin = 6.dp)
-                }
-            )
-
-            ItemTime(
-                item = item,
-                placeholder = placeholder,
-                modifier = Modifier.constrainAs(time) {
-                    bottom.linkTo(parent.bottom)
-                    start.linkTo(by.end, margin = 6.dp)
-                }
-            )
-
-            // putting an animated placeholder also on those lags a bit much
-            if (!placeholder) {
-                OptionsButton(
-                    item = item,
-                    modifier = Modifier.constrainAs(comments) {
-                        top.linkTo(parent.top)
-                        end.linkTo(parent.end)
-                    }
-                )
-
-                ItemComments(
-                    item = item,
-                    modifier = Modifier.constrainAs(more) {
-                        bottom.linkTo(parent.bottom)
-                        end.linkTo(parent.end)
-                    },
-                    onClick = onClickComments
-                )
-            }
-        }
-    }
-}
-
-@Composable
 @OptIn(ExperimentalMaterial3Api::class)
 @Deprecated("Needs to be completely rewritten")
 fun NewsItemTall(item: Item) {
@@ -576,17 +702,17 @@ fun NewsItemTall(item: Item) {
                     )
                 }
                 IconButton(onClick = { /*TODO*/ }, Modifier.offset(y = -(4).dp)) {
-                Icon(
-                    Icons.Filled.Share,
-                    contentDescription = "More",
-                )
-            }
+                    Icon(
+                        Icons.Filled.Share,
+                        contentDescription = "More",
+                    )
+                }
                 IconButton(onClick = { /*TODO*/ }, Modifier.offset(y = -(8).dp)) {
-                Icon(
-                    Icons.Filled.MoreVert,
-                    contentDescription = "More",
-                )
-            }
+                    Icon(
+                        Icons.Filled.MoreVert,
+                        contentDescription = "More",
+                    )
+                }
             }
         }
         Column(Modifier.padding(start = 10.dp)) {

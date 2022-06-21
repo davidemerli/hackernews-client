@@ -101,7 +101,7 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
     ) {
         LazyColumn(
             modifier = modifier,
-            state = lazyListState
+            state = lazyListState,
         ) {
             itemsIndexed(itemListState.value) { index, itemState ->
                 when (itemState) {

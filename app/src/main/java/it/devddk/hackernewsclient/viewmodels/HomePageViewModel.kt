@@ -94,7 +94,7 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         // avoid requesting item if the page is not loaded
         if (currPageState !is NewsPageState.NewsIdsLoaded) return
 
-        // FIXME: items not in the list at this stage are getting requested in favourites screen
+        // FIXME: items not in the list at this stage are getting requested in favorites screen
         if (index >= currPageState.itemsId.size) {
             Timber.d("Requesting item $index, but it is not in the list")
             return
@@ -141,9 +141,9 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         updateItemList()
     }
 
-    suspend fun addToFavorite(itemId: Int, collection: UserDefinedItemCollection) {
+    suspend fun addToFavorites(itemId: Int, collection: UserDefinedItemCollection) {
         getItemIfLoaded(itemId)
-            ?: throw IllegalStateException("Cannot add to favourite a non loaded item")
+            ?: throw IllegalStateException("Cannot add to favorites a non loaded item")
         val result = addToCollection(itemId, collection).onFailure {
             Timber.e(it, "Failed to add to collection")
         }
@@ -152,9 +152,9 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         }
     }
 
-    suspend fun removeFromFavorite(itemId: ItemId, collection: UserDefinedItemCollection) {
+    suspend fun removeFromFavorites(itemId: ItemId, collection: UserDefinedItemCollection) {
         getItemIfLoaded(itemId)
-            ?: throw IllegalStateException("Cannot remove from favourite a non loaded item")
+            ?: throw IllegalStateException("Cannot remove from favorites a non loaded item")
         val result = removeFromCollection(itemId, collection).onFailure {
             Timber.e(it, "Failed to remove from collection")
         }

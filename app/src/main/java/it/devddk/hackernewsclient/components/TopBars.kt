@@ -260,7 +260,7 @@ val ROUTE_ICONS = mapOf(
     "JobStories" to Icons.Filled.Work,
     "Settings" to Icons.Filled.Settings,
     "Feedback" to Icons.Filled.Feedback,
-    "Favorite" to Icons.Filled.Favorite
+    "Favorites" to Icons.Filled.Favorite
 )
 
 val ROUTE_TITLES = mapOf(
@@ -270,5 +270,5 @@ val ROUTE_TITLES = mapOf(
     "AskStories" to "Ask HN",
     "ShowStories" to "Show HN",
     "JobStories" to "HN Jobs",
-    "Favorite" to "Favorite"
+    "Favorites" to "Favorites"
 )
