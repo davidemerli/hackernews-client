@@ -24,6 +24,7 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import it.devddk.hackernewsclient.components.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.components.HomePageTopBar
 import it.devddk.hackernewsclient.components.NewsItem
+import it.devddk.hackernewsclient.components.SwipeableNewsItem
 import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
 import it.devddk.hackernewsclient.domain.model.collection.TopStories
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
@@ -106,7 +107,7 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
             itemsIndexed(itemListState.value) { index, itemState ->
                 when (itemState) {
                     is NewsItemState.ItemLoaded -> {
-                        NewsItem(
+                        SwipeableNewsItem(
                             itemState.item,
                             onClick = {
                                 navController.navigate(

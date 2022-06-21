@@ -7,7 +7,7 @@ sealed class ItemCollection(val entryName: String)
 sealed class HNItemCollection(entryName: String, val maxAmount: Int) : ItemCollection(entryName)
 
 val ALL_QUERIES = listOf(TopStories, NewStories, JobStories, ShowStories, BestStories, AskStories,
-    UserDefinedItemCollection.Favorites)
+    UserDefinedItemCollection.Favorites, UserDefinedItemCollection.ReadLater)
 
 object NewStories : HNItemCollection("New Stories", 500)
 object TopStories : HNItemCollection("Top Stories", 500)

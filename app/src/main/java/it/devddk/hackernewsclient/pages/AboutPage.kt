@@ -165,12 +165,11 @@ fun AboutPage(navController: NavController) {
 
 
                         append("All news are sourced from ")
-
                         clickableUrl(
                             text = "https://news.ycombinator.com",
                             url = "https://news.ycombinator.com"
                         )
-
+                        append(" and we are not responsible for the content, nor we are affiliated with Y Combinator in any way.\n\n")
                     }
 
                 ClickableText(

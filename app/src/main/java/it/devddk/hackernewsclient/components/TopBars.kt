@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.ArrowBack
@@ -272,6 +273,7 @@ val ROUTE_ICONS = mapOf(
     "Settings" to Icons.Filled.Settings,
     "Feedback" to Icons.Filled.Feedback,
     "Favorites" to Icons.Filled.Favorite,
+    "ReadLater" to Icons.Filled.Update,
     "About" to Icons.Filled.Info
 )
 
@@ -283,5 +285,6 @@ val ROUTE_TITLES = mapOf(
     "ShowStories" to "Show HN",
     "JobStories" to "HN Jobs",
     "Favorites" to "Favorites",
+    "ReadLater" to "Read Later",
     "About" to "About"
 )
