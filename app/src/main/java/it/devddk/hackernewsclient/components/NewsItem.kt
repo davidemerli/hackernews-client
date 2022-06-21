@@ -186,7 +186,6 @@ fun NewsItem(
                     UserDefinedItemCollection.ReadLater
                 )
             }
-
         }
     }
 
@@ -702,17 +701,17 @@ fun NewsItemTall(item: Item) {
                     )
                 }
                 IconButton(onClick = { /*TODO*/ }, Modifier.offset(y = -(4).dp)) {
-                    Icon(
-                        Icons.Filled.Share,
-                        contentDescription = "More",
-                    )
-                }
+                Icon(
+                    Icons.Filled.Share,
+                    contentDescription = "More",
+                )
+            }
                 IconButton(onClick = { /*TODO*/ }, Modifier.offset(y = -(8).dp)) {
-                    Icon(
-                        Icons.Filled.MoreVert,
-                        contentDescription = "More",
-                    )
-                }
+                Icon(
+                    Icons.Filled.MoreVert,
+                    contentDescription = "More",
+                )
+            }
             }
         }
         Column(Modifier.padding(start = 10.dp)) {

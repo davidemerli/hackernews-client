@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Feedback
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.OpenInNew
@@ -244,6 +245,16 @@ fun HNModalNavigatorPanel(
                     onClick = { navController.navigate("feedback") },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
+
+                NavigationDrawerItem(
+                    icon = {
+                        Icon(Icons.Filled.Info, contentDescription = "About")
+                    },
+                    label = { Text("About") },
+                    selected = query == "About",
+                    onClick = { navController.navigate("about") },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
             }
         }
     ) {
@@ -260,7 +271,8 @@ val ROUTE_ICONS = mapOf(
     "JobStories" to Icons.Filled.Work,
     "Settings" to Icons.Filled.Settings,
     "Feedback" to Icons.Filled.Feedback,
-    "Favorites" to Icons.Filled.Favorite
+    "Favorites" to Icons.Filled.Favorite,
+    "About" to Icons.Filled.Info
 )
 
 val ROUTE_TITLES = mapOf(
@@ -270,5 +282,6 @@ val ROUTE_TITLES = mapOf(
     "AskStories" to "Ask HN",
     "ShowStories" to "Show HN",
     "JobStories" to "HN Jobs",
-    "Favorites" to "Favorites"
+    "Favorites" to "Favorites",
+    "About" to "About"
 )

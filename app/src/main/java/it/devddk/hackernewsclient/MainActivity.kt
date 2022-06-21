@@ -17,6 +17,7 @@ import androidx.navigation.navDeepLink
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
+import it.devddk.hackernewsclient.pages.AboutPage
 import it.devddk.hackernewsclient.pages.FeedbackPage
 import it.devddk.hackernewsclient.pages.HackerNewsView
 import it.devddk.hackernewsclient.pages.NewsPage
@@ -81,6 +82,10 @@ class MainActivity : ComponentActivity() {
                 SettingsPage(navController = navController)
             }
 
+            composable("about") {
+                AboutPage(navController = navController)
+            }
+
             composable("feedback") {
                 FeedbackPage(navController = navController)
             }
@@ -126,7 +131,7 @@ class MainActivity : ComponentActivity() {
             ) { backStackEntry ->
                 SingleNewsPage(
                     navController = navController,
-                    id = backStackEntry.arguments?.getInt("itemId")!! ,
+                    id = backStackEntry.arguments?.getInt("itemId")!!,
                     selectedView = "comments"
                 )
             }
