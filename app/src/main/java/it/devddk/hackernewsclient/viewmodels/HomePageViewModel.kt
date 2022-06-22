@@ -59,15 +59,17 @@ class HomePageViewModel : ViewModel(), KoinComponent {
                 synchronized(items) {
                     items.clear()
 
-                    it.indices.forEach { id ->
-                        items[id] = NewsItemState.Loading
+                    it.forEachIndexed { index, id ->
+                        items[index] = NewsItemState.Loading(id)
                     }
                 }
 
                 emit(NewsPageState.NewsIdsLoaded(it))
+                updateItemList()
             },
             onFailure = {
                 emit(NewsPageState.NewsIdsError(it))
+                updateItemList()
             }
         )
     }.flowOn(Dispatchers.IO).stateIn(
@@ -117,7 +119,7 @@ class HomePageViewModel : ViewModel(), KoinComponent {
                 onFailure = {
                     Timber.e("Failed to retrieve item $index. ${it.printStackTrace()}")
                     synchronized(items) {
-                        items[itemId] = NewsItemState.ItemError(it)
+                        items[itemId] = NewsItemState.ItemError(itemId, it)
                     }
                 }
             )
@@ -174,7 +176,7 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         synchronized(items) {
             val itemState = pageState.value as? NewsPageState.NewsIdsLoaded
             outputList = itemState?.itemsId?.map { id ->
-                items[id] ?: NewsItemState.Loading
+                items[id] ?: NewsItemState.Loading(id)
             }
         }
 
@@ -191,8 +193,8 @@ sealed class NewsPageState {
     data class NewsIdsError(val exception: Throwable) : NewsPageState()
 }
 
-sealed class NewsItemState {
-    object Loading : NewsItemState()
-    data class ItemLoaded(val item: Item) : NewsItemState()
-    data class ItemError(val exception: Throwable) : NewsItemState()
+sealed class NewsItemState(open val itemId: ItemId) {
+    data class Loading(override val itemId: ItemId) : NewsItemState(itemId)
+    data class ItemLoaded(val item: Item) : NewsItemState(item.id)
+    data class ItemError(override val itemId: ItemId, val exception: Throwable) : NewsItemState(itemId)
 }

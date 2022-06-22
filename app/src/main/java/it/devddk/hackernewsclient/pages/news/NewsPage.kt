@@ -90,7 +90,7 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
     val lazyListState = rememberLazyListState()
     val viewModel: HomePageViewModel = viewModel()
     val itemListState =
-        viewModel.itemListFlow.collectAsState(initial = List(TopStories.maxAmount) { NewsItemState.Loading })
+        viewModel.itemListFlow.collectAsState(initial = emptyList())
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -109,7 +109,7 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
             modifier = modifier,
             state = lazyListState,
         ) {
-            itemsIndexed(itemListState.value) { index, itemState ->
+            itemsIndexed(itemListState.value,  key = { _, item -> item.itemId }) { index, itemState ->
                 when (itemState) {
                     is NewsItemState.ItemLoaded -> {
                         key(itemState.item.id) {
