@@ -21,9 +21,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import it.devddk.hackernewsclient.BuildConfig
-import it.devddk.hackernewsclient.components.HNModalNavigatorPanel
-import it.devddk.hackernewsclient.components.HomePageTopBar
-import it.devddk.hackernewsclient.components.openInBrowser
+import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
+import it.devddk.hackernewsclient.shared.components.HomePageTopBar
+import it.devddk.hackernewsclient.shared.components.openInBrowser
 import timber.log.Timber
 
 @Composable
@@ -110,13 +110,11 @@ fun AboutPage(navController: NavController) {
                             append("External Services:\n")
                         }
 
-
                         clickableUrl(
                             text = "HackerNews API on Firebase",
                             url = "https://github.com/HackerNews/API"
                         )
                         append(" - for general article acquisition\n")
-
 
                         clickableUrl(
                             text = "Algolia Hacker News API",
@@ -162,7 +160,6 @@ fun AboutPage(navController: NavController) {
                             url = "https://firebase.google.com/products/crashlytics"
                         )
                         append(" to improve user experience. User feedback collected in the apposite app section is anonymous and stored on our Firebase Database.\n\n")
-
 
                         append("All news are sourced from ")
                         clickableUrl(

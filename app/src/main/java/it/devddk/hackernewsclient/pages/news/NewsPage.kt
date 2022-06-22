@@ -1,4 +1,4 @@
-package it.devddk.hackernewsclient.pages
+package it.devddk.hackernewsclient.pages.news
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,6 +15,7 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -22,12 +23,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import it.devddk.hackernewsclient.components.HNModalNavigatorPanel
-import it.devddk.hackernewsclient.components.HomePageTopBar
-import it.devddk.hackernewsclient.components.NewsItem
-import it.devddk.hackernewsclient.components.SwipeableNewsItem
 import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
 import it.devddk.hackernewsclient.domain.model.collection.TopStories
+import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
+import it.devddk.hackernewsclient.shared.components.HomePageTopBar
+import it.devddk.hackernewsclient.shared.components.news.NewsItem
+import it.devddk.hackernewsclient.shared.components.news.SwipeableNewsItem
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.NewsPageState
@@ -111,20 +112,22 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
             itemsIndexed(itemListState.value) { index, itemState ->
                 when (itemState) {
                     is NewsItemState.ItemLoaded -> {
-                        SwipeableNewsItem(
-                            itemState.item,
-                            onClick = {
-                                navController.navigate(
-                                    "items/${itemState.item.id}"
-                                )
-                            },
-                            onClickComments = {
-                                navController.navigate(
-                                    "items/${itemState.item.id}/comments"
-                                )
-                            },
-                            placeholder = false
-                        )
+                        key(itemState.item.id) {
+                            SwipeableNewsItem(
+                                itemState.item,
+                                onClick = {
+                                    navController.navigate(
+                                        "items/${itemState.item.id}"
+                                    )
+                                },
+                                onClickComments = {
+                                    navController.navigate(
+                                        "items/${itemState.item.id}/comments"
+                                    )
+                                },
+                                placeholder = false
+                            )
+                        }
                     }
                     is NewsItemState.Loading, is NewsItemState.ItemError -> {
                         LaunchedEffect(index) {

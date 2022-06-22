@@ -53,16 +53,17 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import com.google.accompanist.web.rememberWebViewState
-import it.devddk.hackernewsclient.components.ArticleView
-import it.devddk.hackernewsclient.components.CommentText
-import it.devddk.hackernewsclient.components.ExpandableComment
-import it.devddk.hackernewsclient.components.ItemBy
-import it.devddk.hackernewsclient.components.ItemDomain
-import it.devddk.hackernewsclient.components.ItemTime
-import it.devddk.hackernewsclient.components.ItemTitle
-import it.devddk.hackernewsclient.components.SingleNewsPageTopBar
-import it.devddk.hackernewsclient.components.WebViewWithPrefs
 import it.devddk.hackernewsclient.domain.model.items.Item
+import it.devddk.hackernewsclient.shared.components.ArticleView
+import it.devddk.hackernewsclient.shared.components.CommentText
+import it.devddk.hackernewsclient.shared.components.ExpandableComment
+import it.devddk.hackernewsclient.shared.components.SingleNewsPageTopBar
+import it.devddk.hackernewsclient.shared.components.WebViewWithPrefs
+import it.devddk.hackernewsclient.shared.components.news.NewsItemAuthor
+import it.devddk.hackernewsclient.shared.components.news.NewsItemDomain
+import it.devddk.hackernewsclient.shared.components.news.NewsItemTime
+import it.devddk.hackernewsclient.shared.components.news.NewsItemTitle
+import it.devddk.hackernewsclient.shared.components.news.getDomainName
 import it.devddk.hackernewsclient.utils.SettingPrefs
 import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.DEFAULT_PREFERRED_VIEW
 import it.devddk.hackernewsclient.viewmodels.CommentUiState
@@ -297,6 +298,8 @@ fun CommentsView(
 
     val scrollState = rememberLazyListState()
 
+    val domain = remember { item.url?.let { getDomainName(it) } }
+
     LazyColumn(
         state = scrollState,
         modifier = modifier.fillMaxSize()
@@ -312,14 +315,16 @@ fun CommentsView(
                     .padding(8.dp)
                     .fillMaxHeight()
             ) {
-                ItemDomain(item = item)
-                ItemTitle(item = item)
+                if (domain != null) {
+                    NewsItemDomain(domain = domain)
+                }
+                item.title?.let { NewsItemTitle(title = it) }
                 Row {
-                    ItemBy(item = item)
+                    NewsItemAuthor(author = item.by)
 
                     Text(text = " - ")
 
-                    ItemTime(item = item)
+                    item.time?.let { NewsItemTime(time = it) }
                 }
                 ArticleDescription(item = item)
             }

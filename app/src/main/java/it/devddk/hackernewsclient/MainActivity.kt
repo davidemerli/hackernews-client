@@ -19,14 +19,14 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import it.devddk.hackernewsclient.pages.ArticlePage
 import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
 import it.devddk.hackernewsclient.pages.AboutPage
+import it.devddk.hackernewsclient.pages.ArticlePage
 import it.devddk.hackernewsclient.pages.FeedbackPage
-import it.devddk.hackernewsclient.pages.HackerNewsView
-import it.devddk.hackernewsclient.pages.NewsPage
 import it.devddk.hackernewsclient.pages.SearchPage
 import it.devddk.hackernewsclient.pages.SettingsPage
+import it.devddk.hackernewsclient.pages.news.HackerNewsView
+import it.devddk.hackernewsclient.pages.news.NewsPage
 import it.devddk.hackernewsclient.ui.theme.HackerNewsClientTheme
 
 @ExperimentalPagerApi

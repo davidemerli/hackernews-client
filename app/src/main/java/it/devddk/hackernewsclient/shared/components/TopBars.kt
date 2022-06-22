@@ -1,4 +1,4 @@
-package it.devddk.hackernewsclient.components
+package it.devddk.hackernewsclient.shared.components
 
 import android.content.Context
 import android.content.Intent
@@ -61,7 +61,7 @@ import androidx.navigation.NavController
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
 import it.devddk.hackernewsclient.domain.model.items.Item
-import it.devddk.hackernewsclient.pages.HackerNewsView
+import it.devddk.hackernewsclient.pages.news.HackerNewsView
 import kotlinx.coroutines.launch
 
 @Composable

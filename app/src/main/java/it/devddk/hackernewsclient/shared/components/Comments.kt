@@ -1,4 +1,4 @@
-package it.devddk.hackernewsclient.components
+package it.devddk.hackernewsclient.shared.components
 
 import android.text.util.Linkify
 import android.widget.TextView
@@ -58,15 +58,13 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.accompanist.placeholder.PlaceholderDefaults
-import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.color
-import com.google.accompanist.placeholder.material.fade
 import com.google.accompanist.placeholder.placeholder
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.pages.toSpanned
+import it.devddk.hackernewsclient.shared.components.news.shareStringContent
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
 import it.devddk.hackernewsclient.viewmodels.CommentUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
@@ -273,12 +271,7 @@ fun CommentTitle(
         },
         modifier = modifier
             .padding(4.dp)
-            .placeholder(
-                visible = placeholder,
-                color = PlaceholderDefaults.color(contentAlpha = 0.6f),
-                shape = RoundedCornerShape(8.dp),
-                highlight = PlaceholderHighlight.fade(),
-            ),
+            .customPlaceholder(visible = placeholder),
         style = MaterialTheme.typography.bodyLarge,
     )
 }
@@ -318,12 +311,7 @@ fun CommentText(modifier: Modifier = Modifier, item: Item, placeholder: Boolean 
                     end = 4.dp,
                     bottom = if (item.kids.isNotEmpty()) 4.dp else 16.dp
                 )
-                .placeholder(
-                    visible = placeholder,
-                    color = PlaceholderDefaults.color(contentAlpha = 0.6f),
-                    shape = RoundedCornerShape(8.dp),
-                    highlight = PlaceholderHighlight.fade(),
-                ),
+                .customPlaceholder(visible = placeholder),
         )
     }
 }
@@ -454,7 +442,7 @@ fun MoreOptions(
 
                                     Timber.d(
                                         "INDEX: ${
-                                            comments.value.map { it.itemId }.indexOf(temp.itemId)
+                                        comments.value.map { it.itemId }.indexOf(temp.itemId)
                                         }"
                                     )
 

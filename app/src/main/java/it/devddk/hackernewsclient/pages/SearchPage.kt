@@ -34,9 +34,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import it.devddk.hackernewsclient.components.NewsItem
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
+import it.devddk.hackernewsclient.shared.components.news.NewsItem
 import it.devddk.hackernewsclient.utils.encodeJson
 import it.devddk.hackernewsclient.utils.urlEncode
 import it.devddk.hackernewsclient.viewmodels.SearchPageViewModel
@@ -102,9 +102,11 @@ fun SearchPage(navController: NavController) {
                             result.result.item,
                             onClick = {
                                 Timber.d("Clicked on ${result.result.item.id}")
-                                navController.navigate("items/preloaded/${
+                                navController.navigate(
+                                    "items/preloaded/${
                                     result.result.item.encodeJson().urlEncode()
-                                }")
+                                    }"
+                                )
                             }
                         )
                     }

@@ -1,4 +1,4 @@
-package it.devddk.hackernewsclient.components
+package it.devddk.hackernewsclient.shared.components
 
 import android.os.Build
 import android.text.SpannableString
