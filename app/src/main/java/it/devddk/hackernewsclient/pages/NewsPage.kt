@@ -25,10 +25,9 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import it.devddk.hackernewsclient.components.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.components.HomePageTopBar
 import it.devddk.hackernewsclient.components.NewsItem
-import it.devddk.hackernewsclient.domain.model.utils.CollectionQueryType
-import it.devddk.hackernewsclient.domain.model.utils.TopStories
-import it.devddk.hackernewsclient.utils.encodeJson
-import it.devddk.hackernewsclient.utils.urlEncode
+import it.devddk.hackernewsclient.components.SwipeableNewsItem
+import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
+import it.devddk.hackernewsclient.domain.model.collection.TopStories
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.NewsPageState
@@ -48,7 +47,7 @@ fun NewsPage(
 
     val pageState = viewModel.pageState.collectAsState(NewsPageState.Loading)
 
-    val query = viewModel.uiState.collectAsState(initial = TopStories)
+    val query = viewModel.currentQuery.collectAsState(initial = TopStories)
 
     LaunchedEffect(route) {
         when (route) {
@@ -101,31 +100,27 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
         onRefresh = {
             coroutineScope.launch {
                 Timber.d("refreshing")
-                // TODO: implement refresh on viewmodel
+                viewModel.refreshPage()
             }
         },
     ) {
         LazyColumn(
             modifier = modifier,
-            state = lazyListState
+            state = lazyListState,
         ) {
             itemsIndexed(itemListState.value) { index, itemState ->
                 when (itemState) {
                     is NewsItemState.ItemLoaded -> {
-                        NewsItem(
+                        SwipeableNewsItem(
                             itemState.item,
                             onClick = {
                                 navController.navigate(
-                                    "items/preloaded/${
-                                    itemState.item.encodeJson().urlEncode()
-                                    }"
+                                    "items/${itemState.item.id}"
                                 )
                             },
                             onClickComments = {
                                 navController.navigate(
-                                    "items/preloaded/${
-                                    itemState.item.encodeJson().urlEncode()
-                                    }/comments"
+                                    "items/${itemState.item.id}/comments"
                                 )
                             },
                             placeholder = false
@@ -162,6 +157,6 @@ fun LoadingScreen() {
 
 sealed class NewsPageRoutes
 
-data class HackerNewsView(val query: CollectionQueryType) : NewsPageRoutes() {
+data class HackerNewsView(val query: ItemCollection) : NewsPageRoutes() {
     val route: String = query::class.java.simpleName
 }

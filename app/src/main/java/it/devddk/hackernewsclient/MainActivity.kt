@@ -19,17 +19,15 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import it.devddk.hackernewsclient.domain.model.items.Item
-import it.devddk.hackernewsclient.domain.model.utils.ALL_QUERIES
 import it.devddk.hackernewsclient.pages.ArticlePage
+import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
+import it.devddk.hackernewsclient.pages.AboutPage
 import it.devddk.hackernewsclient.pages.FeedbackPage
 import it.devddk.hackernewsclient.pages.HackerNewsView
 import it.devddk.hackernewsclient.pages.NewsPage
 import it.devddk.hackernewsclient.pages.SearchPage
 import it.devddk.hackernewsclient.pages.SettingsPage
 import it.devddk.hackernewsclient.ui.theme.HackerNewsClientTheme
-import it.devddk.hackernewsclient.utils.decodeJson
-import it.devddk.hackernewsclient.utils.urlDecode
 
 @ExperimentalPagerApi
 @ExperimentalMaterial3Api
@@ -87,45 +85,16 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
-            composable(
-                "items/preloaded/{item}",
-                arguments = listOf(
-                    navArgument("item") {
-                        type = NavType.StringType
-                    }
-                )
-            ) { backStackEntry ->
-                ArticlePage(
-                    navController = navController,
-                    windowSizeClass = windowSizeClass,
-                    item = backStackEntry.arguments?.getString("item")!!.urlDecode()
-                        .decodeJson(Item::class.java)
-                )
-            }
-
-            composable(
-                "items/preloaded/{item}/comments",
-                arguments = listOf(
-                    navArgument("item") {
-                        type = NavType.StringType
-                    }
-                )
-            ) { backStackEntry ->
-                ArticlePage(
-                    navController = navController,
-                    windowSizeClass = windowSizeClass,
-                    item = backStackEntry.arguments?.getString("item")!!.urlDecode()
-                        .decodeJson(Item::class.java),
-                    selectedView = "comments"
-                )
-            }
-
             composable("search") {
                 SearchPage(navController = navController)
             }
 
             composable("settings") {
                 SettingsPage(navController = navController)
+            }
+
+            composable("about") {
+                AboutPage(navController = navController)
             }
 
             composable("feedback") {
@@ -161,6 +130,22 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     windowSizeClass = windowSizeClass,
                     id = backStackEntry.arguments?.getInt("itemId")!!
+                )
+            }
+
+            composable(
+                arguments = listOf(
+                    navArgument("itemId") {
+                        type = NavType.IntType
+                    }
+                ),
+                route = "items/{itemId}/comments"
+            ) { backStackEntry ->
+                ArticlePage(
+                    navController = navController,
+                    windowSizeClass = windowSizeClass,
+                    id = backStackEntry.arguments?.getInt("itemId")!!,
+                    selectedView = "comments"
                 )
             }
         }

@@ -14,7 +14,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Feedback
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.OpenInNew
@@ -23,6 +25,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.ArrowBack
@@ -56,8 +59,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import it.devddk.hackernewsclient.R
+import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
 import it.devddk.hackernewsclient.domain.model.items.Item
-import it.devddk.hackernewsclient.domain.model.utils.ALL_QUERIES
 import it.devddk.hackernewsclient.pages.HackerNewsView
 import kotlinx.coroutines.launch
 
@@ -243,6 +246,16 @@ fun HNModalNavigatorPanel(
                     onClick = { navController.navigate("feedback") },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
+
+                NavigationDrawerItem(
+                    icon = {
+                        Icon(Icons.Filled.Info, contentDescription = "About")
+                    },
+                    label = { Text("About") },
+                    selected = query == "About",
+                    onClick = { navController.navigate("about") },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
             }
         }
     ) {
@@ -258,7 +271,10 @@ val ROUTE_ICONS = mapOf(
     "ShowStories" to Icons.Filled.Dashboard,
     "JobStories" to Icons.Filled.Work,
     "Settings" to Icons.Filled.Settings,
-    "Feedback" to Icons.Filled.Feedback
+    "Feedback" to Icons.Filled.Feedback,
+    "Favorites" to Icons.Filled.Favorite,
+    "ReadLater" to Icons.Filled.Update,
+    "About" to Icons.Filled.Info
 )
 
 val ROUTE_TITLES = mapOf(
@@ -268,4 +284,7 @@ val ROUTE_TITLES = mapOf(
     "AskStories" to "Ask HN",
     "ShowStories" to "Show HN",
     "JobStories" to "HN Jobs",
+    "Favorites" to "Favorites",
+    "ReadLater" to "Read Later",
+    "About" to "About"
 )

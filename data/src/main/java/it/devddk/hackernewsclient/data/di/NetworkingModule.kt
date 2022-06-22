@@ -5,8 +5,11 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import it.devddk.hackernewsclient.data.BuildConfig
 import it.devddk.hackernewsclient.data.api.AlgoliaSearchApi
+import it.devddk.hackernewsclient.data.common.utils.Connectivity
+import it.devddk.hackernewsclient.data.common.utils.ConnectivityImpl
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import retrofit2.Converter
@@ -48,5 +51,8 @@ val networkingModule = module {
     }
     single(named("feedback")) {
         get<FirebaseDatabase>(named("ourDb")).getReference("feedback")
+    }
+    single<Connectivity> {
+        ConnectivityImpl(androidContext())
     }
 }

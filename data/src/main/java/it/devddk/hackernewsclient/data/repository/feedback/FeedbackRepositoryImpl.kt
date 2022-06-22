@@ -4,7 +4,6 @@ import com.google.firebase.database.DatabaseReference
 import it.devddk.hackernewsclient.data.networking.model.FeedbackEntity
 import it.devddk.hackernewsclient.domain.model.feedback.Feedback
 import it.devddk.hackernewsclient.domain.repository.FeedbackRepository
-import kotlinx.coroutines.tasks.await
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named

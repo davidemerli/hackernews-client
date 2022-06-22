@@ -2,12 +2,16 @@ package it.devddk.hackernewsclient.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import it.devddk.hackernewsclient.domain.interaction.collection.AddItemToCollectionUseCase
+import it.devddk.hackernewsclient.domain.interaction.collection.RemoveItemFromCollectionUseCase
 import it.devddk.hackernewsclient.domain.interaction.item.GetItemUseCase
 import it.devddk.hackernewsclient.domain.interaction.item.GetNewStoriesUseCase
+import it.devddk.hackernewsclient.domain.interaction.item.RefreshAllItemsUseCase
+import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
+import it.devddk.hackernewsclient.domain.model.collection.TopStories
+import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.domain.model.items.Item
-import it.devddk.hackernewsclient.domain.model.utils.CollectionQueryType
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
-import it.devddk.hackernewsclient.domain.model.utils.TopStories
 import it.devddk.hackernewsclient.domain.utils.getValue
 import it.devddk.hackernewsclient.domain.utils.requireValue
 import kotlinx.coroutines.Dispatchers
@@ -23,38 +27,40 @@ import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import timber.log.Timber
+import java.util.concurrent.ConcurrentHashMap
 
 class HomePageViewModel : ViewModel(), KoinComponent {
 
     // internal state
-    private val itemList: MutableList<NewsItemState> = MutableList(500) { NewsItemState.Loading }
+    private val items: MutableMap<ItemId, NewsItemState> = ConcurrentHashMap()
 
     // use cases
     private val getNewStories: GetNewStoriesUseCase by inject()
     private val getItemById: GetItemUseCase by inject()
+    private val addToCollection: AddItemToCollectionUseCase by inject()
+    private val removeFromCollection: RemoveItemFromCollectionUseCase by inject()
+    private val refreshAllItems: RefreshAllItemsUseCase by inject()
 
     // state flows
-    private val _uiState: MutableSharedFlow<CollectionQueryType> =
-        MutableSharedFlow<CollectionQueryType>(1).apply {
-            onSubscription {
-                emit(TopStories)
-            }
+    private val _currentQuery: MutableSharedFlow<ItemCollection> =
+        MutableSharedFlow<ItemCollection>(1).apply {
+            onSubscription { emit(TopStories) }
         }
-    val uiState = _uiState.asSharedFlow()
+    val currentQuery = _currentQuery.asSharedFlow()
 
     private val _itemListFlow: MutableSharedFlow<List<NewsItemState>> = MutableSharedFlow(1)
     val itemListFlow = _itemListFlow.asSharedFlow()
 
-    val pageState: StateFlow<NewsPageState> = _uiState.transform { query ->
+    val pageState: StateFlow<NewsPageState> = _currentQuery.transform { query ->
         emit(NewsPageState.Loading)
 
         getNewStories(query).fold(
             onSuccess = {
-                synchronized(itemList) {
-                    itemList.clear()
+                synchronized(items) {
+                    items.clear()
 
-                    it.indices.forEach { _ ->
-                        itemList.add(NewsItemState.Loading)
+                    it.indices.forEach { id ->
+                        items[id] = NewsItemState.Loading
                     }
                 }
 
@@ -70,11 +76,11 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         initialValue = NewsPageState.Loading
     )
 
-    suspend fun setQuery(newQuery: CollectionQueryType) {
-        val oldQuery = _uiState.getValue()
+    suspend fun setQuery(newQuery: ItemCollection) {
+        val oldQuery = _currentQuery.getValue()
 
         if (oldQuery != newQuery) {
-            _uiState.emit(newQuery)
+            _currentQuery.emit(newQuery)
 
             updateItemList()
         }
@@ -88,23 +94,30 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         // avoid requesting item if the page is not loaded
         if (currPageState !is NewsPageState.NewsIdsLoaded) return
 
-        synchronized(itemList) {
-            // avoid requesting item if it's already loaded
-            if (itemList[index] is NewsItemState.ItemLoaded) return
+        // FIXME: items not in the list at this stage are getting requested in favorites screen
+        if (index >= currPageState.itemsId.size) {
+            Timber.d("Requesting item $index, but it is not in the list")
+            return
         }
 
         val itemId = currPageState.itemsId[index]
 
+        synchronized(items) {
+            // avoid requesting item if it's already loaded
+            if (items[itemId] is NewsItemState.ItemLoaded) return
+        }
+
         withContext(Dispatchers.IO) {
             getItemById(itemId).fold(
                 onSuccess = {
-                    synchronized(itemList) {
-                        itemList[index] = NewsItemState.ItemLoaded(it)
+                    synchronized(items) {
+                        items[itemId] = NewsItemState.ItemLoaded(it)
                     }
                 },
                 onFailure = {
-                    synchronized(itemList) {
-                        itemList[index] = NewsItemState.ItemError(it)
+                    Timber.e("Failed to retrieve item $index. ${it.printStackTrace()}")
+                    synchronized(items) {
+                        items[itemId] = NewsItemState.ItemError(it)
                     }
                 }
             )
@@ -113,26 +126,62 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         updateItemList()
     }
 
-    private suspend fun updateItemList() {
-        val result: List<NewsItemState>
+    suspend fun refreshItem(itemId: Int) {
+        getItemById(itemId).onSuccess {
+            synchronized(items) {
+                items[itemId] = NewsItemState.ItemLoaded(it)
+            }
+            updateItemList()
+        }
+    }
 
-        synchronized(itemList) {
-            result = itemList.toList()
+    suspend fun refreshPage() {
+        refreshAllItems()
+        _currentQuery.emit(_currentQuery.requireValue())
+        updateItemList()
+    }
+
+    suspend fun addToFavorites(itemId: Int, collection: UserDefinedItemCollection) {
+        getItemIfLoaded(itemId)
+            ?: throw IllegalStateException("Cannot add to favorites a non loaded item")
+        val result = addToCollection(itemId, collection).onFailure {
+            Timber.e(it, "Failed to add to collection")
+        }
+        if (result.isSuccess) {
+            refreshItem(itemId)
+        }
+    }
+
+    suspend fun removeFromFavorites(itemId: ItemId, collection: UserDefinedItemCollection) {
+        getItemIfLoaded(itemId)
+            ?: throw IllegalStateException("Cannot remove from favorites a non loaded item")
+        val result = removeFromCollection(itemId, collection).onFailure {
+            Timber.e(it, "Failed to remove from collection")
+        }
+        if (result.isSuccess) {
+            refreshItem(itemId)
+        }
+    }
+
+    private fun getItemIfLoaded(itemId: Int): Item? {
+        synchronized(items) {
+            return (items[itemId] as? NewsItemState.ItemLoaded)?.item
+        }
+    }
+
+    private suspend fun updateItemList() {
+        val outputList: List<NewsItemState>?
+        synchronized(items) {
+            val itemState = pageState.value as? NewsPageState.NewsIdsLoaded
+            outputList = itemState?.itemsId?.map { id ->
+                items[id] ?: NewsItemState.Loading
+            }
         }
 
-        _itemListFlow.emit(result)
-    }
-
-    private suspend fun refresh() {
-        _uiState.emit(_uiState.requireValue())
-
-        updateItemList()
-    }
-
-    private suspend fun refresh(query: CollectionQueryType) {
-        _uiState.emit(query)
-
-        updateItemList()
+        if (outputList != null) {
+            Timber.d("Updated List")
+            _itemListFlow.emit(outputList)
+        }
     }
 }
 

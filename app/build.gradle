@@ -97,6 +97,9 @@ dependencies {
     // responsiveness
     implementation("androidx.window:window:1.1.0-alpha02")
 
+    // fancy swipe actions
+    implementation "me.saket.swipe:swipe:1.0.0"
+
     // settings
     implementation "androidx.datastore:datastore-preferences:1.0.0"
     implementation "com.github.Sh4dowSoul.ComposePreferences:preferences-material3:0.1.4"
