@@ -29,7 +29,7 @@ import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.shared.components.HomePageTopBar
 import it.devddk.hackernewsclient.shared.components.news.NewsItem
 import it.devddk.hackernewsclient.shared.components.news.SwipeableNewsItem
-import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
+import it.devddk.hackernewsclient.viewmodels.NewsListViewModel
 import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.NewsPageState
 import kotlinx.coroutines.launch
@@ -42,7 +42,7 @@ fun NewsPage(
     windowSizeClass: WindowSizeClass,
     route: NewsPageRoutes,
 ) {
-    val viewModel: HomePageViewModel = viewModel()
+    val viewModel: NewsListViewModel = viewModel()
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
@@ -88,7 +88,7 @@ fun NewsPage(
 fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier) {
 
     val lazyListState = rememberLazyListState()
-    val viewModel: HomePageViewModel = viewModel()
+    val viewModel: NewsListViewModel = viewModel()
     val itemListState =
         viewModel.itemListFlow.collectAsState(initial = emptyList())
 
