@@ -31,7 +31,7 @@ import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.items.favorite
 import it.devddk.hackernewsclient.domain.model.items.readLater
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
-import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
+import it.devddk.hackernewsclient.viewmodels.NewsListViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.net.URI
@@ -48,7 +48,7 @@ fun NewsItem(
     val context = LocalContext.current
 
     val coroutineScope = rememberCoroutineScope()
-    val viewModel: HomePageViewModel = viewModel()
+    val viewModel: NewsListViewModel = viewModel()
 
     val itemDomain = remember { item.url?.let { getDomainName(it) } }
 
@@ -219,7 +219,7 @@ fun shareStringContent(context: Context, content: String) {
 
 fun onCollectionToggle(
     coroutineScope: CoroutineScope,
-    viewModel: HomePageViewModel,
+    viewModel: NewsListViewModel,
     itemId: ItemId,
     toggleable: MutableState<Boolean>,
     collection: UserDefinedItemCollection,

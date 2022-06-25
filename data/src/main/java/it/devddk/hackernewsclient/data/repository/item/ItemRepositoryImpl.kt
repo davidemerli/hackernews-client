@@ -35,7 +35,7 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
     private val connectivity: Connectivity by inject()
 
 
-    private val cache = LruCache<ItemId, Item>(500)
+    private val cache : LruCache<ItemId, Item> by inject()
 
     override suspend fun getItemById(itemId: Int, forceRefresh: Boolean): Result<Item> {
         if (forceRefresh) {

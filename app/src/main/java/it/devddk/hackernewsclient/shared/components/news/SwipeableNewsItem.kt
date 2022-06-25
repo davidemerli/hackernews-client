@@ -17,7 +17,7 @@ import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollect
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.favorite
 import it.devddk.hackernewsclient.domain.model.items.readLater
-import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
+import it.devddk.hackernewsclient.viewmodels.NewsListViewModel
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
 
@@ -32,7 +32,7 @@ fun SwipeableNewsItem(
     val favorite = remember { mutableStateOf(item.collections.favorite) }
 
     val coroutineScope = rememberCoroutineScope()
-    val viewModel: HomePageViewModel = viewModel()
+    val viewModel: NewsListViewModel = viewModel()
 
     val readLaterAction = SwipeAction(
         icon = rememberVectorPainter(if (!readLater.value) Icons.Filled.Update else Icons.Filled.UpdateDisabled),

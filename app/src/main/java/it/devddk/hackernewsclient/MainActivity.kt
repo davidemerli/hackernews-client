@@ -65,7 +65,7 @@ class MainActivity : ComponentActivity() {
                     NewsPage(
                         navController = navController,
                         windowSizeClass = windowSizeClass,
-                        route = HackerNewsView(query)
+                        route = query
                     )
                 }
             }

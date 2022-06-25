@@ -43,11 +43,13 @@ import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.shared.components.HomePageTopBar
 import it.devddk.hackernewsclient.shared.components.news.NewsItem
 import it.devddk.hackernewsclient.shared.components.news.SwipeableNewsItem
+
 import it.devddk.hackernewsclient.shared.components.topbars.FeedbackButton
 import it.devddk.hackernewsclient.shared.components.topbars.OpenInBrowserButton
 import it.devddk.hackernewsclient.shared.components.topbars.SearchButton
 import it.devddk.hackernewsclient.shared.components.topbars.ShareButton
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
+import it.devddk.hackernewsclient.viewmodels.NewsListViewModel
 import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.NewsPageState
 import kotlinx.coroutines.launch
@@ -58,21 +60,17 @@ import timber.log.Timber
 fun NewsPage(
     navController: NavController,
     windowSizeClass: WindowSizeClass,
-    route: NewsPageRoutes,
+    route: ItemCollection,
 ) {
     val viewModel: HomePageViewModel = viewModel()
 
+    val itemCollection = viewModel.collections[route]!!
+    val pageState = itemCollection.pageState.collectAsState(NewsPageState.Loading)
+
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val pageState = viewModel.pageState.collectAsState(NewsPageState.Loading)
-    val query = viewModel.currentQuery.collectAsState(initial = TopStories)
+//    val query = viewModel.currentQuery.collectAsState(initial = TopStories)
 
     var selectedItem by remember { mutableStateOf<Item?>(null) }
-
-    LaunchedEffect(route) {
-        when (route) {
-            is HackerNewsView -> viewModel.setQuery(route.query)
-        }
-    }
 
     val onClick = { item: Item ->
         if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded) {
@@ -89,14 +87,14 @@ fun NewsPage(
     HNModalNavigatorPanel(
         navController = navController,
         state = drawerState,
-        query = HackerNewsView(query.value).route,
+        query = "TopStories",
     ) {
         Scaffold(
             topBar = {
                 HomePageTopBar(
                     navController = navController,
                     state = drawerState,
-                    query = HackerNewsView(query.value).route,
+                    query = "TopStories",
                     actions = {
                         SearchButton(navController = navController)
 
@@ -121,6 +119,10 @@ fun NewsPage(
             when (pageState.value) {
                 is NewsPageState.Loading -> {
                     LoadingScreen()
+
+                    LaunchedEffect(Unit) {
+                        itemCollection.loadAll()
+                    }
                 }
                 is NewsPageState.NewsIdsError -> {
                     ErrorScreen()
@@ -183,8 +185,9 @@ fun ItemInfiniteList(
 
     val lazyListState = rememberLazyListState()
     val viewModel: HomePageViewModel = viewModel()
-    val itemListState =
-        viewModel.itemListFlow.collectAsState(initial = emptyList())
+
+    val itemCollection = viewModel.collections[TopStories]!!
+    val itemListState = itemCollection.itemListFlow.collectAsState(initial = emptyList())
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -196,7 +199,8 @@ fun ItemInfiniteList(
         onRefresh = {
             coroutineScope.launch {
                 Timber.d("refreshing")
-                viewModel.refreshPage()
+
+                itemCollection.refreshAll()
             }
         },
     ) {
@@ -208,7 +212,7 @@ fun ItemInfiniteList(
                 when (itemState) {
                     is NewsItemState.Loading, is NewsItemState.ItemError -> {
                         LaunchedEffect(index) {
-                            viewModel.requestItem(index)
+                            itemCollection.requestItem(index)
                         }
 
                         NewsItem(placeholder = true)
