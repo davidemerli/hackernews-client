@@ -308,7 +308,7 @@ fun CommentText(modifier: Modifier = Modifier, item: Item, placeholder: Boolean 
                 .padding(
                     top = 4.dp,
                     start = 4.dp,
-                    end = 4.dp,
+                    end = 16.dp,
                     bottom = if (item.kids.isNotEmpty()) 4.dp else 16.dp
                 )
                 .customPlaceholder(visible = placeholder),
@@ -366,7 +366,7 @@ fun MoreOptions(
     navController: NavController,
 ) {
     val context = LocalContext.current
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by rememberSaveable { mutableStateOf(false) }
 
     val mViewModel: SingleNewsViewModel = viewModel()
     val comments = mViewModel.commentList.collectAsState(emptyList())

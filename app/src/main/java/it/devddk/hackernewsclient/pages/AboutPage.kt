@@ -167,6 +167,11 @@ fun AboutPage(navController: NavController) {
                             url = "https://news.ycombinator.com"
                         )
                         append(" and we are not responsible for the content, nor we are affiliated with Y Combinator in any way.\n\n")
+
+                        append("Contact ycombinator at ")
+
+                        clickableUrl(text = "hn@ycombinator.com", url = "mailto:hn@ycombinator.com")
+                        append("\n\n")
                     }
 
                 ClickableText(

@@ -80,7 +80,7 @@ class MainActivity : ComponentActivity() {
             ) { backStackEntry ->
                 ArticlePage(
                     navController = navController,
-                    windowSizeClass = windowSizeClass,
+                    windowWidthSizeClass = windowSizeClass.widthSizeClass,
                     id = backStackEntry.arguments?.getInt("itemId")!!
                 )
             }
@@ -128,7 +128,7 @@ class MainActivity : ComponentActivity() {
             ) { backStackEntry ->
                 ArticlePage(
                     navController = navController,
-                    windowSizeClass = windowSizeClass,
+                    windowWidthSizeClass = windowSizeClass.widthSizeClass,
                     id = backStackEntry.arguments?.getInt("itemId")!!
                 )
             }
@@ -143,7 +143,7 @@ class MainActivity : ComponentActivity() {
             ) { backStackEntry ->
                 ArticlePage(
                     navController = navController,
-                    windowSizeClass = windowSizeClass,
+                    windowWidthSizeClass = windowSizeClass.widthSizeClass,
                     id = backStackEntry.arguments?.getInt("itemId")!!,
                     selectedView = "comments"
                 )

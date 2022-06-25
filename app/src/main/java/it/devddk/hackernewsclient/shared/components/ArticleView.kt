@@ -1,17 +1,16 @@
 package it.devddk.hackernewsclient.shared.components
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.key
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.google.accompanist.web.WebView
@@ -27,14 +26,12 @@ fun ArticleView(
     webviewState: WebViewState,
 ) {
     Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier,
     ) {
         if (webviewState.isLoading) {
             LinearProgressIndicator(
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.secondary
             )
         }
 
@@ -133,7 +130,9 @@ fun WebViewWithPrefs(
     ) {
         WebView(
             state = webviewState,
-            modifier = modifier.fillMaxHeight(),
+            modifier = modifier
+                .fillMaxHeight()
+                .verticalScroll(verticalScrollState),
             onCreated = { webview ->
                 Timber.d("javascriptEnabled: ${javaScriptEnabled.value}")
                 Timber.d("domStorageEnabled: ${domStorageEnabled.value}")

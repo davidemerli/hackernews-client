@@ -1,5 +1,7 @@
 package it.devddk.hackernewsclient.pages
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -27,7 +30,6 @@ import androidx.compose.material3.TabPosition
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -52,13 +54,13 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
+import com.google.accompanist.web.WebViewState
 import com.google.accompanist.web.rememberWebViewState
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.shared.components.ArticleView
 import it.devddk.hackernewsclient.shared.components.CommentText
 import it.devddk.hackernewsclient.shared.components.ExpandableComment
 import it.devddk.hackernewsclient.shared.components.SingleNewsPageTopBar
-import it.devddk.hackernewsclient.shared.components.WebViewWithPrefs
 import it.devddk.hackernewsclient.shared.components.news.NewsItemAuthor
 import it.devddk.hackernewsclient.shared.components.news.NewsItemDomain
 import it.devddk.hackernewsclient.shared.components.news.NewsItemTime
@@ -83,7 +85,7 @@ fun String.toSpanned(): String {
 @Composable
 fun ArticlePage(
     navController: NavController,
-    windowSizeClass: WindowSizeClass,
+    windowWidthSizeClass: WindowWidthSizeClass,
     id: Int?,
     selectedView: String? = null,
 ) {
@@ -106,7 +108,7 @@ fun ArticlePage(
             ArticlePage(
                 item = uiStateValue.item,
                 navController = navController,
-                windowSizeClass = windowSizeClass,
+                windowWidthSizeClass = windowWidthSizeClass,
                 selectedView = selectedView,
             )
         }
@@ -117,22 +119,29 @@ fun ArticlePage(
 @OptIn(ExperimentalMaterial3Api::class)
 fun ArticlePage(
     navController: NavController,
-    windowSizeClass: WindowSizeClass,
+    windowWidthSizeClass: WindowWidthSizeClass,
     item: Item,
     selectedView: String? = null,
 ) {
     val viewModel: SingleNewsViewModel = viewModel()
     val webviewState = rememberWebViewState(item.url ?: "")
 
+    val scrollState = rememberLazyListState()
+
     LaunchedEffect(item.id) {
         viewModel.setId(item.id)
     }
 
-    when (windowSizeClass.widthSizeClass) {
+    when (windowWidthSizeClass) {
         WindowWidthSizeClass.Compact,
         WindowWidthSizeClass.Medium,
         -> {
-            TabbedView(item = item, navController = navController, selectedView)
+            TabbedView(
+                item = item,
+                navController = navController,
+                webviewState = webviewState,
+                selectedView
+            )
         }
         WindowWidthSizeClass.Expanded -> {
             Scaffold(
@@ -141,7 +150,7 @@ fun ArticlePage(
                         item = item,
                         navController = navController,
                     )
-                }
+                },
             ) {
                 Row(
                     modifier = Modifier
@@ -156,7 +165,8 @@ fun ArticlePage(
                     CommentsView(
                         modifier = Modifier.fillMaxWidth(),
                         item = item,
-                        navController = navController
+                        navController = navController,
+                        scrollState = scrollState
                     )
                 }
             }
@@ -175,20 +185,22 @@ fun Loading() {
 }
 
 @Composable
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalPagerApi::class,
-)
-fun TabbedView(item: Item, navController: NavController, selectedView: String?) {
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPagerApi::class)
+fun TabbedView(
+    item: Item,
+    navController: NavController,
+    webviewState: WebViewState,
+    selectedView: String?
+) {
     val tabs = item.url?.let { listOf("Article", "Comments (${item.descendants ?: 0})") } ?: listOf(
         "Comments (${item.descendants ?: 0})"
     )
 
     val coroutineScope = rememberCoroutineScope()
     val pagerState = rememberPagerState()
+    val scrollState = rememberLazyListState()
 
     var fullScreenWebView by remember { mutableStateOf(false) }
-    val webviewState = rememberWebViewState(url = item.url ?: "")
 
     val dataStore = SettingPrefs(LocalContext.current)
     val preferredView = selectedView
@@ -202,17 +214,28 @@ fun TabbedView(item: Item, navController: NavController, selectedView: String?) 
         }
     }
 
+    BackHandler(enabled = fullScreenWebView, onBack = { fullScreenWebView = false })
+
     Scaffold(
         topBar = {
-            if (!fullScreenWebView) {
-                SingleNewsPageTopBar(item, navController)
+            AnimatedVisibility(visible = !fullScreenWebView) {
+                SingleNewsPageTopBar(
+                    navController = navController,
+                    item = item,
+                )
             }
         },
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
-            if (tabs[pagerState.currentPage] == "Article") {
+            if (pagerState.currentPage == 0 && item.url != null) {
                 FloatingActionButton(
-                    onClick = { fullScreenWebView = !fullScreenWebView },
+                    onClick = {
+                        fullScreenWebView = !fullScreenWebView
+
+                        coroutineScope.launch {
+                            pagerState.scrollToPage(0)
+                        }
+                    },
                 ) {
                     Icon(
                         if (fullScreenWebView) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
@@ -222,60 +245,61 @@ fun TabbedView(item: Item, navController: NavController, selectedView: String?) 
             }
         }
     ) {
-        Column(modifier = Modifier.padding(top = it.calculateTopPadding())) {
+        Column(
+            modifier = Modifier.padding(top = it.calculateTopPadding())
+        ) {
             if (item.url != null) {
-                if (fullScreenWebView) {
-                    WebViewWithPrefs(webviewState = webviewState)
-                } else {
-                    item.url?.let {
-                        TabRow(
-                            selectedTabIndex = pagerState.currentPage,
-                            indicator = { tabPositions ->
-                                TabRowDefaults.Indicator(
-                                    Modifier.pagerTabIndicatorOffset(
-                                        pagerState,
-                                        tabPositions,
-                                    ),
-                                    color = MaterialTheme.colorScheme.secondary,
-                                )
-                            }
-                        ) {
-                            tabs.forEachIndexed { index, title ->
-                                Tab(selected = pagerState.currentPage == index, onClick = {
-                                    coroutineScope.launch {
-                                        pagerState.animateScrollToPage(index)
-                                    }
-                                }, text = {
-                                    Text(text = title, color = MaterialTheme.colorScheme.secondary)
-                                })
-                            }
+                AnimatedVisibility(visible = !fullScreenWebView) {
+                    TabRow(
+                        selectedTabIndex = pagerState.currentPage,
+                        indicator = { tabPositions ->
+                            TabRowDefaults.Indicator(
+                                Modifier.pagerTabIndicatorOffset(
+                                    pagerState,
+                                    tabPositions,
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    ) {
+                        tabs.forEachIndexed { index, title ->
+                            Tab(selected = pagerState.currentPage == index, onClick = {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            }, text = {
+                                Text(text = title, color = MaterialTheme.colorScheme.secondary)
+                            })
                         }
                     }
-                    HorizontalPager(
-                        count = item.url?.let { 2 } ?: 1,
-                        state = pagerState,
-                        modifier = Modifier.fillMaxHeight(),
-                        userScrollEnabled = !fullScreenWebView
-                    ) { index ->
-                        when (index) {
-                            0 -> {
-                                ArticleView(
-                                    webviewState = webviewState
-                                )
-                            }
-                            1 -> {
-                                CommentsView(
-                                    item = item,
-                                    navController = navController
-                                )
-                            }
+                }
+                HorizontalPager(
+                    count = item.url?.let { 2 } ?: 1,
+                    state = pagerState,
+                    modifier = Modifier.fillMaxHeight(),
+                    userScrollEnabled = !fullScreenWebView
+                ) { index ->
+                    when (index) {
+                        0 -> {
+                            ArticleView(
+                                modifier = Modifier.fillMaxHeight(),
+                                webviewState = webviewState
+                            )
+                        }
+                        1 -> {
+                            CommentsView(
+                                item = item,
+                                navController = navController,
+                                scrollState = scrollState,
+                            )
                         }
                     }
                 }
             } else {
                 CommentsView(
                     item = item,
-                    navController = navController
+                    navController = navController,
+                    scrollState = scrollState,
                 )
             }
         }
@@ -286,8 +310,9 @@ fun TabbedView(item: Item, navController: NavController, selectedView: String?) 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalFoundationApi::class)
 fun CommentsView(
     modifier: Modifier = Modifier,
-    item: Item,
     navController: NavController,
+    item: Item,
+    scrollState: LazyListState,
 ) {
     val context = LocalContext.current
     val dataStore = SettingPrefs(context)
@@ -295,8 +320,6 @@ fun CommentsView(
 
     val mViewModel: SingleNewsViewModel = viewModel()
     val comments = mViewModel.commentList.collectAsState(emptyList())
-
-    val scrollState = rememberLazyListState()
 
     val domain = remember { item.url?.let { getDomainName(it) } }
 

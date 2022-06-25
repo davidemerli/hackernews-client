@@ -3,12 +3,10 @@ package it.devddk.hackernewsclient.shared.components
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -18,24 +16,17 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NewReleases
-import androidx.compose.material.icons.filled.OpenInBrowser
-import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.filled.Work
-import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Menu
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerState
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,11 +37,7 @@ import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -62,6 +49,9 @@ import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.pages.news.HackerNewsView
+import it.devddk.hackernewsclient.shared.components.topbars.FeedbackButton
+import it.devddk.hackernewsclient.shared.components.topbars.OpenInBrowserButton
+import it.devddk.hackernewsclient.shared.components.topbars.QueryTitle
 import kotlinx.coroutines.launch
 
 @Composable
@@ -70,20 +60,13 @@ fun HomePageTopBar(
     navController: NavController,
     state: DrawerState,
     query: String,
+    actions: @Composable() (RowScope.() -> Unit) = {}
 ) {
     val scope = rememberCoroutineScope()
 
     CenterAlignedTopAppBar(
         title = {
-            Row {
-                Icon(
-                    ROUTE_ICONS[query]!!,
-                    query,
-                    modifier = Modifier.padding(start = 4.dp, top = 4.dp, end = 6.dp)
-                )
-
-                Text(ROUTE_TITLES[query] ?: query)
-            }
+            QueryTitle(query)
         },
         navigationIcon = {
             IconButton(onClick = {
@@ -92,28 +75,18 @@ fun HomePageTopBar(
                 Icon(Icons.Rounded.Menu, "Menu")
             }
         },
-        actions = {
-            IconButton(onClick = {
-                navController.navigate("search")
-            }) {
-                Icon(Icons.Rounded.Search, "Search")
-            }
-            IconButton(onClick = { }) {
-                Icon(Icons.Rounded.AccountCircle, "Notifications")
-            }
-        },
+        actions = actions,
     )
 }
 
 @Composable
-fun SingleNewsPageTopBar(item: Item, navController: NavController) {
+fun SingleNewsPageTopBar(modifier: Modifier = Modifier, item: Item, navController: NavController) {
     val context = LocalContext.current
-    var openInBrowserExpanded by remember { mutableStateOf(false) }
 
     val coroutineScope = rememberCoroutineScope()
 
     SmallTopAppBar(
-        modifier = Modifier.wrapContentHeight(Alignment.Bottom),
+        modifier = modifier.wrapContentHeight(Alignment.Bottom),
         title = { },
         navigationIcon = {
             IconButton(onClick = { navController.popBackStack() }) {
@@ -126,55 +99,13 @@ fun SingleNewsPageTopBar(item: Item, navController: NavController) {
             }) {
                 Icon(Icons.Filled.Refresh, "Refresh")
             }
-            IconButton(onClick = {
-                navController.navigate("feedback/${item.id}")
-            }) {
-                Icon(Icons.Filled.ReportProblem, "Report Problem")
-            }
-            Box(
-                modifier = Modifier.wrapContentSize(Alignment.TopStart)
-            ) {
-                IconButton(onClick = { openInBrowserExpanded = !openInBrowserExpanded }) {
-                    Icon(Icons.Filled.OpenInNew, "Open in browser")
-                }
 
-                DropdownMenu(
-                    expanded = openInBrowserExpanded,
-                    onDismissRequest = { openInBrowserExpanded = false }
-                ) {
-                    item.url?.let { url ->
-                        DropdownMenuItem(
-                            text = { Text("Open Article in browser") },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Filled.OpenInBrowser,
-                                    contentDescription = "Open Article in browser"
-                                )
-                            },
-                            onClick = {
-                                openInBrowser(context, url)
-                                openInBrowserExpanded = false
-                            },
-                        )
-                    }
-                    DropdownMenuItem(
-                        text = { Text("Open HN link in browser") },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Filled.OpenInBrowser,
-                                contentDescription = "Open HN link in browser"
-                            )
-                        },
-                        onClick = {
-                            openInBrowser(
-                                context,
-                                "https://news.ycombinator.com/item?id=${item.id}"
-                            )
-                            openInBrowserExpanded = false
-                        },
-                    )
-                }
-            }
+            FeedbackButton(navController, item.id)
+
+            OpenInBrowserButton(
+                itemUrl = item.url,
+                hnUrl = "https://news.ycombinator.com/item?id=${item.id}"
+            )
         },
     )
 }
