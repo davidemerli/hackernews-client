@@ -31,6 +31,7 @@ import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.items.favorite
 import it.devddk.hackernewsclient.domain.model.items.readLater
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
+import it.devddk.hackernewsclient.pages.parseHTML
 import it.devddk.hackernewsclient.viewmodels.NewsListViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -114,7 +115,7 @@ fun NewsItem(
 
         item.title?.let {
             NewsItemTitle(
-                title = it,
+                title = it.parseHTML(),
                 placeholder = placeholder,
                 modifier = Modifier
                     .padding(end = 56.dp) // to avoid overlapping with the dropdown menu

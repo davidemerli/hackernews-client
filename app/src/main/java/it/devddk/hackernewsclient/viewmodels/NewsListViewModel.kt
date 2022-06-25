@@ -148,8 +148,10 @@ class NewsListViewModel : ViewModel(), KoinComponent {
         updateItemList()
     }
 
+    @Deprecated("Needs to be replaced with the new homepage viewmodel")
     suspend fun addToFavorites(itemId: Int, collection: UserDefinedItemCollection) {
-        getItemIfLoaded(itemId)
+        getItemById(itemId) // hack to make this function until we change everything to the new viewmodel
+        // , and at this point we don't have the item in the cache here
             ?: throw IllegalStateException("Cannot add to favorites a non loaded item")
         val result = addToCollection(itemId, collection).onFailure {
             Timber.e(it, "Failed to add to collection")
@@ -160,7 +162,8 @@ class NewsListViewModel : ViewModel(), KoinComponent {
     }
 
     suspend fun removeFromFavorites(itemId: ItemId, collection: UserDefinedItemCollection) {
-        getItemIfLoaded(itemId)
+        getItemById(itemId) // hack to make this function until we change everything to the new viewmodel
+        // , and at this point we don't have the item in the cache here
             ?: throw IllegalStateException("Cannot remove from favorites a non loaded item")
         val result = removeFromCollection(itemId, collection).onFailure {
             Timber.e(it, "Failed to remove from collection")

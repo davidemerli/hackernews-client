@@ -75,7 +75,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.max
 
-fun String.toSpanned(): String {
+fun String.parseHTML(): String {
     return HtmlCompat.fromHtml(
         this,
         HtmlCompat.FROM_HTML_MODE_LEGACY
