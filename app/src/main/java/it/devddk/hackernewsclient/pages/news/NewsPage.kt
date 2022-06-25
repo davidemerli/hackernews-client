@@ -212,7 +212,7 @@ fun ItemInfiniteList(
                 when (itemState) {
                     is NewsItemState.Loading, is NewsItemState.ItemError -> {
                         LaunchedEffect(index) {
-                            itemCollection.requestItem(index)
+                            itemCollection.requestItem(itemState.itemId)
                         }
 
                         NewsItem(placeholder = true)

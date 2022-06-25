@@ -67,7 +67,10 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
                     runCatching {
                         // Start asking for item on HN api
                         val hnResult = items.child(itemId.toString()).get().await()
+
                         val data = hnResult.getValue(ItemResponse::class.java)
+
+                        Timber.d("hnResult: $hnResult - $data")
                         checkNotNull(data?.mapToDomainModel()) { "Received null item" }
                     }.recoverCatching { exception ->
                         // Skip offline check if canceled
