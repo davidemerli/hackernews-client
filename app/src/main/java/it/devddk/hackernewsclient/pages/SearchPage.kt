@@ -87,7 +87,7 @@ fun SearchPage(navController: NavController) {
                 )
             }
 
-            items(resultList.value.size + 1) { index ->
+            items(resultList.value.size) { index ->
                 LaunchedEffect(index.div(20)) {
                     viewModel.requestItem(index)
                 }
@@ -103,9 +103,7 @@ fun SearchPage(navController: NavController) {
                             onClick = {
                                 Timber.d("Clicked on ${result.result.item.id}")
                                 navController.navigate(
-                                    "items/preloaded/${
-                                    result.result.item.encodeJson().urlEncode()
-                                    }"
+                                    "items/${result.result.item.id}"
                                 )
                             }
                         )
@@ -114,6 +112,7 @@ fun SearchPage(navController: NavController) {
                     }
                 }
             }
+            if(r)
         }
     }
 }
