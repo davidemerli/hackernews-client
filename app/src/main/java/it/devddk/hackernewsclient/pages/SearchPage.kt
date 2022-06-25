@@ -112,7 +112,6 @@ fun SearchPage(navController: NavController) {
                     }
                 }
             }
-        }
     }
 }
 
