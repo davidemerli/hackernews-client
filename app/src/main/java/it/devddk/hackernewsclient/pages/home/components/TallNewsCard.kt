@@ -1,6 +1,7 @@
 package it.devddk.hackernewsclient.pages.home.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -43,6 +44,7 @@ fun TallNewsCard(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .fillMaxWidth()
+            .clickable{ onClick() }
             .padding(16.dp)
     ) {
         item.previewUrl?.let { previewUrl ->
