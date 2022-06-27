@@ -39,17 +39,15 @@ import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
 import it.devddk.hackernewsclient.domain.model.collection.TopStories
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.pages.ArticlePage
-import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
-import it.devddk.hackernewsclient.shared.components.HomePageTopBar
 import it.devddk.hackernewsclient.shared.components.news.NewsItem
 import it.devddk.hackernewsclient.shared.components.news.SwipeableNewsItem
-
 import it.devddk.hackernewsclient.shared.components.topbars.FeedbackButton
+import it.devddk.hackernewsclient.shared.components.topbars.HNModalNavigatorPanel
+import it.devddk.hackernewsclient.shared.components.topbars.HomePageTopBar
 import it.devddk.hackernewsclient.shared.components.topbars.OpenInBrowserButton
 import it.devddk.hackernewsclient.shared.components.topbars.SearchButton
 import it.devddk.hackernewsclient.shared.components.topbars.ShareButton
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
-import it.devddk.hackernewsclient.viewmodels.NewsListViewModel
 import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.NewsPageState
 import kotlinx.coroutines.launch

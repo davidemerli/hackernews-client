@@ -36,9 +36,9 @@ import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import it.devddk.hackernewsclient.domain.model.feedback.Feedback
-import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
-import it.devddk.hackernewsclient.shared.components.HomePageTopBar
 import it.devddk.hackernewsclient.shared.components.SegmentedButtons
+import it.devddk.hackernewsclient.shared.components.topbars.HNModalNavigatorPanel
+import it.devddk.hackernewsclient.shared.components.topbars.HomePageTopBar
 import it.devddk.hackernewsclient.viewmodels.FeedbackViewModel
 import kotlinx.coroutines.launch
 

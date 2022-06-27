@@ -31,9 +31,9 @@ fun getPreview(siteUrl: String?): String? {
     return if (siteUrl != null) {
         val urlEncoded = siteUrl.encode().base64()
 
-        "https://identicon-api.herokuapp.com/$urlEncoded/128?format=png"
+        "https://hash-bg.davidemerli.com/$urlEncoded"
     } else {
-        "https://identicon-api.herokuapp.com/${Random.nextLong()}/128?format=png"
+        "https://hash-bg.davidemerli.com/${Random.nextLong()}"
     }
 }
 

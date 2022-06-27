@@ -35,6 +35,7 @@ import it.devddk.hackernewsclient.pages.parseHTML
 import it.devddk.hackernewsclient.viewmodels.NewsListViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.net.URI
 
 @Composable
@@ -269,10 +270,13 @@ internal val placeholderItem = Item(
 fun getDomainName(url: String): String {
     return try {
         val uri = URI(url)
+        Timber.d("uri: $uri")
         val domain: String = uri.host
 
         domain.removePrefix("www.")
     } catch (e: Exception) {
+        Timber.d("?????")
+        Timber.e(e)
         url
     }
 }

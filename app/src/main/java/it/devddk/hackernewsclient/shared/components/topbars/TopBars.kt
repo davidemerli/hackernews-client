@@ -1,4 +1,4 @@
-package it.devddk.hackernewsclient.shared.components
+package it.devddk.hackernewsclient.shared.components.topbars
 
 import android.content.Context
 import android.content.Intent
@@ -49,9 +49,6 @@ import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.pages.news.HackerNewsView
-import it.devddk.hackernewsclient.shared.components.topbars.FeedbackButton
-import it.devddk.hackernewsclient.shared.components.topbars.OpenInBrowserButton
-import it.devddk.hackernewsclient.shared.components.topbars.QueryTitle
 import kotlinx.coroutines.launch
 
 @Composable

@@ -60,12 +60,12 @@ import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.shared.components.ArticleView
 import it.devddk.hackernewsclient.shared.components.CommentText
 import it.devddk.hackernewsclient.shared.components.ExpandableComment
-import it.devddk.hackernewsclient.shared.components.SingleNewsPageTopBar
 import it.devddk.hackernewsclient.shared.components.news.NewsItemAuthor
 import it.devddk.hackernewsclient.shared.components.news.NewsItemDomain
 import it.devddk.hackernewsclient.shared.components.news.NewsItemTime
 import it.devddk.hackernewsclient.shared.components.news.NewsItemTitle
 import it.devddk.hackernewsclient.shared.components.news.getDomainName
+import it.devddk.hackernewsclient.shared.components.topbars.SingleNewsPageTopBar
 import it.devddk.hackernewsclient.utils.SettingPrefs
 import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.DEFAULT_PREFERRED_VIEW
 import it.devddk.hackernewsclient.viewmodels.CommentUiState

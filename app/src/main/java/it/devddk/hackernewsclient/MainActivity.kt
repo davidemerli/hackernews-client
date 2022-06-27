@@ -25,6 +25,7 @@ import it.devddk.hackernewsclient.pages.ArticlePage
 import it.devddk.hackernewsclient.pages.FeedbackPage
 import it.devddk.hackernewsclient.pages.SearchPage
 import it.devddk.hackernewsclient.pages.SettingsPage
+import it.devddk.hackernewsclient.pages.home.HomePage
 import it.devddk.hackernewsclient.pages.news.HackerNewsView
 import it.devddk.hackernewsclient.pages.news.NewsPage
 import it.devddk.hackernewsclient.ui.theme.HackerNewsClientTheme
@@ -59,7 +60,17 @@ class MainActivity : ComponentActivity() {
     private fun AppRootNavigator(windowSizeClass: WindowSizeClass) {
         val navController = rememberNavController()
 
-        NavHost(navController = navController, "TopStories") {
+        NavHost(navController = navController, "homepage") {
+
+            composable(
+                "homepage",
+            ) {
+                HomePage(
+                    navController = navController,
+                    windowSizeClass = windowSizeClass
+                )
+            }
+
             ALL_QUERIES.forEach { query ->
                 composable(route = HackerNewsView(query).route) {
                     NewsPage(

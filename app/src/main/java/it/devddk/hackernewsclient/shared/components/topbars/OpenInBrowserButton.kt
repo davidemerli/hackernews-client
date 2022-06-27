@@ -18,7 +18,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import it.devddk.hackernewsclient.shared.components.openInBrowser
 
 @Composable
 fun OpenInBrowserButton(

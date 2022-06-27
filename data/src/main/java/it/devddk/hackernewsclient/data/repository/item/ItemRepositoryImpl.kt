@@ -70,7 +70,6 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
 
                         val data = hnResult.getValue(ItemResponse::class.java)
 
-                        Timber.d("hnResult: $hnResult - $data")
                         checkNotNull(data?.mapToDomainModel()) { "Received null item" }
                     }.recoverCatching { exception ->
                         // Skip offline check if canceled
