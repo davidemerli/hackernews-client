@@ -2,16 +2,12 @@ package it.devddk.hackernewsclient.data.networking.model
 
 import it.devddk.hackernewsclient.data.common.utils.ResponseConversionException
 import it.devddk.hackernewsclient.data.networking.DomainMapper
-import it.devddk.hackernewsclient.data.networking.utils.convertTimestamp
+import it.devddk.hackernewsclient.data.networking.utils.toLocalDateTime
 import it.devddk.hackernewsclient.data.networking.utils.fixLinks
 import it.devddk.hackernewsclient.data.networking.utils.toItemType
 import it.devddk.hackernewsclient.domain.model.items.Item
-import it.devddk.hackernewsclient.domain.model.items.ItemType
 import okio.ByteString.Companion.encode
 import org.jsoup.Jsoup
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 import kotlin.random.Random
 
 fun getPreview(siteUrl: String?): String? {
@@ -61,7 +57,7 @@ data class ItemResponse(
             type?.toItemType()?: throw ResponseConversionException("type must specified in item response"),
             deleted,
             by,
-            time?.convertTimestamp() ?: throw ResponseConversionException("time must specified in item response"),
+            time?.toLocalDateTime() ?: throw ResponseConversionException("time must specified in item response"),
             dead,
             parent,
             text?.fixLinks() ?: "",

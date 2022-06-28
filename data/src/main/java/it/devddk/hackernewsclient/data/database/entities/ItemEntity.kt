@@ -15,8 +15,10 @@ data class ItemEntity(
     val id: Int,
     val deleted: Boolean,
     @ColumnInfo(name= "author") val by: String?,
+    val storyId: Int?,
     val type: String,
     val time: LocalDateTime?,
+    val saved: LocalDateTime?,
     val dead: Boolean,
     val parent: Int?,
     val text: String?,
@@ -53,7 +55,7 @@ data class ItemEntity(
 }
 
 
-fun Item.toItemEntity() : ItemEntity {
+fun Item.toItemEntity(storyId : Int? = null) : ItemEntity {
     return ItemEntity(
         id = id,
         deleted = deleted,
@@ -70,7 +72,9 @@ fun Item.toItemEntity() : ItemEntity {
         poll = poll,
         score = score,
         url = url,
-        htmlPage = htmlPage)
+        htmlPage = htmlPage,
+        saved = LocalDateTime.now(),
+        storyId = null)
 }
 
 

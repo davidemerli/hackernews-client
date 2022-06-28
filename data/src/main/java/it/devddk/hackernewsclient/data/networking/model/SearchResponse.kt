@@ -2,7 +2,7 @@ package it.devddk.hackernewsclient.data.networking.model
 
 import com.google.gson.annotations.SerializedName
 import it.devddk.hackernewsclient.data.networking.DomainMapper
-import it.devddk.hackernewsclient.data.networking.utils.convertTimestamp
+import it.devddk.hackernewsclient.data.networking.utils.toLocalDateTime
 import it.devddk.hackernewsclient.data.networking.utils.toItemType
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
@@ -41,7 +41,7 @@ data class SearchResponse(
             deleted = false,
             dead = false,
             by = hit.author,
-            time = hit.created?.convertTimestamp(),
+            time = hit.created?.toLocalDateTime(),
             parent = hit.parentId,
             text = when(itemType) {
                 ItemType.COMMENT -> hit.commentText

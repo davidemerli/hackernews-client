@@ -3,7 +3,7 @@ package it.devddk.hackernewsclient.data.database
 import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import it.devddk.hackernewsclient.data.networking.utils.convertTimestamp
+import it.devddk.hackernewsclient.data.networking.utils.toLocalDateTime
 import java.time.LocalDateTime
 import java.time.ZoneId
 
@@ -26,7 +26,7 @@ class ItemConverter {
 
     @TypeConverter
     fun toLocalDateTime(value: Long): LocalDateTime {
-        return value.convertTimestamp()
+        return value.toLocalDateTime()
     }
 
     @TypeConverter

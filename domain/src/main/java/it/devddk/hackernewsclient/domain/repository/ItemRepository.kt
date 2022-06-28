@@ -6,10 +6,36 @@ import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollect
 
 
 interface ItemRepository {
+
+    sealed class ItemSources
+
+    object Online : ItemSources()
+
+    object Offline : ItemSources()
+
+    object Cache : ItemSources()
+
+    sealed class FetchMode(open val fetchOrder : List<ItemSources>) {
+
+        fun onConnectivityAbsent() : FetchMode {
+            return CustomFetch(fetchOrder.filter { it !is Online })
+        }
+    }
+
+    object OfflineFirst : FetchMode(listOf(Cache, Offline, Online))
+
+    object OnlineFirst : FetchMode(listOf(Cache, Online, Offline))
+
+    object OnlyOnline : FetchMode(listOf(Cache, Online))
+
+    object OnlyOffline : FetchMode(listOf(Cache, Offline))
+
+    data class CustomFetch(override val fetchOrder: List<ItemSources>) : FetchMode(fetchOrder)
+
     /**
      * Gets an item by is [ItemId]
      */
-    suspend fun getItemById(itemId: ItemId, forceRefresh : Boolean = false): Result<Item>
+    suspend fun getItemById(itemId: ItemId, fetchStrategy : FetchMode = OnlineFirst): Result<Item>
 
     suspend fun saveItem(item : Item)
 

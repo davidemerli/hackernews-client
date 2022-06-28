@@ -5,6 +5,7 @@ import com.google.firebase.database.DatabaseReference
 import it.devddk.hackernewsclient.data.common.utils.Connectivity
 import it.devddk.hackernewsclient.data.database.dao.ItemCollectionEntityDao
 import it.devddk.hackernewsclient.data.database.dao.ItemEntityDao
+import it.devddk.hackernewsclient.data.database.dao.SaveItemDao
 import it.devddk.hackernewsclient.data.database.entities.ItemCollectionEntity
 import it.devddk.hackernewsclient.data.database.entities.toItemEntity
 import it.devddk.hackernewsclient.data.networking.model.ItemResponse
@@ -14,7 +15,6 @@ import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollect
 import it.devddk.hackernewsclient.domain.repository.ItemRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.tasks.await
@@ -29,90 +29,74 @@ import java.time.LocalDateTime
 
 class ItemRepositoryImpl : ItemRepository, KoinComponent {
 
+
     private val items: DatabaseReference by inject(named("item"))
     private val itemDao: ItemEntityDao by inject()
+    private val saveItemDao: SaveItemDao by inject()
     private val collectionDao: ItemCollectionEntityDao by inject()
     private val connectivity: Connectivity by inject()
 
 
-    private val cache : LruCache<ItemId, Item> by inject()
+    private val cache: LruCache<ItemId, Item> by inject()
 
-    override suspend fun getItemById(itemId: Int, forceRefresh: Boolean): Result<Item> {
-        if (forceRefresh) {
-            return fetchItemOnlineOrOffline(itemId).onSuccess { item ->
-                cache.put(itemId, item)
+    override suspend fun getItemById(
+        itemId: Int,
+        fetchStrategy: ItemRepository.FetchMode,
+    ): Result<Item> {
+
+        val currFetchStrategy = if (connectivity.hasNetworkAccess()) {
+            fetchStrategy
+        } else {
+            fetchStrategy.onConnectivityAbsent()
+        }
+
+        val fetchOrder = currFetchStrategy.fetchOrder
+        if (fetchOrder.isEmpty()) {
+            return Result.failure(exception = IllegalArgumentException("Empty fetch strategy"))
+        }
+
+        var result: Result<Item> = runCatching {
+            throw IllegalFetchStrategy()
+        }
+
+        val problems = mutableListOf<Throwable>()
+
+        for (source in fetchOrder) {
+
+            result = result.recoverCatching {
+                when (it) {
+                    is IllegalFetchStrategy -> {
+                        // Not relevant exception
+                    }
+                    is CancellationException -> {
+                        // Rethrow to continue
+                        throw CancellationException()
+                    }
+                    else -> problems.add(it)
+                }
+                //Use the fetcher
+                val fetcher = sources[source]!!
+                fetcher(itemId)
             }
         }
-        val cacheItem = cache.get(itemId)
-        if (cacheItem != null) {
-            return Result.success(cacheItem)
-        }
-        return fetchItemOnlineOrOffline(itemId).onSuccess { item ->
-            cache.put(itemId, item)
-        }
-    }
 
-    private suspend fun fetchItemOnlineOrOffline(itemId: Int): Result<Item> {
-        // Supervisor scope: Don't kill parent coroutine in case of a failure
-        return supervisorScope {
-            cache.get(itemId)
-            // Run on IO thread pool
-            withContext(Dispatchers.IO) {
-                // Start asking for collections in local database
-                val collectionsDeferred = async {
-                    return@async collectionDao.getAllCollectionsForItem(itemId)
-                }
-
-                val itemResult = if (connectivity.hasNetworkAccess()) {
-                    runCatching {
-                        // Start asking for item on HN api
-                        val hnResult = items.child(itemId.toString()).get().await()
-
-                        val data = hnResult.getValue(ItemResponse::class.java)
-
-                        Timber.d("hnResult: $hnResult - $data")
-                        checkNotNull(data?.mapToDomainModel()) { "Received null item" }
-                    }.recoverCatching { exception ->
-                        // Skip offline check if canceled
-                        if (exception is CancellationException) {
-                            throw exception
-                        }
-                        fetchItemOffline(itemId)
+        return result.onFailure {
+            if (it !is CancellationException) {
+                Timber.e("Failed to retrieve item $itemId:\n${
+                    problems.mapIndexed { i, t ->
+                        "Attempt #" + (i + 1) + " " + fetchOrder[i]::class.simpleName + ": " + t.message + " \n"
                     }
-                } else {
-                    runCatching {
-                        fetchItemOffline(itemId)
-                    }
-                }
-
-                itemResult.mapCatching { item ->
-                    // Fetch collections from local database, if Item fetching didn't not fail
-                    val collections = try {
-                        collectionsDeferred.await()
-                            .mapNotNull(ItemCollectionEntity::mapToDomainModel).toSet()
-                    } catch (e: Exception) {
-                        Timber.w("Failed to retrieve collections for item $itemId")
-                        emptySet()
-                    }
-                    item.copy(collections = collections.associateBy { entry -> entry.collection })
-                }.onFailure { e ->
-                    Timber.e("Item $itemId could not be retrieved. Cause ${e.message}")
-                }
+                }")
             }
+
         }
     }
 
-
-    private suspend fun fetchItemOffline(itemId: Int): Item {
-        return checkNotNull(itemDao.getItem(itemId)) { " Item $itemId unavailable online and offline" }
-            .mapToDomainModel()
-    }
 
     override suspend fun saveItem(item: Item) {
         withContext(Dispatchers.IO) {
             itemDao.insertItem(item.toItemEntity())
         }
-
     }
 
     override suspend fun addItemToCollection(
@@ -167,4 +151,42 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
     override suspend fun invalidateCache() {
         cache.evictAll()
     }
+
+    private val fetchFromCache: suspend (Int) -> Item = { id: Int ->
+        val item = cache.get(id)
+        item ?: throw ItemNotFoundException(id, ItemRepository.Cache)
+    }
+
+    private val fetchFromOnline: suspend (Int) -> Item = { itemId: Int ->
+        // Start asking for item on HN api
+        val hnResult = items.child(itemId.toString()).get().await()
+        val data = hnResult.getValue(ItemResponse::class.java)
+        Timber.d("hnResult: $hnResult - $data")
+        val item = checkNotNull(data?.mapToDomainModel()) { "Item $itemId not available online" }
+        cache.put(itemId, item)
+        item
+    }
+
+    private val fetchFromOffline: suspend (Int) -> Item = { itemId: Int ->
+        val item =
+            checkNotNull(itemDao.getItem(itemId)) { "Item $itemId not available offline" }.mapToDomainModel()
+        cache.put(itemId, item)
+        item
+    }
+
+    private val sources = mapOf(
+        ItemRepository.Cache to fetchFromCache,
+        ItemRepository.Online to fetchFromOnline,
+        ItemRepository.Offline to fetchFromOffline
+    )
+
+    private class ItemNotFoundException(
+        val id: ItemId,
+        val source: ItemRepository.ItemSources,
+        message: String = "Unable to fetch item $id from ${source::class.java.simpleName}",
+    ) : Exception(message)
+
+    private class IllegalFetchStrategy : Exception("Illegal fetch strategy")
+
+
 }
