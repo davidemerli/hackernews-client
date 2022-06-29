@@ -261,6 +261,7 @@ internal val placeholderItem = Item(
     ItemType.STORY,
     title = "_".repeat(30),
     url = "https://news.ycombinator.com/",
+    previewUrl = "https://news.ycombinator.com/",
     by = "_".repeat(10),
     score = 100,
     descendants = 100,
@@ -270,7 +271,6 @@ internal val placeholderItem = Item(
 fun getDomainName(url: String): String {
     return try {
         val uri = URI(url)
-        Timber.d("uri: $uri")
         val domain: String = uri.host
 
         domain.removePrefix("www.")

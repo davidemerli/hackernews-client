@@ -71,12 +71,12 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
-            ALL_QUERIES.forEach { query ->
-                composable(route = HackerNewsView(query).route) {
+            ALL_QUERIES.forEach { itemCollection ->
+                composable(route = HackerNewsView(itemCollection).route) {
                     NewsPage(
                         navController = navController,
                         windowSizeClass = windowSizeClass,
-                        route = query
+                        itemCollection = itemCollection
                     )
                 }
             }
@@ -98,6 +98,20 @@ class MainActivity : ComponentActivity() {
 
             composable("search") {
                 SearchPage(navController = navController)
+            }
+
+            composable(
+                "search/{query}",
+                arguments = listOf(
+                    navArgument("query") {
+                        type = NavType.StringType
+                    }
+                ),
+            ) { backStackEntry ->
+                SearchPage(
+                    navController = navController,
+                    query = backStackEntry.arguments?.getString("query")!!
+                )
             }
 
             composable("settings") {

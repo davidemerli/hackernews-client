@@ -8,7 +8,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import it.devddk.hackernewsclient.domain.model.utils.ItemId
+import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
+import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.shared.components.LoadingIndicatorCircular
 import it.devddk.hackernewsclient.shared.components.news.NewsItem
 import it.devddk.hackernewsclient.shared.components.news.SwipeableNewsItem
@@ -20,13 +21,14 @@ import it.devddk.hackernewsclient.viewmodels.NewsPageState
 fun ColumnScope.NewsColumn(
     modifier: Modifier = Modifier,
     itemCollection: ItemCollectionHolder,
-    onItemClick: (ItemId) -> (() -> Unit),
+    onItemClick: (Item) -> Unit,
+    addToCollection: (Item, UserDefinedItemCollection) -> Unit,
 ) {
     val pageState by remember { itemCollection.pageState }.collectAsState(NewsPageState.Loading)
     val itemListState by remember { itemCollection.itemListFlow }.collectAsState(initial = emptyList())
 
     when (pageState) {
-        is NewsPageState.Loading -> LoadingPage(itemCollection = itemCollection)
+        is NewsPageState.Loading -> LoadingPage(modifier, itemCollection = itemCollection)
 
         is NewsPageState.NewsIdsError -> LoadPageError()
 
@@ -46,7 +48,8 @@ fun ColumnScope.NewsColumn(
 
                         SwipeableNewsItem(
                             item = item,
-                            onClick = onItemClick(item.id),
+                            onClick = { onItemClick(item) },
+                            addToCollection = addToCollection,
                         )
                     }
                 }

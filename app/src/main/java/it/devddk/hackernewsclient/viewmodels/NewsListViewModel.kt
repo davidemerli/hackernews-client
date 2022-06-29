@@ -161,6 +161,7 @@ class NewsListViewModel : ViewModel(), KoinComponent {
         }
     }
 
+    @Deprecated("Needs to be replaced with the new homepage viewmodel")
     suspend fun removeFromFavorites(itemId: ItemId, collection: UserDefinedItemCollection) {
         getItemById(itemId) // hack to make this function until we change everything to the new viewmodel
             // , and at this point we don't have the item in the cache here

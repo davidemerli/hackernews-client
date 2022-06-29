@@ -17,12 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Fullscreen
-import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
@@ -139,7 +134,7 @@ fun ArticlePage(
             TabbedView(
                 item = item,
                 navController = navController,
-                webviewState = webviewState,
+                webViewState = webviewState,
                 selectedView
             )
         }
@@ -189,8 +184,8 @@ fun Loading() {
 fun TabbedView(
     item: Item,
     navController: NavController,
-    webviewState: WebViewState,
-    selectedView: String?
+    webViewState: WebViewState,
+    selectedView: String? = null
 ) {
     val tabs = item.url?.let { listOf("Article", "Comments (${item.descendants ?: 0})") } ?: listOf(
         "Comments (${item.descendants ?: 0})"
@@ -216,94 +211,94 @@ fun TabbedView(
 
     BackHandler(enabled = fullScreenWebView, onBack = { fullScreenWebView = false })
 
-    Scaffold(
-        topBar = {
-            AnimatedVisibility(visible = !fullScreenWebView) {
-                SingleNewsPageTopBar(
-                    navController = navController,
-                    item = item,
-                )
-            }
-        },
-        containerColor = MaterialTheme.colorScheme.background,
-        floatingActionButton = {
-            if (pagerState.currentPage == 0 && item.url != null) {
-                FloatingActionButton(
-                    onClick = {
-                        fullScreenWebView = !fullScreenWebView
-
-                        coroutineScope.launch {
-                            pagerState.scrollToPage(0)
-                        }
-                    },
-                ) {
-                    Icon(
-                        if (fullScreenWebView) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
-                        contentDescription = "Fullscreen"
-                    )
-                }
-            }
-        }
+//    Scaffold(
+//        topBar = {
+//            AnimatedVisibility(visible = !fullScreenWebView) {
+//                SingleNewsPageTopBar(
+//                    navController = navController,
+//                    item = item,
+//                )
+//            }
+//        },
+//        containerColor = MaterialTheme.colorScheme.background,
+//        floatingActionButton = {
+//            if (pagerState.currentPage == 0 && item.url != null) {
+//                FloatingActionButton(
+//                    onClick = {
+//                        fullScreenWebView = !fullScreenWebView
+//
+//                        coroutineScope.launch {
+//                            pagerState.scrollToPage(0)
+//                        }
+//                    },
+//                ) {
+//                    Icon(
+//                        if (fullScreenWebView) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
+//                        contentDescription = "Fullscreen"
+//                    )
+//                }
+//            }
+//        }
+//    ) {
+    Column(
+//            modifier = Modifier.padding(top = it.calculateTopPadding())
     ) {
-        Column(
-            modifier = Modifier.padding(top = it.calculateTopPadding())
-        ) {
-            if (item.url != null) {
-                AnimatedVisibility(visible = !fullScreenWebView) {
-                    TabRow(
-                        selectedTabIndex = pagerState.currentPage,
-                        indicator = { tabPositions ->
-                            TabRowDefaults.Indicator(
-                                Modifier.pagerTabIndicatorOffset(
-                                    pagerState,
-                                    tabPositions,
-                                ),
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                    ) {
-                        tabs.forEachIndexed { index, title ->
-                            Tab(selected = pagerState.currentPage == index, onClick = {
-                                coroutineScope.launch {
-                                    pagerState.animateScrollToPage(index)
-                                }
-                            }, text = {
-                                Text(text = title, color = MaterialTheme.colorScheme.secondary)
-                            })
-                        }
+        if (item.url != null) {
+            AnimatedVisibility(visible = !fullScreenWebView) {
+                TabRow(
+                    selectedTabIndex = pagerState.currentPage,
+                    indicator = { tabPositions ->
+                        TabRowDefaults.Indicator(
+                            Modifier.pagerTabIndicatorOffset(
+                                pagerState,
+                                tabPositions,
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                ) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(selected = pagerState.currentPage == index, onClick = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
+                        }, text = {
+                            Text(text = title, color = MaterialTheme.colorScheme.secondary)
+                        })
                     }
                 }
-                HorizontalPager(
-                    count = item.url?.let { 2 } ?: 1,
-                    state = pagerState,
-                    modifier = Modifier.fillMaxHeight(),
-                    userScrollEnabled = !fullScreenWebView
-                ) { index ->
-                    when (index) {
-                        0 -> {
-                            ArticleView(
-                                modifier = Modifier.fillMaxHeight(),
-                                webviewState = webviewState
-                            )
-                        }
-                        1 -> {
-                            CommentsView(
-                                item = item,
-                                navController = navController,
-                                scrollState = scrollState,
-                            )
-                        }
-                    }
-                }
-            } else {
-                CommentsView(
-                    item = item,
-                    navController = navController,
-                    scrollState = scrollState,
-                )
             }
+            HorizontalPager(
+                count = item.url?.let { 2 } ?: 1,
+                state = pagerState,
+                modifier = Modifier.fillMaxHeight(),
+                userScrollEnabled = !fullScreenWebView
+            ) { index ->
+                when (index) {
+                    0 -> {
+                        ArticleView(
+                            modifier = Modifier.fillMaxHeight(),
+                            webviewState = webViewState
+                        )
+                    }
+                    1 -> {
+                        CommentsView(
+                            item = item,
+                            navController = navController,
+                            scrollState = scrollState,
+                        )
+                    }
+                }
+            }
+        } else {
+            CommentsView(
+                item = item,
+                navController = navController,
+                scrollState = scrollState,
+            )
         }
     }
+//    }
 }
 
 @Composable
