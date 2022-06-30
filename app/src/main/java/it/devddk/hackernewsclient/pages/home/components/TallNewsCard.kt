@@ -41,6 +41,8 @@ import com.google.accompanist.placeholder.placeholder
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.shared.components.customPlaceholder
+import it.devddk.hackernewsclient.shared.components.news.AddToFavorite
+import it.devddk.hackernewsclient.shared.components.news.AddToReadLater
 import it.devddk.hackernewsclient.shared.components.news.ShareArticle
 import it.devddk.hackernewsclient.shared.components.news.ShareHNLink
 import it.devddk.hackernewsclient.shared.components.news.placeholderItem
@@ -72,6 +74,7 @@ fun TallNewsCard(
     )
 
     var shareExpanded by remember { mutableStateOf(false) }
+    var moreExpanded by remember { mutableStateOf(false) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -199,6 +202,21 @@ fun TallNewsCard(
 
             IconButton(onClick = { /*TODO*/ }) {
                 Icon(Icons.Filled.MoreVert, "More")
+
+                DropdownMenu(
+                    expanded = moreExpanded,
+                    onDismissRequest = { moreExpanded = false }
+                ) {
+                    AddToFavorite(
+                        favorite = false,
+                        onClick = { /*TODO*/ }
+                    )
+
+                    AddToReadLater(
+                        readLater = false,
+                        onClick = { /*TODO*/ }
+                    )
+                }
             }
         }
     }

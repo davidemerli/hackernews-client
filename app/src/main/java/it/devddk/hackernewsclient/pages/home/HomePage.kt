@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.pages.home
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -65,6 +66,8 @@ import it.devddk.hackernewsclient.domain.model.collection.BestStories
 import it.devddk.hackernewsclient.domain.model.collection.TopStories
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.domain.model.items.Item
+import it.devddk.hackernewsclient.domain.model.items.favorite
+import it.devddk.hackernewsclient.domain.model.items.readLater
 import it.devddk.hackernewsclient.pages.TabbedView
 import it.devddk.hackernewsclient.pages.home.components.GoToLocationRow
 import it.devddk.hackernewsclient.pages.home.components.HNTopBar
@@ -72,6 +75,7 @@ import it.devddk.hackernewsclient.pages.home.components.MediumNewsRow
 import it.devddk.hackernewsclient.pages.home.components.NewsColumn
 import it.devddk.hackernewsclient.pages.home.components.TallNewsRow
 import it.devddk.hackernewsclient.pages.news.HackerNewsView
+import it.devddk.hackernewsclient.shared.components.ArticleView
 import it.devddk.hackernewsclient.shared.components.topbars.ROUTE_ICONS
 import it.devddk.hackernewsclient.shared.components.topbars.ROUTE_TITLES
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
@@ -97,20 +101,22 @@ fun HomePage(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     val onItemClick = { item: Item ->
-        if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded) {
+//        if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded) {
             selectedItem = item
-        } else {
-            navController.navigate("items/${item.id}")
-        }
+//        } else {
+//            navController.navigate("items/${item.id}")
+//        }
     }
 
     val onItemClickComments = { item: Item ->
         if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded) {
-            selectedItem = item //TODO: go to comments in tabbed view
+            selectedItem = item // TODO: go to comments in tabbed view
         } else {
             navController.navigate("items/${item.id}/comments")
         }
     }
+
+    BackHandler(enabled = selectedItem != null, onBack = {selectedItem = null})
 
     HNModalNavigatorPanel(navController = navController, state = drawerState) {
         Scaffold(
@@ -146,6 +152,7 @@ fun HomePage(
                         bestCollection = bestCollection,
                         topCollection = topCollection,
                         readLaterCollection = readLaterCollection,
+                        selectedItem = selectedItem,
                         onItemClick = onItemClick,
                         onItemClickComments = onItemClickComments,
                     )
@@ -180,6 +187,7 @@ fun ExpandedLayout(
                 bestCollection = bestCollection,
                 topCollection = topCollection,
                 readLaterCollection = readLaterCollection,
+                selectedItem = selectedItem,
                 onItemClick = onItemClick,
                 onItemClickComments = onItemClickComments,
                 modifier = Modifier
@@ -232,6 +240,7 @@ fun CompactLayout(
     bestCollection: ItemCollectionHolder,
     topCollection: ItemCollectionHolder,
     readLaterCollection: ItemCollectionHolder,
+    selectedItem: Item?,
     onItemClick: (Item) -> Unit,
     onItemClickComments: (Item) -> Unit,
 ) {
@@ -242,7 +251,7 @@ fun CompactLayout(
     val readLaterItems = readLaterCollection.itemListFlow.collectAsState(initial = emptyList())
     val showReadLater by derivedStateOf { readLaterItems.value.isNotEmpty() }
 
-    val viewModel: HomePageViewModel = viewModel()
+    val viewModel: SingleNewsViewModel = viewModel()
 
     LaunchedEffect(readLaterCollection) {
         readLaterCollection.loadAll()
@@ -259,48 +268,34 @@ fun CompactLayout(
             coroutineScope.launch { readLaterCollection.loadAll() }
         }
     ) {
-        Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .verticalScroll(scrollState),
-        ) {
-            GoToLocationRow(
-                leadingIcon = Icons.Filled.AutoAwesome,
-                location = "Best Stories",
-                buttonText = "See more",
-                onClick = {
-                    navController.navigate("BestStories")
-                }
-            )
+        if (selectedItem != null) {
+            LaunchedEffect(selectedItem) { viewModel.setId(selectedItem.id) }
 
-            TallNewsRow(
-                modifier = Modifier
+            ArticleView(
+                webviewState = rememberWebViewState(url = selectedItem.url ?: "")
+            )
+        } else {
+            Column(
+                modifier = modifier
                     .fillMaxWidth()
-                    .defaultMinSize(minHeight = 256.dp),
-                itemCollection = bestCollection,
-                onItemClick = onItemClick,
-                onItemClickComments = onItemClickComments,
-            )
-
-            Divider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .alpha(0.1f)
-                    .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
-            )
-
-            if (showReadLater) {
+                    .verticalScroll(scrollState),
+            ) {
                 GoToLocationRow(
-                    leadingIcon = Icons.Filled.Bookmark,
-                    location = "Your saves",
-                    buttonText = "See more", onClick = {
-                        navController.navigate("ReadLater")
+                    leadingIcon = Icons.Filled.AutoAwesome,
+                    location = "Best Stories",
+                    buttonText = "See more",
+                    onClick = {
+                        navController.navigate("BestStories")
                     }
                 )
 
-                MediumNewsRow(
-                    itemCollection = readLaterCollection,
+                TallNewsRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = 256.dp),
+                    itemCollection = bestCollection,
                     onItemClick = onItemClick,
+                    onItemClickComments = onItemClickComments,
                 )
 
                 Divider(
@@ -309,41 +304,80 @@ fun CompactLayout(
                         .alpha(0.1f)
                         .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
                 )
-            }
 
-            GoToLocationRow(
-                leadingIcon = Icons.Filled.TrendingUp,
-                location = "Top Stories",
-                buttonText = "See more",
-                onClick = {
-                    navController.navigate("TopStories")
-                },
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+                if (showReadLater) {
+                    GoToLocationRow(
+                        leadingIcon = Icons.Filled.Bookmark,
+                        location = "Your saves",
+                        buttonText = "See more", onClick = {
+                            navController.navigate("ReadLater")
+                        }
+                    )
 
-            NewsColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 384.dp),
-                itemCollection = topCollection,
-                onItemClick = onItemClick,
-                addToCollection = { item, itemCollection ->
-                    coroutineScope.launch {
-                        viewModel.collections[itemCollection]?.addToFavorites(item.id, itemCollection)
-                    }
+                    MediumNewsRow(
+                        itemCollection = readLaterCollection,
+                        onItemClickComments = onItemClickComments,
+                        onItemClick = onItemClick,
+                    )
+
+                    Divider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .alpha(0.1f)
+                            .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                    )
                 }
-            )
 
-            GoToLocationRow(
-                buttonText = "Back to top",
-                actionIcon = Icons.Filled.ArrowUpward,
-                onClick = {
-                    coroutineScope.launch {
-                        scrollState.animateScrollTo(0)
+                GoToLocationRow(
+                    leadingIcon = Icons.Filled.TrendingUp,
+                    location = "Top Stories",
+                    buttonText = "See more",
+                    onClick = {
+                        navController.navigate("TopStories")
+                    },
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                NewsColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = 384.dp),
+                    itemCollection = topCollection,
+                    onItemClick = onItemClick,
+                    addToCollection = { item, itemCollection ->
+                        coroutineScope.launch {
+                            when (itemCollection) {
+                                is UserDefinedItemCollection.Favorites -> {
+                                    if (!item.collections.favorite) {
+                                        topCollection.addToFavorites(item.id, itemCollection)
+                                    } else {
+                                        topCollection.removeFromFavorites(item.id, itemCollection)
+                                    }
+                                }
+                                is UserDefinedItemCollection.ReadLater -> {
+                                    if (!item.collections.readLater) {
+                                        topCollection.addToFavorites(item.id, itemCollection)
+                                    } else {
+                                        topCollection.removeFromFavorites(item.id, itemCollection)
+                                    }
+                                }
+                                else -> {}
+                            }
+                        }
                     }
-                },
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+                )
+
+                GoToLocationRow(
+                    buttonText = "Back to top",
+                    actionIcon = Icons.Filled.ArrowUpward,
+                    onClick = {
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo(0)
+                        }
+                    },
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
         }
     }
 }

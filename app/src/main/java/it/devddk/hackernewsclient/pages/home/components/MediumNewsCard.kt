@@ -17,13 +17,17 @@ import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,7 +42,12 @@ import coil.decode.SvgDecoder
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.shared.components.customPlaceholder
+import it.devddk.hackernewsclient.shared.components.news.AddToFavorite
+import it.devddk.hackernewsclient.shared.components.news.AddToReadLater
+import it.devddk.hackernewsclient.shared.components.news.ShareArticle
+import it.devddk.hackernewsclient.shared.components.news.ShareHNLink
 import it.devddk.hackernewsclient.shared.components.news.placeholderItem
+import it.devddk.hackernewsclient.shared.components.news.shareStringContent
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
 import java.net.URI
 
@@ -47,6 +56,7 @@ fun MediumNewsCard(
     modifier: Modifier = Modifier,
     item: Item = placeholderItem,
     onClick: () -> Unit = {},
+    onCommentClick: () -> Unit = {},
     placeholder: Boolean = false,
 ) {
     val context = LocalContext.current
@@ -55,6 +65,9 @@ fun MediumNewsCard(
     val authorString = context.getString(R.string.author, item.by)
     val timeString = remember(item) { TimeDisplayUtils(context).toDateTimeAgoInterval(item.time) }
     val scoreString = context.getString(R.string.points, item.score)
+
+    var shareExpanded by remember { mutableStateOf(false) }
+    var moreExpanded by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -88,7 +101,10 @@ fun MediumNewsCard(
             }
 
             Column(
-                modifier = Modifier.fillMaxWidth().padding(start = 2.dp).offset(y = (-4).dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 2.dp)
+                    .offset(y = (-4).dp)
             ) {
                 domain?.let { domain ->
                     Text(
@@ -152,14 +168,16 @@ fun MediumNewsCard(
                         append(scoreString)
                     }
                 },
-                modifier = Modifier.padding(horizontal = 8.dp).customPlaceholder(visible = placeholder),
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .customPlaceholder(visible = placeholder),
             )
 
             Spacer(modifier = Modifier.weight(1f))
 
             item.descendants?.let { descendants ->
                 TextButton(
-                    onClick = { /*TODO*/ },
+                    onClick = onCommentClick,
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = MaterialTheme.colorScheme.onSurface,
                     )
@@ -174,11 +192,46 @@ fun MediumNewsCard(
                 }
             }
 
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = { shareExpanded = !shareExpanded }) {
                 Icon(Icons.Filled.Share, "Share")
+
+                DropdownMenu(
+                    expanded = shareExpanded,
+                    onDismissRequest = { shareExpanded = false }
+                ) {
+                    item.url?.let { url ->
+                        ShareArticle(
+                            onClick = {
+                                shareStringContent(context, url)
+                                shareExpanded = false
+                            }
+                        )
+                    }
+
+                    ShareHNLink(onClick = {
+                        shareStringContent(context, "https://news.ycombinator.com/item?id=${item.id}")
+                        shareExpanded = false
+                    })
+                }
             }
-            IconButton(onClick = { /*TODO*/ }) {
+
+            IconButton(onClick = { moreExpanded = !moreExpanded }) {
                 Icon(Icons.Filled.MoreVert, "More")
+
+                DropdownMenu(
+                    expanded = moreExpanded,
+                    onDismissRequest = { moreExpanded = false }
+                ) {
+                    AddToFavorite(
+                        favorite = false,
+                        onClick = { /*TODO*/ }
+                    )
+
+                    AddToReadLater(
+                        readLater = false,
+                        onClick = { /*TODO*/ }
+                    )
+                }
             }
         }
     }

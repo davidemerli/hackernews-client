@@ -25,6 +25,7 @@ fun MediumNewsRow(
     modifier: Modifier = Modifier,
     itemCollection: ItemCollectionHolder,
     onItemClick: (Item) -> Unit,
+    onItemClickComments: (Item) -> Unit
 ) {
     val pageState by remember { itemCollection.pageState }.collectAsState(NewsPageState.Loading)
     val itemListState by remember { itemCollection.itemListFlow }.collectAsState(initial = emptyList())
@@ -66,6 +67,7 @@ fun MediumNewsRow(
                                     item = item,
                                     modifier = Modifier.width(384.dp),
                                     onClick = { onItemClick(item) },
+                                    onCommentClick = { onItemClickComments(item) }
                                 )
                             }
                         }

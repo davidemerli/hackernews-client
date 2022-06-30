@@ -32,9 +32,7 @@ fun SwipeableNewsItem(
     val readLaterAction = SwipeAction(
         icon = rememberVectorPainter(if (!readLater.value) Icons.Filled.Update else Icons.Filled.UpdateDisabled),
         background = MaterialTheme.colorScheme.secondary,
-        onSwipe = {
-            addToCollection(item, UserDefinedItemCollection.ReadLater)
-        }
+        onSwipe = { addToCollection(item, UserDefinedItemCollection.ReadLater) }
     )
 
     val favoriteAction = SwipeAction(
@@ -46,7 +44,7 @@ fun SwipeableNewsItem(
     SwipeableActionsBox(
         startActions = listOf(favoriteAction),
         endActions = listOf(readLaterAction),
-        swipeThreshold = 192.dp,
+        swipeThreshold = 128.dp,
         backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.background
     ) {
         NewsItem(
