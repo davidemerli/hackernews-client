@@ -12,9 +12,5 @@ class CommentTreeRepositoryImpl : CommentTreeRepository, KoinComponent {
 
     private val algoliaApi: AlgoliaSearchApi by inject()
 
-    override suspend fun getCommentTree(id: ItemId): Result<ItemTree> {
-        return algoliaApi.getItemById(id).asResult().mapCatching {
-            it.mapToDomainModel()
-        }
-    }
+
 }

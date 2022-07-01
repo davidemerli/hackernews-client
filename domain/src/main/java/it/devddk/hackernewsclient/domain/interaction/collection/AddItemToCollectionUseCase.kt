@@ -25,33 +25,6 @@ class AddItemToCollectionUseCaseImpl : AddItemToCollectionUseCase, KoinComponent
     private val commentTreeRepository: CommentTreeRepository by inject()
 
     override suspend fun invoke(id: Int, collection: UserDefinedItemCollection): Result<Unit> {
-
-        val thisItem = itemRepository.getItemById(id)
-
-        if(collection.saveWholeItem) {
-
-        }
-
-
-
-        commentTreeRepository.getCommentTree(id).fold(
-            onSuccess = { tree ->
-                when(tree.item.type) {
-
-                }
-
-            },
-            onFailure = {
-
-            }
-        )
-
-        withContext(Dispatchers.IO) {
-            launch {
-
-            }
-        }
-
         return itemRepository.addItemToCollection(id, collection)
     }
 

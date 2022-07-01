@@ -44,8 +44,9 @@ abstract class SaveItemDao(val database: LocalDatabase) {
         }
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    private suspend fun needsToBeSaved(
+
+    @Transaction
+    suspend fun needsToBeSaved(
         collection: String,
         mainItemId: Int,
         minTimeFromLastSaveMillis: Int,
