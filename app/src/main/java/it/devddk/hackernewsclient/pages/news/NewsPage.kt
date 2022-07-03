@@ -41,6 +41,7 @@ import it.devddk.hackernewsclient.pages.home.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.pages.home.components.HNTopBar
 import it.devddk.hackernewsclient.shared.components.news.NewsItem
 import it.devddk.hackernewsclient.shared.components.news.SwipeableNewsItem
+import it.devddk.hackernewsclient.shared.components.scrollbar
 import it.devddk.hackernewsclient.shared.components.topbars.ROUTE_ICONS
 import it.devddk.hackernewsclient.shared.components.topbars.ROUTE_TITLES
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
@@ -185,7 +186,7 @@ fun ItemInfiniteList(
         },
     ) {
         LazyColumn(
-            modifier = modifier,
+            modifier = modifier.scrollbar(lazyListState, fixedKnobRatio = 0.1f),
             state = lazyListState,
         ) {
             itemsIndexed(itemListState.value, key = { _, item -> item.itemId }) { index, itemState ->

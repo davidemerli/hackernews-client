@@ -395,16 +395,16 @@ fun CompactLayout(
                 )
 
                 NewsColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 384.dp),
                     itemCollection = topCollection,
                     onItemClick = onItemClick,
                     toggleCollection = { item, itemCollection ->
                         coroutineScope.launch {
                             viewModel.toggleFromCollection(item.id, itemCollection)
                         }
-                    }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = 384.dp),
                 )
 
                 GoToLocationRow(
