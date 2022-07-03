@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.data.networking.model
 
+import androidx.annotation.Keep
 import it.devddk.hackernewsclient.data.common.utils.ResponseConversionException
 import it.devddk.hackernewsclient.data.networking.DomainMapper
 import it.devddk.hackernewsclient.data.networking.utils.convertTimestamp
@@ -33,6 +34,7 @@ fun getPreview(url: String?, itemId: ItemId): String? {
     return "https://hash-bg.davidemerli.com/$itemId"
 }
 
+@Keep
 data class ItemResponse(
     val id: Int? = null,
     val type: String? = null,

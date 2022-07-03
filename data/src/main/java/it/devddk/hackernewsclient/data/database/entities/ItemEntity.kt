@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.data.database.entities
 
+import androidx.annotation.Keep
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -10,6 +11,7 @@ import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import java.time.LocalDateTime
 
+@Keep
 @Entity(tableName = "items", primaryKeys = ["id"])
 data class ItemEntity(
     val id: Int,
@@ -52,7 +54,7 @@ data class ItemEntity(
     }
 }
 
-
+@Keep
 fun Item.toItemEntity() : ItemEntity {
     return ItemEntity(
         id = id,
@@ -75,7 +77,7 @@ fun Item.toItemEntity() : ItemEntity {
 
 
 
-
+@Keep
 data class ItemEntityWithoutHtmlPage(
     val id: Int,
     val deleted: Boolean,
