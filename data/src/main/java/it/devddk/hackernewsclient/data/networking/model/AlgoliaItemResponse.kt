@@ -6,9 +6,10 @@ import it.devddk.hackernewsclient.data.networking.utils.toLocalDateTime
 import it.devddk.hackernewsclient.data.networking.utils.toItemType
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemTree
+import java.time.LocalDateTime
 
 data class AlgoliaItemResponse(
-    @SerializedName("objectID") val id: String,
+    @SerializedName("id") val id: String,
     @SerializedName("created_at") val createdAt: String?,
     @SerializedName("created_at_i") val createdAtInstant: Long?,
     val type: String?,
@@ -41,6 +42,7 @@ data class AlgoliaItemResponse(
         deleted = false,
         by = author,
         time = createdAtInstant?.toLocalDateTime(),
+        downloaded = LocalDateTime.now(),
         dead = false,
         text = text,
         kids = children.map { it.id.toInt() },

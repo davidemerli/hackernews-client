@@ -8,6 +8,7 @@ import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.search.*
 import timber.log.Timber
+import java.time.LocalDateTime
 
 data class SearchResponse(
     val hits: List<SearchResultHitResponse>,
@@ -40,6 +41,7 @@ data class SearchResponse(
             type = itemType,
             deleted = false,
             dead = false,
+            downloaded = LocalDateTime.now(),
             by = hit.author,
             time = hit.created?.toLocalDateTime(),
             parent = hit.parentId,

@@ -2,9 +2,7 @@ package it.devddk.hackernewsclient.data.database.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import it.devddk.hackernewsclient.data.networking.base.DomainMapper
-import it.devddk.hackernewsclient.data.networking.base.RoomMapper
 import it.devddk.hackernewsclient.data.networking.utils.toItemType
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
@@ -19,6 +17,7 @@ data class ItemEntity(
     val type: String,
     val time: LocalDateTime?,
     val saved: LocalDateTime?,
+    val downloaded: LocalDateTime?,
     val dead: Boolean,
     val parent: Int?,
     val text: String?,
@@ -29,7 +28,8 @@ data class ItemEntity(
     val poll: Int?,
     val score: Int?,
     val url: String?,
-    val htmlPage: String?
+    val htmlPage: String?,
+    val savedRefCount: Int?
 ) : DomainMapper<Item> {
 
     override fun mapToDomainModel(): Item {
@@ -39,6 +39,7 @@ data class ItemEntity(
             deleted,
             by,
             time,
+            downloaded,
             dead,
             parent,
             text,
@@ -62,6 +63,7 @@ fun Item.toItemEntity(storyId : Int? = null) : ItemEntity {
         by = by,
         type = type.toString(),
         time = time,
+        downloaded = downloaded,
         dead = dead,
         parent = parent,
         text = text,
@@ -74,47 +76,7 @@ fun Item.toItemEntity(storyId : Int? = null) : ItemEntity {
         url = url,
         htmlPage = htmlPage,
         saved = LocalDateTime.now(),
-        storyId = null)
-}
-
-
-
-
-data class ItemEntityWithoutHtmlPage(
-    val id: Int,
-    val deleted: Boolean,
-    @ColumnInfo(name= "author") val by: String?,
-    val type: String,
-    val time: LocalDateTime?,
-    val dead: Boolean,
-    val parent: Int?,
-    val text: String?,
-    val kids: List<Int>,
-    val title: String?,
-    val descendants: Int?,
-    val parts: List<Int>,
-    val poll: Int?,
-    val score: Int?,
-    val url: String?
-) : DomainMapper<Item> {
-    override fun mapToDomainModel(): Item {
-        return Item(
-            id,
-            type.toItemType() ?: ItemType.STORY,
-            deleted,
-            by,
-            time,
-            dead,
-            parent,
-            text,
-            kids,
-            title,
-            descendants,
-            parts,
-            poll,
-            score,
-            url,
-            htmlPage = null
-        )
-    }
+        storyId = storyId,
+        savedRefCount = null
+    )
 }

@@ -1,16 +1,14 @@
 package it.devddk.hackernewsclient.data.database.dao
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Transaction
 import it.devddk.hackernewsclient.data.database.entities.ItemCollectionEntity
-import it.devddk.hackernewsclient.data.database.entities.ItemCollectionEntityPrimaryKey
+import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 
 @Dao
-interface ItemCollectionEntityDao {
+abstract class ItemCollectionEntityDao {
 
     /**
      * Adds an item to a specific collection, replaces previous one if key is identical
@@ -18,7 +16,7 @@ interface ItemCollectionEntityDao {
      * @return A number >= 0 if successful, < 0 other wise
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun addItemToCollection(entry: ItemCollectionEntity) : Long
+    abstract suspend fun addItemToCollection(entry: ItemCollectionEntity) : Long
 
     /**
      * Removes an item from a specific collection
@@ -29,7 +27,7 @@ interface ItemCollectionEntityDao {
      * @return Number of row deleted. If 0 the query failed (or did not find any match to remove)
      */
     @Query("DELETE FROM items_collection WHERE :id = id AND :collection = collection")
-    suspend fun removeItemFromCollection(id: Int, collection: String) : Int
+    abstract suspend fun removeItemFromCollection(id: Int, collection: UserDefinedItemCollection) : Int
 
     /**
      * Fetches the [ItemCollectionEntity] from its primary key if it exists
@@ -38,7 +36,7 @@ interface ItemCollectionEntityDao {
      * @return The searched [ItemCollectionEntity], or null if it does not exist
      */
     @Query("SELECT * FROM items_collection WHERE :id = id AND :collection = collection LIMIT 1")
-    suspend fun getItemCollectionEntity(id: Int, collection: String) : ItemCollectionEntity?
+    abstract suspend fun getItemCollectionEntity(id: Int, collection: UserDefinedItemCollection) : ItemCollectionEntity?
 
     /**
      * Gets all collections where the item was put into
@@ -46,7 +44,7 @@ interface ItemCollectionEntityDao {
      * @return A list of all collection where the item is inside
      */
     @Query("SELECT * FROM items_collection AS ic WHERE :id = ic.id")
-    suspend fun getAllCollectionsForItem(id: Int) : List<ItemCollectionEntity>
+    abstract suspend fun getAllCollectionsForItem(id: Int) : List<ItemCollectionEntity>
 
     /**
      * Gets all items inside collection
@@ -54,6 +52,6 @@ interface ItemCollectionEntityDao {
      * @return All items id inside the collection (wrapped inside [ItemCollectionEntity])
      */
     @Query("SELECT * FROM items_collection AS ic WHERE :collection = ic.collection")
-    suspend fun getAllIdsForCollection(collection: String) : List<ItemCollectionEntity>
+    abstract suspend fun getAllIdsForCollection(collection: UserDefinedItemCollection) : List<ItemCollectionEntity>
 
 }

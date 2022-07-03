@@ -10,19 +10,21 @@ interface ItemRepository {
 
     companion object {
 
-        val OfflineFirst = FetchMode(listOf(Cache, Offline, Online))
+        val OfflineFirst = FetchMode(Cache, Offline, Online)
 
-        val OnlineFirst = FetchMode(listOf(Cache, Online, Offline))
+        val OnlineFirst = FetchMode(Cache, Online, Offline)
 
-        val OnlyOnline = FetchMode(listOf(Cache, Online))
+        val OnlyOnline = FetchMode(Cache, Online)
 
-        val OnlyOffline = FetchMode(listOf(Cache, Offline))
+        val OnlyOffline = FetchMode(Cache, Offline)
 
-        val MIN_TIME_FOR_REFRESH_SECS = 900
+        const val MIN_TIME_FOR_REFRESH_SECS = 900
 
     }
 
     data class FetchMode(val fetchOrder : List<ItemSources>) {
+
+        constructor(vararg items : ItemSources) : this(listOf(*items))
 
         fun onConnectivityAbsent() : FetchMode {
             return FetchMode(fetchOrder.filter { it !is Online })

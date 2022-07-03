@@ -37,8 +37,8 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
     private val items: DatabaseReference by inject(named("item"))
     private val itemDao: ItemEntityDao by inject()
     private val db: LocalDatabase by inject()
-    private val saveItemDao: SaveItemDao by inject()
-    private val collectionDao: ItemCollectionEntityDao by inject()
+    private val saveItemDao = db.saveItemDao()
+    private val collectionDao = db.itemCollectionDao()
     private val algoliaApi: AlgoliaSearchApi by inject()
     private val connectivity: Connectivity by inject()
 
@@ -100,17 +100,27 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
 
 
     override suspend fun saveItem(item: ItemId): Result<Unit> {
+        Timber.d("Getting $item from algolia to be saved")
         return algoliaApi.getItemById(item).asResult().mapCatching { algolia ->
             val rootItem = if (algolia.storyId != null) {
+                Timber.d("Algolia returned! Item is not root, requesting ${algolia.storyId}")
                 algoliaApi.getItemById(algolia.storyId).asResult().getOrThrow()
             } else {
+                Timber.d("Algolia returned! Item is root")
                 algolia
             }
             val linearizedCommentTree = rootItem.mapToDomainModel().dfsWalkComments().map {
                 it.toItemEntity()
             }
-            itemDao.insertItems(linearizedCommentTree)
-            Unit
+            db.withTransaction {
+                val savedItems = itemDao.insertItems(linearizedCommentTree)
+                Timber.d("Item id $item: Saved ${savedItems.size}/${linearizedCommentTree.size} sub items")
+                if (savedItems.isEmpty()) {
+                    throw IllegalStateException("Failed to save sub items in database")
+                }
+            }
+        }.onFailure {
+            Timber.e("Failed to persist item. \n${it.stackTraceToString()}")
         }
     }
 
@@ -124,19 +134,23 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
                 val needsSaveItem = db.withTransaction {
                     val collectionName = collection::class.simpleName!!
                     val rowsAdded = collectionDao.addItemToCollection(ItemCollectionEntity(id,
-                        collectionName, LocalDateTime.now()))
+                        collection, LocalDateTime.now()))
+                    Timber.d("Added item $id to $collectionName")
                     if (rowsAdded < 0) {
                         throw IllegalStateException("Failed query")
                     }
-                    collection.saveWholeItem && saveItemDao.needsToBeSaved(collectionName,
+                    collection.saveWholeItem && saveItemDao.needsToBeSaved(collection,
                         id,
                         ItemRepository.MIN_TIME_FOR_REFRESH_SECS)
+
                 }
                 cache.remove(id)
+                Timber.d("Added item $id needs to be saved? $needsSaveItem")
                 if (needsSaveItem) {
                     saveItem(id)
                 }
             }
+            Timber.d("Saving transaction finished")
         }
     }
 
@@ -147,10 +161,11 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
     ): Result<Unit> {
         return runCatching {
             val rowsDeleted = collectionDao.removeItemFromCollection(id,
-                collection::class.simpleName!!)
+                collection)
             if (rowsDeleted != 1) {
                 throw IllegalStateException("Failed query")
             }
+            Timber.d("Removing $id from ${collection::class.java}")
             cache.remove(id)
         }
     }
@@ -158,14 +173,14 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
     override suspend fun getCollectionsOfItem(id: ItemId): Result<Set<UserDefinedItemCollection>> {
         return runCatching {
             collectionDao.getAllCollectionsForItem(id).map {
-                UserDefinedItemCollection.valueOf(it.collection)!!
+                it.collection
             }.toSet()
         }
     }
 
     override suspend fun getAllItemsForCollection(collection: UserDefinedItemCollection): Result<List<ItemId>> {
         return runCatching {
-            collectionDao.getAllIdsForCollection(collection::class.simpleName!!).map {
+            collectionDao.getAllIdsForCollection(collection).map {
                 it.id
             }
         }
@@ -186,7 +201,15 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
         val data = hnResult.getValue(ItemResponse::class.java)
         Timber.d("hnResult: $hnResult - $data")
         val item =
-            checkNotNull(data?.mapToDomainModel()) { "Item $itemId not available online" }
+            checkNotNull(data?.mapToDomainModel()
+                ?.copy(downloaded = LocalDateTime.now())) { "Item $itemId not available online" }
+        cache.put(itemId, item)
+        item
+    }
+
+    private val fetchFromOffline: suspend (Int) -> Item = { itemId: Int ->
+        val item =
+            checkNotNull(itemDao.getItem(itemId)) { "Item $itemId not available offline" }.mapToDomainModel()
         cache.put(itemId, item)
         item
     }
@@ -197,12 +220,6 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
         }
     }
 
-    private val fetchFromOffline: suspend (Int) -> Item = { itemId: Int ->
-        val item =
-            checkNotNull(itemDao.getItem(itemId)) { "Item $itemId not available offline" }.mapToDomainModel()
-        cache.put(itemId, item)
-        item
-    }
 
     private val sources = mapOf(
         ItemRepository.Cache to fetchFromCache,

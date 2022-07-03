@@ -10,6 +10,7 @@ import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import okio.ByteString.Companion.encode
 import org.jsoup.Jsoup
+import java.time.LocalDateTime
 import kotlin.random.Random
 
 fun getPreview(url: String?, itemId: ItemId): String? {
@@ -55,6 +56,7 @@ data class ItemResponse(
             deleted,
             by,
             time?.toLocalDateTime() ?: throw ResponseConversionException("time must specified in item response"),
+            LocalDateTime.now(),
             dead,
             parent,
             text?.fixLinks() ?: "",

@@ -9,17 +9,10 @@ import java.time.LocalDateTime
 @Entity(tableName = "items_collection", primaryKeys = ["id", "collection"])
 data class ItemCollectionEntity(
     val id: Int,
-    val collection: String,
+    val collection: UserDefinedItemCollection,
     val timeAdded: LocalDateTime
 ) : DomainMapper<ItemCollectionEntry?> {
     override fun mapToDomainModel(): ItemCollectionEntry? {
-        return UserDefinedItemCollection.valueOf(collection)
-            ?.let { ItemCollectionEntry(it, timeAdded) }
+        return ItemCollectionEntry(collection, timeAdded)
     }
 }
-
-
-data class ItemCollectionEntityPrimaryKey(
-    val id: Int,
-    val collection: String
-)

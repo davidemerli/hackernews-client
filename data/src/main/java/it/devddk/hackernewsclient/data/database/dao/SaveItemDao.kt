@@ -1,11 +1,11 @@
 package it.devddk.hackernewsclient.data.database.dao
 
-import androidx.annotation.VisibleForTesting
 import androidx.room.Dao
 import androidx.room.Transaction
 import it.devddk.hackernewsclient.data.database.LocalDatabase
 import it.devddk.hackernewsclient.data.database.entities.ItemCollectionEntity
 import it.devddk.hackernewsclient.data.database.entities.ItemEntity
+import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import java.lang.Exception
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -18,10 +18,11 @@ abstract class SaveItemDao(val database: LocalDatabase) {
 
     @Transaction
     open suspend fun saveWholeStory(
-        collection: String,
+        collection: UserDefinedItemCollection,
         mainStory: ItemEntity,
         subStories: List<ItemEntity>,
         minTimeFromLastSaveMillis: Int,
+        increaseRefCount: Boolean
     ): Int {
         val queryResult = collectionDao.addItemToCollection(ItemCollectionEntity(mainStory.id,
             collection,
@@ -44,29 +45,28 @@ abstract class SaveItemDao(val database: LocalDatabase) {
         }
     }
 
+    @Transaction
+    open suspend fun removeWholeStoryIfUnused(
+        itemId: Int
+    ) {
+
+    }
+
 
     @Transaction
     open suspend fun needsToBeSaved(
-        collection: String,
+        collection: UserDefinedItemCollection,
         mainItemId: Int,
         minTimeFromLastSaveMillis: Int,
     ): Boolean {
         val collectionEntity = collectionDao.getItemCollectionEntity(mainItemId, collection)
-        val timeWhenSaved = itemDao.getSavedTime(mainItemId)
-        return timeWhenSaved == null ||
-                timeWhenSaved.until(LocalDateTime.now(),
+        val timeWhenDownloaded = itemDao.getDownloadedTime(mainItemId)
+        return timeWhenDownloaded == null ||
+                timeWhenDownloaded.until(LocalDateTime.now(),
                     ChronoUnit.SECONDS) > minTimeFromLastSaveMillis ||
                 (collectionEntity != null &&
                         collectionEntity.timeAdded.until(LocalDateTime.now(),
                             ChronoUnit.SECONDS) > minTimeFromLastSaveMillis)
-
-    }
-
-    @Transaction
-    open suspend fun removeWholeStoryIfUnused(
-        collToRemove: ItemCollectionEntity,
-        subStories: List<ItemEntity>,
-    ) {
 
     }
 }
