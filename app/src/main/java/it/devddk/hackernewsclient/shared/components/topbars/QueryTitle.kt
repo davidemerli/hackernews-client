@@ -7,8 +7,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import it.devddk.hackernewsclient.shared.components.ROUTE_ICONS
-import it.devddk.hackernewsclient.shared.components.ROUTE_TITLES
 
 @Composable
 fun QueryTitle(query: String) {

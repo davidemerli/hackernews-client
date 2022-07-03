@@ -43,8 +43,8 @@ import timber.log.Timber
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun SearchPage(navController: NavController) {
-    var searchQuery by rememberSaveable { mutableStateOf("") }
+fun SearchPage(navController: NavController, query: String = "") {
+    var searchQuery by rememberSaveable { mutableStateOf(query) }
     val viewModel: SearchPageViewModel = viewModel()
     val lazyListState = rememberLazyListState()
     val resultList = viewModel.resultListFlow.collectAsState(initial = emptyList())
@@ -155,10 +155,6 @@ fun SearchBar(
                     .fillMaxWidth()
                     .focusRequester(focusRequester),
             )
-
-            LaunchedEffect(searchQuery) {
-                focusRequester.requestFocus()
-            }
         },
         navigationIcon = {
             IconButton(onClick = onBackClick) {

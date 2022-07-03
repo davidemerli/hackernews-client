@@ -6,31 +6,28 @@ import it.devddk.hackernewsclient.data.networking.utils.toLocalDateTime
 import it.devddk.hackernewsclient.data.networking.utils.fixLinks
 import it.devddk.hackernewsclient.data.networking.utils.toItemType
 import it.devddk.hackernewsclient.domain.model.items.Item
+import it.devddk.hackernewsclient.domain.model.items.ItemType
+import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import okio.ByteString.Companion.encode
 import org.jsoup.Jsoup
 import kotlin.random.Random
 
-fun getPreview(siteUrl: String?): String? {
-    try {
-        if (siteUrl != null) {
-            val response =
-                Jsoup.connect(siteUrl).ignoreContentType(true).followRedirects(true).execute()
+fun getPreview(url: String?, itemId: ItemId): String? {
+    url?.let {
+        try {
+            val response = Jsoup.connect(url)
+                .ignoreContentType(true)
+                .followRedirects(true)
+                .execute()
 
             return response.parse()
                 .select("meta[property=og:image]")
                 .first()
                 .attr("content")
-        }
-    } catch (e: Exception) {
+        } catch (_: Exception) {}
     }
 
-    return if (siteUrl != null) {
-        val urlEncoded = siteUrl.encode().base64()
-
-        "https://identicon-api.herokuapp.com/$urlEncoded/128?format=png"
-    } else {
-        "https://identicon-api.herokuapp.com/${Random.nextLong()}/128?format=png"
-    }
+    return "https://hash-bg.davidemerli.com/$itemId"
 }
 
 data class ItemResponse(
@@ -68,10 +65,7 @@ data class ItemResponse(
             poll,
             score,
             url,
-            getPreview(url)
+            getPreview(url, id)
         )
-
     }
-
-
 }

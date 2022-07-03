@@ -17,7 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -36,39 +35,34 @@ import androidx.navigation.NavController
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
-import it.devddk.hackernewsclient.domain.model.collection.TopStories
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.pages.ArticlePage
-import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
-import it.devddk.hackernewsclient.shared.components.HomePageTopBar
+import it.devddk.hackernewsclient.pages.home.HNModalNavigatorPanel
+import it.devddk.hackernewsclient.pages.home.components.HNTopBar
 import it.devddk.hackernewsclient.shared.components.news.NewsItem
 import it.devddk.hackernewsclient.shared.components.news.SwipeableNewsItem
-
-import it.devddk.hackernewsclient.shared.components.topbars.FeedbackButton
-import it.devddk.hackernewsclient.shared.components.topbars.OpenInBrowserButton
-import it.devddk.hackernewsclient.shared.components.topbars.SearchButton
-import it.devddk.hackernewsclient.shared.components.topbars.ShareButton
+import it.devddk.hackernewsclient.shared.components.topbars.ROUTE_ICONS
+import it.devddk.hackernewsclient.shared.components.topbars.ROUTE_TITLES
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
-import it.devddk.hackernewsclient.viewmodels.NewsListViewModel
+import it.devddk.hackernewsclient.viewmodels.ItemCollectionHolder
 import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.NewsPageState
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 fun NewsPage(
     navController: NavController,
     windowSizeClass: WindowSizeClass,
-    route: ItemCollection,
+    itemCollection: ItemCollection,
 ) {
     val viewModel: HomePageViewModel = viewModel()
 
-    val itemCollection = viewModel.collections[route]!!
-    val pageState = itemCollection.pageState.collectAsState(NewsPageState.Loading)
+    val collectionHolder = viewModel.collections[itemCollection]!!
+    val pageState = collectionHolder.pageState.collectAsState(NewsPageState.Loading)
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-//    val query = viewModel.currentQuery.collectAsState(initial = TopStories)
 
     var selectedItem by remember { mutableStateOf<Item?>(null) }
 
@@ -84,34 +78,19 @@ fun NewsPage(
         navController.navigate("items/${item.id}/comments")
     }
 
+    val routeName = remember { collectionHolder.collection::class.java.simpleName }
+
     HNModalNavigatorPanel(
         navController = navController,
         state = drawerState,
-        query = "TopStories",
     ) {
         Scaffold(
             topBar = {
-                HomePageTopBar(
+                HNTopBar(
                     navController = navController,
-                    state = drawerState,
-                    query = "TopStories",
-                    actions = {
-                        SearchButton(navController = navController)
-
-                        if (selectedItem != null) {
-                            ShareButton(
-                                itemUrl = selectedItem!!.url,
-                                hnUrl = "https://news.ycombinator.com/item?id=${selectedItem!!.id}"
-                            )
-
-                            OpenInBrowserButton(
-                                itemUrl = selectedItem!!.url,
-                                hnUrl = "https://news.ycombinator.com/item?id=${selectedItem!!.id}"
-                            )
-
-                            FeedbackButton(navController, selectedItem!!.id)
-                        }
-                    }
+                    drawerState = drawerState,
+                    title = ROUTE_TITLES[routeName] ?: "route_name_error",
+                    leadingIcon = ROUTE_ICONS[routeName]
                 )
             },
             containerColor = MaterialTheme.colorScheme.background,
@@ -121,7 +100,7 @@ fun NewsPage(
                     LoadingScreen()
 
                     LaunchedEffect(Unit) {
-                        itemCollection.loadAll()
+                        collectionHolder.loadAll()
                     }
                 }
                 is NewsPageState.NewsIdsError -> {
@@ -135,6 +114,7 @@ fun NewsPage(
                             ItemInfiniteList(
                                 onClick = onClick,
                                 onClickComments = onClickComments,
+                                collectionHolder = collectionHolder,
                                 modifier = Modifier.padding(top = it.calculateTopPadding())
                             )
                         }
@@ -145,6 +125,7 @@ fun NewsPage(
                                 ItemInfiniteList(
                                     onClick = onClick,
                                     onClickComments = onClickComments,
+                                    collectionHolder = collectionHolder,
                                     modifier = Modifier
                                         .fillMaxWidth(0.5f)
                                         .padding(top = it.calculateTopPadding())
@@ -179,15 +160,14 @@ fun NewsPage(
 @Composable
 fun ItemInfiniteList(
     modifier: Modifier = Modifier,
+    collectionHolder: ItemCollectionHolder,
     onClick: (Item) -> Unit,
     onClickComments: (Item) -> Unit,
 ) {
 
     val lazyListState = rememberLazyListState()
-    val viewModel: HomePageViewModel = viewModel()
 
-    val itemCollection = viewModel.collections[TopStories]!!
-    val itemListState = itemCollection.itemListFlow.collectAsState(initial = emptyList())
+    val itemListState = collectionHolder.itemListFlow.collectAsState(initial = emptyList())
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -200,7 +180,7 @@ fun ItemInfiniteList(
             coroutineScope.launch {
                 Timber.d("refreshing")
 
-                itemCollection.refreshAll()
+                collectionHolder.refreshAll()
             }
         },
     ) {
@@ -212,7 +192,7 @@ fun ItemInfiniteList(
                 when (itemState) {
                     is NewsItemState.Loading, is NewsItemState.ItemError -> {
                         LaunchedEffect(index) {
-                            itemCollection.requestItem(itemState.itemId)
+                            collectionHolder.requestItem(itemState.itemId)
                         }
 
                         NewsItem(placeholder = true)

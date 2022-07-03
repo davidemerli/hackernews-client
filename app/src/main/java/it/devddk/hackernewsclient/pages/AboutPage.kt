@@ -21,9 +21,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import it.devddk.hackernewsclient.BuildConfig
-import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
-import it.devddk.hackernewsclient.shared.components.HomePageTopBar
-import it.devddk.hackernewsclient.shared.components.openInBrowser
+import it.devddk.hackernewsclient.pages.home.HNModalNavigatorPanel
+import it.devddk.hackernewsclient.shared.components.topbars.HomePageTopBar
+import it.devddk.hackernewsclient.shared.components.topbars.openInBrowser
 import timber.log.Timber
 
 @Composable
@@ -40,7 +40,6 @@ fun AboutPage(navController: NavController) {
     HNModalNavigatorPanel(
         navController = navController,
         state = drawerState,
-        query = "About",
     ) {
         Scaffold(
             topBar = {

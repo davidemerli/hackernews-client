@@ -2,7 +2,6 @@ package it.devddk.hackernewsclient.shared.components
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -10,17 +9,26 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewFeature
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.WebViewState
 import it.devddk.hackernewsclient.utils.SettingPrefs
+import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.DEFAULT_DARK_MODE
 import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.WEBVIEW_DEFAULTS
-import timber.log.Timber
+import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 @SuppressLint("SetJavaScriptEnabled")
+@Deprecated("Use WebViewWithPrefs and implement the progress elsewhere")
 fun ArticleView(
     modifier: Modifier = Modifier,
     webviewState: WebViewState,
@@ -36,6 +44,7 @@ fun ArticleView(
         }
 
         WebViewWithPrefs(
+            modifier = modifier,
             webviewState = webviewState
         )
     }
@@ -50,161 +59,130 @@ fun WebViewWithPrefs(
     val verticalScrollState = rememberScrollState()
     val dataStore = SettingPrefs(context)
 
-    val javaScriptEnabled =
-        dataStore.javaScriptEnabled.collectAsState(initial = WEBVIEW_DEFAULTS["javaScriptEnabled"]!!)
+    val itemViewModel: SingleNewsViewModel = viewModel()
+    val coroutineScope = rememberCoroutineScope()
 
-    val domStorageEnabled =
-        dataStore.domStorageEnabled.collectAsState(initial = WEBVIEW_DEFAULTS["domStorageEnabled"]!!)
+    val javaScriptEnabled by dataStore.javaScriptEnabled.collectAsState(initial = WEBVIEW_DEFAULTS["javaScriptEnabled"]!!)
 
-    val allowFileAccess =
-        dataStore.allowFileAccess.collectAsState(initial = WEBVIEW_DEFAULTS["allowFileAccess"]!!)
+    val domStorageEnabled by dataStore.domStorageEnabled.collectAsState(initial = WEBVIEW_DEFAULTS["domStorageEnabled"]!!)
 
-    val blockNetworkImage =
-        dataStore.blockNetworkImage.collectAsState(initial = WEBVIEW_DEFAULTS["blockNetworkImage"]!!)
+    val allowFileAccess by dataStore.allowFileAccess.collectAsState(initial = WEBVIEW_DEFAULTS["allowFileAccess"]!!)
 
-    val allowContentAccess =
-        dataStore.allowContentAccess.collectAsState(initial = WEBVIEW_DEFAULTS["allowContentAccess"]!!)
+    val blockNetworkImage by dataStore.blockNetworkImage.collectAsState(initial = WEBVIEW_DEFAULTS["blockNetworkImage"]!!)
 
-    val blockNetworkLoads =
-        dataStore.blockNetworkLoads.collectAsState(initial = WEBVIEW_DEFAULTS["blockNetworkLoads"]!!)
+    val allowContentAccess by dataStore.allowContentAccess.collectAsState(initial = WEBVIEW_DEFAULTS["allowContentAccess"]!!)
 
-    val builtInZoomControls =
-        dataStore.builtInZoomControls.collectAsState(initial = WEBVIEW_DEFAULTS["builtInZoomControls"]!!)
+    val blockNetworkLoads by dataStore.blockNetworkLoads.collectAsState(initial = WEBVIEW_DEFAULTS["blockNetworkLoads"]!!)
 
-    val databaseEnabled =
-        dataStore.databaseEnabled.collectAsState(initial = WEBVIEW_DEFAULTS["databaseEnabled"]!!)
+    val builtInZoomControls by dataStore.builtInZoomControls.collectAsState(initial = WEBVIEW_DEFAULTS["builtInZoomControls"]!!)
 
-    val displayZoomControls =
-        dataStore.displayZoomControls.collectAsState(initial = WEBVIEW_DEFAULTS["displayZoomControls"]!!)
+    val databaseEnabled by dataStore.databaseEnabled.collectAsState(initial = WEBVIEW_DEFAULTS["databaseEnabled"]!!)
 
-    val javaScriptCanOpenWindowsAutomatically =
-        dataStore.javaScriptCanOpenWindowsAutomatically.collectAsState(initial = WEBVIEW_DEFAULTS["javaScriptCanOpenWindowsAutomatically"]!!)
+    val displayZoomControls by dataStore.displayZoomControls.collectAsState(initial = WEBVIEW_DEFAULTS["displayZoomControls"]!!)
 
-    val loadWithOverviewMode =
-        dataStore.loadWithOverviewMode.collectAsState(initial = WEBVIEW_DEFAULTS["loadWithOverviewMode"]!!)
+    val javaScriptCanOpenWindowsAutomatically by dataStore.javaScriptCanOpenWindowsAutomatically.collectAsState(initial = WEBVIEW_DEFAULTS["javaScriptCanOpenWindowsAutomatically"]!!)
 
-    val loadsImagesAutomatically =
-        dataStore.loadsImagesAutomatically.collectAsState(initial = WEBVIEW_DEFAULTS["loadsImagesAutomatically"]!!)
+    val loadWithOverviewMode by dataStore.loadWithOverviewMode.collectAsState(initial = WEBVIEW_DEFAULTS["loadWithOverviewMode"]!!)
 
-    val mediaPlaybackRequiresUserGesture =
-        dataStore.mediaPlaybackRequiresUserGesture.collectAsState(initial = WEBVIEW_DEFAULTS["mediaPlaybackRequiresUserGesture"]!!)
+    val loadsImagesAutomatically by dataStore.loadsImagesAutomatically.collectAsState(initial = WEBVIEW_DEFAULTS["loadsImagesAutomatically"]!!)
 
-    val offscreenPreRaster =
-        dataStore.offscreenPreRaster.collectAsState(initial = WEBVIEW_DEFAULTS["offscreenPreRaster"]!!)
+    val mediaPlaybackRequiresUserGesture by dataStore.mediaPlaybackRequiresUserGesture.collectAsState(initial = WEBVIEW_DEFAULTS["mediaPlaybackRequiresUserGesture"]!!)
 
-    val useWideViewPort =
-        dataStore.useWideViewPort.collectAsState(initial = WEBVIEW_DEFAULTS["useWideViewPort"]!!)
+    val offscreenPreRaster by dataStore.offscreenPreRaster.collectAsState(initial = WEBVIEW_DEFAULTS["offscreenPreRaster"]!!)
 
-    val geolocationEnabled =
-        dataStore.geolocationEnabled.collectAsState(initial = WEBVIEW_DEFAULTS["geolocationEnabled"]!!)
+    val useWideViewPort by dataStore.useWideViewPort.collectAsState(initial = WEBVIEW_DEFAULTS["useWideViewPort"]!!)
 
-    val needInitialFocus =
-        dataStore.needInitialFocus.collectAsState(initial = WEBVIEW_DEFAULTS["needInitialFocus"]!!)
+    val geolocationEnabled by dataStore.geolocationEnabled.collectAsState(initial = WEBVIEW_DEFAULTS["geolocationEnabled"]!!)
 
-    val supportMultipleWindows =
-        dataStore.supportMultipleWindows.collectAsState(initial = WEBVIEW_DEFAULTS["supportMultipleWindows"]!!)
+    val needInitialFocus by dataStore.needInitialFocus.collectAsState(initial = WEBVIEW_DEFAULTS["needInitialFocus"]!!)
 
-    val supportZoom =
-        dataStore.supportZoom.collectAsState(initial = WEBVIEW_DEFAULTS["supportZoom"]!!)
+    val supportMultipleWindows by dataStore.supportMultipleWindows.collectAsState(initial = WEBVIEW_DEFAULTS["supportMultipleWindows"]!!)
+
+    val supportZoom by dataStore.supportZoom.collectAsState(initial = WEBVIEW_DEFAULTS["supportZoom"]!!)
+
+    val darkMode by dataStore.darkMode.collectAsState(initial = DEFAULT_DARK_MODE)
 
     key(
-        javaScriptEnabled.value,
-        domStorageEnabled.value,
-        allowFileAccess.value,
-        blockNetworkImage.value,
-        allowContentAccess.value,
-        blockNetworkLoads.value,
-        builtInZoomControls.value,
-        databaseEnabled.value,
-        displayZoomControls.value,
-        javaScriptCanOpenWindowsAutomatically.value,
-        loadWithOverviewMode.value,
-        loadsImagesAutomatically.value,
-        mediaPlaybackRequiresUserGesture.value,
-        offscreenPreRaster.value,
-        useWideViewPort.value,
-        geolocationEnabled.value,
-        needInitialFocus.value,
-        supportMultipleWindows.value,
-        supportZoom.value
+        javaScriptEnabled,
+        domStorageEnabled,
+        allowFileAccess,
+        blockNetworkImage,
+        allowContentAccess,
+        blockNetworkLoads,
+        builtInZoomControls,
+        databaseEnabled,
+        displayZoomControls,
+        javaScriptCanOpenWindowsAutomatically,
+        loadWithOverviewMode,
+        loadsImagesAutomatically,
+        mediaPlaybackRequiresUserGesture,
+        offscreenPreRaster,
+        useWideViewPort,
+        geolocationEnabled,
+        needInitialFocus,
+        supportMultipleWindows,
+        supportZoom,
+        darkMode,
     ) {
         WebView(
+            modifier = modifier.verticalScroll(verticalScrollState),
             state = webviewState,
-            modifier = modifier
-                .fillMaxHeight()
-                .verticalScroll(verticalScrollState),
             onCreated = { webview ->
-                Timber.d("javascriptEnabled: ${javaScriptEnabled.value}")
-                Timber.d("domStorageEnabled: ${domStorageEnabled.value}")
-                Timber.d("allowFileAccess: ${allowFileAccess.value}")
-                Timber.d("blockNetworkImage: ${blockNetworkImage.value}")
-                Timber.d("allowContentAccess: ${allowContentAccess.value}")
-                Timber.d("blockNetworkLoads: ${blockNetworkLoads.value}")
-                Timber.d("builtInZoomControls: ${builtInZoomControls.value}")
-                Timber.d("databaseEnabled: ${databaseEnabled.value}")
-                Timber.d("displayZoomControls: ${displayZoomControls.value}")
-                Timber.d("javaScriptCanOpenWindowsAutomatically: ${javaScriptCanOpenWindowsAutomatically.value}")
-                Timber.d("loadWithOverviewMode: ${loadWithOverviewMode.value}")
-                Timber.d("loadsImagesAutomatically: ${loadsImagesAutomatically.value}")
-                Timber.d("mediaPlaybackRequiresUserGesture: ${mediaPlaybackRequiresUserGesture.value}")
-                Timber.d("offscreenPreRaster: ${offscreenPreRaster.value}")
-                Timber.d("useWideViewPort: ${useWideViewPort.value}")
-                Timber.d("geolocationEnabled: ${geolocationEnabled.value}")
-                Timber.d("needInitialFocus: ${needInitialFocus.value}")
-                Timber.d("supportMultipleWindows: ${supportMultipleWindows.value}")
-                Timber.d("supportZoom: ${supportZoom.value}")
+                coroutineScope.launch { itemViewModel.setWebView(webview) }
 
-                webview.settings.javaScriptEnabled = javaScriptEnabled.value
-                webview.settings.domStorageEnabled = domStorageEnabled.value
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK) && darkMode) {
+                    WebSettingsCompat.setForceDark(webview.settings, WebSettingsCompat.FORCE_DARK_ON)
+                }
 
-                webview.isScrollContainer = supportZoom.value
+                webview.settings.javaScriptEnabled = javaScriptEnabled
+                webview.settings.domStorageEnabled = domStorageEnabled
+
+                webview.isScrollContainer = supportZoom
                 webview.isScrollbarFadingEnabled = true
                 webview.isVerticalScrollBarEnabled = true
                 webview.isHorizontalScrollBarEnabled = true
 
-                webview.settings.setSupportZoom(supportZoom.value)
-                webview.settings.loadWithOverviewMode = loadWithOverviewMode.value
-                webview.settings.builtInZoomControls = builtInZoomControls.value
+                webview.settings.setSupportZoom(supportZoom)
+                webview.settings.loadWithOverviewMode = loadWithOverviewMode
+                webview.settings.builtInZoomControls = builtInZoomControls
 
-//            // false by default
-                webview.settings.allowFileAccess = allowFileAccess.value
-                webview.settings.blockNetworkImage = blockNetworkImage.value
-                webview.settings.allowContentAccess = allowContentAccess.value
-                webview.settings.blockNetworkLoads = blockNetworkLoads.value
-                webview.settings.databaseEnabled = databaseEnabled.value
-                webview.settings.displayZoomControls = displayZoomControls.value
-                webview.settings.javaScriptCanOpenWindowsAutomatically =
-                    javaScriptCanOpenWindowsAutomatically.value
-                webview.settings.loadWithOverviewMode = loadWithOverviewMode.value
-                webview.settings.loadsImagesAutomatically = loadsImagesAutomatically.value
-                webview.settings.mediaPlaybackRequiresUserGesture =
-                    mediaPlaybackRequiresUserGesture.value
-//                webview.settings.offscreenPreRaster = offscreenPreRaster.value
-                webview.settings.useWideViewPort = useWideViewPort.value
-                webview.settings.setGeolocationEnabled(geolocationEnabled.value)
-                webview.settings.setNeedInitialFocus(needInitialFocus.value)
-                webview.settings.setSupportMultipleWindows(supportMultipleWindows.value)
+                //            // false by default
+                webview.settings.allowFileAccess = allowFileAccess
+                webview.settings.blockNetworkImage = blockNetworkImage
+                webview.settings.allowContentAccess = allowContentAccess
+                webview.settings.blockNetworkLoads = blockNetworkLoads
+                webview.settings.databaseEnabled = databaseEnabled
+                webview.settings.displayZoomControls = displayZoomControls
+                webview.settings.javaScriptCanOpenWindowsAutomatically = javaScriptCanOpenWindowsAutomatically
+                webview.settings.loadWithOverviewMode = loadWithOverviewMode
+                webview.settings.loadsImagesAutomatically = loadsImagesAutomatically
+                webview.settings.mediaPlaybackRequiresUserGesture = mediaPlaybackRequiresUserGesture
+//                                webview.settings.offscreenPreRaster = offscreenPreRaster
+                webview.settings.useWideViewPort = useWideViewPort
+                webview.settings.setGeolocationEnabled(geolocationEnabled)
+                webview.settings.setNeedInitialFocus(needInitialFocus)
+                webview.settings.setSupportMultipleWindows(supportMultipleWindows)
 
                 // TODO: configure those as settings
-//            it.settings.cacheMode = true
-//            it.settings.cursiveFontFamily = true
-//            it.settings.defaultFixedFontSize = true
-//            it.settings.defaultFontSize = true
-//            it.settings.defaultTextEncodingName = true
-//            it.settings.disabledActionModeMenuItems = true
-//            it.settings.fantasyFontFamily = true
-//            it.settings.fixedFontFamily = true
-//            it.settings.forceDark = true
-//            it.settings.layoutAlgorithm = true
-//            it.settings.minimumFontSize = true
-//            it.settings.minimumLogicalFontSize = true
-//            it.settings.mixedContentMode = true
-//            it.settings.safeBrowsingEnabled = true
-//            it.settings.sansSerifFontFamily = true
-//            it.settings.serifFontFamily = true
-//            it.settings.standardFontFamily = true
-//            it.settings.textZoom = true
-//            it.settings.userAgentString = true
+                //            it.settings.cacheMode = true
+                //            it.settings.cursiveFontFamily = true
+                //            it.settings.defaultFixedFontSize = true
+                //            it.settings.defaultFontSize = true
+                //            it.settings.defaultTextEncodingName = true
+                //            it.settings.disabledActionModeMenuItems = true
+                //            it.settings.fantasyFontFamily = true
+                //            it.settings.fixedFontFamily = true
+                //            it.settings.forceDark = true
+                //            it.settings.layoutAlgorithm = true
+                //            it.settings.minimumFontSize = true
+                //            it.settings.minimumLogicalFontSize = true
+                //            it.settings.mixedContentMode = true
+                //            it.settings.safeBrowsingEnabled = true
+                //            it.settings.sansSerifFontFamily = true
+                //            it.settings.serifFontFamily = true
+                //            it.settings.standardFontFamily = true
+                //            it.settings.textZoom = true
+                //            it.settings.userAgentString = true
             }
         )
     }

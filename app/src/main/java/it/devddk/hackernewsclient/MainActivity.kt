@@ -25,6 +25,7 @@ import it.devddk.hackernewsclient.pages.ArticlePage
 import it.devddk.hackernewsclient.pages.FeedbackPage
 import it.devddk.hackernewsclient.pages.SearchPage
 import it.devddk.hackernewsclient.pages.SettingsPage
+import it.devddk.hackernewsclient.pages.home.HomePage
 import it.devddk.hackernewsclient.pages.news.HackerNewsView
 import it.devddk.hackernewsclient.pages.news.NewsPage
 import it.devddk.hackernewsclient.ui.theme.HackerNewsClientTheme
@@ -59,13 +60,23 @@ class MainActivity : ComponentActivity() {
     private fun AppRootNavigator(windowSizeClass: WindowSizeClass) {
         val navController = rememberNavController()
 
-        NavHost(navController = navController, "TopStories") {
-            ALL_QUERIES.forEach { query ->
-                composable(route = HackerNewsView(query).route) {
+        NavHost(navController = navController, "homepage") {
+
+            composable(
+                "homepage",
+            ) {
+                HomePage(
+                    navController = navController,
+                    windowSizeClass = windowSizeClass
+                )
+            }
+
+            ALL_QUERIES.forEach { itemCollection ->
+                composable(route = HackerNewsView(itemCollection).route) {
                     NewsPage(
                         navController = navController,
                         windowSizeClass = windowSizeClass,
-                        route = query
+                        itemCollection = itemCollection
                     )
                 }
             }
@@ -87,6 +98,20 @@ class MainActivity : ComponentActivity() {
 
             composable("search") {
                 SearchPage(navController = navController)
+            }
+
+            composable(
+                "search/{query}",
+                arguments = listOf(
+                    navArgument("query") {
+                        type = NavType.StringType
+                    }
+                ),
+            ) { backStackEntry ->
+                SearchPage(
+                    navController = navController,
+                    query = backStackEntry.arguments?.getString("query")!!
+                )
             }
 
             composable("settings") {

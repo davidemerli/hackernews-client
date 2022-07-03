@@ -31,9 +31,11 @@ import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.items.favorite
 import it.devddk.hackernewsclient.domain.model.items.readLater
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
-import it.devddk.hackernewsclient.viewmodels.NewsListViewModel
+import it.devddk.hackernewsclient.pages.parseHTML
+import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.net.URI
 
 @Composable
@@ -48,7 +50,7 @@ fun NewsItem(
     val context = LocalContext.current
 
     val coroutineScope = rememberCoroutineScope()
-    val viewModel: NewsListViewModel = viewModel()
+    val viewModel: HomePageViewModel = viewModel()
 
     val itemDomain = remember { item.url?.let { getDomainName(it) } }
 
@@ -114,7 +116,7 @@ fun NewsItem(
 
         item.title?.let {
             NewsItemTitle(
-                title = it,
+                title = it.parseHTML(),
                 placeholder = placeholder,
                 modifier = Modifier
                     .padding(end = 56.dp) // to avoid overlapping with the dropdown menu
@@ -219,7 +221,7 @@ fun shareStringContent(context: Context, content: String) {
 
 fun onCollectionToggle(
     coroutineScope: CoroutineScope,
-    viewModel: NewsListViewModel,
+    viewModel: HomePageViewModel,
     itemId: ItemId,
     toggleable: MutableState<Boolean>,
     collection: UserDefinedItemCollection,
@@ -227,11 +229,7 @@ fun onCollectionToggle(
     toggleable.value = !toggleable.value
 
     coroutineScope.launch {
-        if (toggleable.value) {
-            viewModel.addToFavorites(itemId, collection)
-        } else {
-            viewModel.removeFromFavorites(itemId, collection)
-        }
+        viewModel.toggleFromCollection(itemId, collection)
     }
 }
 
@@ -259,6 +257,7 @@ internal val placeholderItem = Item(
     ItemType.STORY,
     title = "_".repeat(30),
     url = "https://news.ycombinator.com/",
+    previewUrl = "https://news.ycombinator.com/",
     by = "_".repeat(10),
     score = 100,
     descendants = 100,
@@ -272,6 +271,8 @@ fun getDomainName(url: String): String {
 
         domain.removePrefix("www.")
     } catch (e: Exception) {
+        Timber.d("?????")
+        Timber.e(e)
         url
     }
 }

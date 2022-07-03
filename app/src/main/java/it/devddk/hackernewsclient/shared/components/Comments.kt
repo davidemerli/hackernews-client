@@ -58,12 +58,10 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.accompanist.placeholder.material.color
-import com.google.accompanist.placeholder.placeholder
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
-import it.devddk.hackernewsclient.pages.toSpanned
+import it.devddk.hackernewsclient.pages.parseHTML
 import it.devddk.hackernewsclient.shared.components.news.shareStringContent
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
 import it.devddk.hackernewsclient.viewmodels.CommentUiState
@@ -300,7 +298,7 @@ fun CommentText(modifier: Modifier = Modifier, item: Item, placeholder: Boolean 
                 it.setTextColor(textColor.toArgb())
                 it.highlightColor = highlightColor.toArgb()
 
-                it.text = item.text!!.toSpanned()
+                it.text = item.text!!.parseHTML()
                 it.setTextIsSelectable(true)
                 Linkify.addLinks(it, Linkify.WEB_URLS)
             },

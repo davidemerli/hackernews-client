@@ -102,12 +102,12 @@ class NewsListViewModel : ViewModel(), KoinComponent {
         if (currPageState !is NewsPageState.NewsIdsLoaded) return
 
         // FIXME: items not in the list at this stage are getting requested in favorites screen
-        if (index >= currPageState.itemsId.size) {
+        if (index >= currPageState.itemIds.size) {
             Timber.d("Requesting item $index, but it is not in the list")
             return
         }
 
-        val itemId = currPageState.itemsId[index]
+        val itemId = currPageState.itemIds[index]
 
         synchronized(items) {
             // avoid requesting item if it's already loaded
@@ -148,8 +148,10 @@ class NewsListViewModel : ViewModel(), KoinComponent {
         updateItemList()
     }
 
+    @Deprecated("Needs to be replaced with the new homepage viewmodel")
     suspend fun addToFavorites(itemId: Int, collection: UserDefinedItemCollection) {
-        getItemIfLoaded(itemId)
+        getItemById(itemId) // hack to make this function until we change everything to the new viewmodel
+            // , and at this point we don't have the item in the cache here
             ?: throw IllegalStateException("Cannot add to favorites a non loaded item")
         val result = addToCollection(itemId, collection).onFailure {
             Timber.e(it, "Failed to add to collection")
@@ -159,8 +161,10 @@ class NewsListViewModel : ViewModel(), KoinComponent {
         }
     }
 
+    @Deprecated("Needs to be replaced with the new homepage viewmodel")
     suspend fun removeFromFavorites(itemId: ItemId, collection: UserDefinedItemCollection) {
-        getItemIfLoaded(itemId)
+        getItemById(itemId) // hack to make this function until we change everything to the new viewmodel
+            // , and at this point we don't have the item in the cache here
             ?: throw IllegalStateException("Cannot remove from favorites a non loaded item")
         val result = removeFromCollection(itemId, collection).onFailure {
             Timber.e(it, "Failed to remove from collection")
@@ -180,7 +184,7 @@ class NewsListViewModel : ViewModel(), KoinComponent {
         val outputList: List<NewsItemState>?
         synchronized(items) {
             val itemState = pageState.value as? NewsPageState.NewsIdsLoaded
-            outputList = itemState?.itemsId?.map { id ->
+            outputList = itemState?.itemIds?.map { id ->
                 items[id] ?: NewsItemState.Loading(id)
             }
         }
@@ -201,17 +205,40 @@ class HomePageViewModel : ViewModel(), KoinComponent {
     private val refreshAllItems: RefreshAllItemsUseCase by inject()
 
     val collections = ALL_QUERIES.associateWith {
-        ItemCollectionHolder(it,
+        ItemCollectionHolder(
+            it,
             getNewStories,
             getItemById,
             addToCollection,
             removeFromCollection,
-            refreshAllItems)
+            refreshAllItems
+        )
+    }
+
+    suspend fun toggleFromCollection(itemId: Int, collection: UserDefinedItemCollection) {
+        val queryResult = collections.values
+            .map { Pair(it, it.getItemIfLoaded(itemId)) }
+            .find { it.second != null }
+
+        queryResult?.second ?: Timber.d("Cannot add to favorites a non loaded item")
+
+        val isPresent = queryResult?.second?.collections?.get(collection) != null
+
+        val result =
+            if (!isPresent) {
+                addToCollection(itemId, collection).onFailure { Timber.e(it, "Failed to add to collection") }
+            } else {
+                removeFromCollection(itemId, collection).onFailure { Timber.e(it, "Failed to remove to collection") }
+            }
+
+        if (result.isSuccess) {
+            queryResult?.first?.requestItem(itemId)
+        }
     }
 }
 
 class ItemCollectionHolder(
-    val collection: ItemCollection,     // use cases
+    val collection: ItemCollection, // use cases
     private val getNewStories: GetNewStoriesUseCase,
     private val getItemById: GetItemUseCase,
     private val addToCollection: AddItemToCollectionUseCase,
@@ -253,13 +280,10 @@ class ItemCollectionHolder(
             },
             onFailure = { itemsId ->
                 synchronized(items) {
-
-
                 }
             }
         )
     }
-
 
     suspend fun requestItem(itemId: Int, retries: Int = 3) {
         getItemById(itemId).fold(
@@ -279,7 +303,6 @@ class ItemCollectionHolder(
                         requestItem(itemId, retries - 1)
 
                         Timber.d(e)
-
                     }
                     else -> {
                         Timber.w("Failed to load $itemId due to ${e::class.simpleName}. No more retries left.")
@@ -289,7 +312,8 @@ class ItemCollectionHolder(
                         updateItemList()
                     }
                 }
-            })
+            }
+        )
     }
 
     suspend fun addToFavorites(itemId: Int, collection: UserDefinedItemCollection) {
@@ -314,7 +338,7 @@ class ItemCollectionHolder(
         }
     }
 
-    private fun getItemIfLoaded(itemId: Int): Item? {
+    fun getItemIfLoaded(itemId: Int): Item? {
         synchronized(items) {
             return (items[itemId] as? NewsItemState.ItemLoaded)?.item
         }
@@ -324,7 +348,7 @@ class ItemCollectionHolder(
         val outputList: List<NewsItemState>?
         synchronized(items) {
             val itemState = pageState.value as? NewsPageState.NewsIdsLoaded
-            outputList = itemState?.itemsId?.map { id ->
+            outputList = itemState?.itemIds?.map { id ->
                 items[id] ?: NewsItemState.Loading(id)
             }
         }
@@ -334,12 +358,11 @@ class ItemCollectionHolder(
             _itemListFlow.emit(outputList)
         }
     }
-
 }
 
 sealed class NewsPageState {
     object Loading : NewsPageState()
-    data class NewsIdsLoaded(val itemsId: List<ItemId>) : NewsPageState()
+    data class NewsIdsLoaded(val itemIds: List<ItemId>) : NewsPageState()
     data class NewsIdsError(val exception: Throwable) : NewsPageState()
 }
 
