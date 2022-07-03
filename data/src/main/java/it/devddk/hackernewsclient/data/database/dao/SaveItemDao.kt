@@ -17,7 +17,7 @@ abstract class SaveItemDao(val database: LocalDatabase) {
     private val itemDao: ItemEntityDao = database.itemEntityDao()
 
     @Transaction
-    suspend fun saveWholeStory(
+    open suspend fun saveWholeStory(
         collection: String,
         mainStory: ItemEntity,
         subStories: List<ItemEntity>,
@@ -46,7 +46,7 @@ abstract class SaveItemDao(val database: LocalDatabase) {
 
 
     @Transaction
-    suspend fun needsToBeSaved(
+    open suspend fun needsToBeSaved(
         collection: String,
         mainItemId: Int,
         minTimeFromLastSaveMillis: Int,
@@ -63,7 +63,7 @@ abstract class SaveItemDao(val database: LocalDatabase) {
     }
 
     @Transaction
-    suspend fun removeWholeStoryIfUnused(
+    open suspend fun removeWholeStoryIfUnused(
         collToRemove: ItemCollectionEntity,
         subStories: List<ItemEntity>,
     ) {

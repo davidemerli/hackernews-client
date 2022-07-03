@@ -99,8 +99,8 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
     }
 
 
-    override suspend fun saveItem(id: ItemId): Result<Unit> {
-        return algoliaApi.getItemById(id).asResult().mapCatching { algolia ->
+    override suspend fun saveItem(item: ItemId): Result<Unit> {
+        return algoliaApi.getItemById(item).asResult().mapCatching { algolia ->
             val rootItem = if (algolia.storyId != null) {
                 algoliaApi.getItemById(algolia.storyId).asResult().getOrThrow()
             } else {
