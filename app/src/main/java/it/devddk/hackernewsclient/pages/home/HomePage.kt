@@ -48,17 +48,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import com.google.accompanist.web.WebViewState
 import com.google.accompanist.web.rememberWebViewState
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
@@ -66,8 +69,6 @@ import it.devddk.hackernewsclient.domain.model.collection.BestStories
 import it.devddk.hackernewsclient.domain.model.collection.TopStories
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.domain.model.items.Item
-import it.devddk.hackernewsclient.domain.model.items.favorite
-import it.devddk.hackernewsclient.domain.model.items.readLater
 import it.devddk.hackernewsclient.pages.TabbedView
 import it.devddk.hackernewsclient.pages.home.components.GoToLocationRow
 import it.devddk.hackernewsclient.pages.home.components.HNTopBar
@@ -75,11 +76,12 @@ import it.devddk.hackernewsclient.pages.home.components.MediumNewsRow
 import it.devddk.hackernewsclient.pages.home.components.NewsColumn
 import it.devddk.hackernewsclient.pages.home.components.TallNewsRow
 import it.devddk.hackernewsclient.pages.news.HackerNewsView
-import it.devddk.hackernewsclient.shared.components.ArticleView
 import it.devddk.hackernewsclient.shared.components.topbars.ROUTE_ICONS
 import it.devddk.hackernewsclient.shared.components.topbars.ROUTE_TITLES
+import it.devddk.hackernewsclient.utils.SettingPrefs
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.ItemCollectionHolder
+import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
 
@@ -89,34 +91,59 @@ fun HomePage(
     navController: NavController,
     windowSizeClass: WindowSizeClass,
 ) {
+    val context = LocalContext.current
+    val dataStore = SettingPrefs(context)
+
+    val coroutineScope = rememberCoroutineScope()
+
     val viewModel: HomePageViewModel = viewModel()
+    val itemViewModel: SingleNewsViewModel = viewModel()
 
     val bestCollection = viewModel.collections[BestStories]!!
     val topCollection = viewModel.collections[TopStories]!!
     val readLaterCollection = viewModel.collections[UserDefinedItemCollection.ReadLater]!!
 
-    var selectedItem by remember { mutableStateOf<Item?>(null) }
-    var expandedArticleView by remember { mutableStateOf(false) }
+    val itemUiState by itemViewModel.uiState.collectAsState(initial = SingleNewsUiState.Loading)
+
+    val selectedItem by derivedStateOf {
+        if (itemUiState is SingleNewsUiState.ItemLoaded) {
+            (itemUiState as SingleNewsUiState.ItemLoaded).item
+        } else null
+    }
+
+    var expandedArticleView by rememberSaveable { mutableStateOf(false) }
+    var readerMode by remember { mutableStateOf(false) }
+    val darkMode by dataStore.darkMode.collectAsState(initial = SettingPrefs.DEFAULT_DARK_MODE)
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     val onItemClick = { item: Item ->
-//        if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded) {
-            selectedItem = item
-//        } else {
-//            navController.navigate("items/${item.id}")
-//        }
-    }
-
-    val onItemClickComments = { item: Item ->
-        if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded) {
-            selectedItem = item // TODO: go to comments in tabbed view
-        } else {
-            navController.navigate("items/${item.id}/comments")
+        coroutineScope.launch {
+            itemViewModel.setId(item.id)
+            readerMode = false
         }
     }
 
-    BackHandler(enabled = selectedItem != null, onBack = {selectedItem = null})
+    val onItemClickComments = { item: Item ->
+        coroutineScope.launch {
+            itemViewModel.setId(item.id) // TODO: go to comments in tabbed
+            readerMode = false
+        }
+    }
+
+    val readabilityUrl = "https://readability.davidemerli.com?convert=${selectedItem?.url ?: ""}"
+
+    val webViewState = rememberWebViewState(if (readerMode) readabilityUrl else selectedItem?.url ?: "")
+    val webViewInstance by itemViewModel.webView.collectAsState(initial = null)
+
+    BackHandler(enabled = selectedItem != null, onBack = {
+        coroutineScope.launch {
+            itemViewModel.setId(null)
+        }
+
+        readerMode = false
+        expandedArticleView = false
+    })
 
     HNModalNavigatorPanel(navController = navController, state = drawerState) {
         Scaffold(
@@ -125,7 +152,25 @@ fun HomePage(
                     navController = navController,
                     drawerState = drawerState,
                     selectedItem = selectedItem,
-                    onClose = { selectedItem = null },
+                    readerMode = readerMode,
+                    darkMode = darkMode,
+                    onClose = {
+                        coroutineScope.launch {
+                            itemViewModel.setId(null)
+                        }
+                    },
+                    onDarkModeClick = {
+                        coroutineScope.launch { dataStore.setDarkMode(!darkMode) }
+                    },
+                    onReaderModeClick = {
+                        readerMode = !readerMode
+
+                        if (readerMode) {
+                            webViewInstance?.loadUrl(readabilityUrl)
+                        } else {
+                            webViewInstance?.loadUrl(selectedItem?.url ?: "")
+                        }
+                    }
                 )
             },
         ) {
@@ -137,15 +182,17 @@ fun HomePage(
                         bestCollection = bestCollection,
                         topCollection = topCollection,
                         readLaterCollection = readLaterCollection,
-                        onItemClick = onItemClick,
-                        onItemClickComments = onItemClickComments,
+                        onItemClick = { item -> onItemClick(item) },
+                        onItemClickComments = { item -> onItemClickComments(item) },
                         selectedItem = selectedItem,
                         expanded = expandedArticleView,
-                        onExpandedClick = { expandedArticleView = !expandedArticleView }
+                        onExpandedClick = { expandedArticleView = !expandedArticleView },
+                        webViewState = webViewState,
                     )
                 }
                 WindowWidthSizeClass.Compact,
-                WindowWidthSizeClass.Medium -> {
+                WindowWidthSizeClass.Medium,
+                -> {
                     CompactLayout(
                         modifier = Modifier.padding(top = it.calculateTopPadding()),
                         navController = navController,
@@ -153,8 +200,9 @@ fun HomePage(
                         topCollection = topCollection,
                         readLaterCollection = readLaterCollection,
                         selectedItem = selectedItem,
-                        onItemClick = onItemClick,
-                        onItemClickComments = onItemClickComments,
+                        onItemClick = { item -> onItemClick(item) },
+                        onItemClickComments = { item -> onItemClickComments(item) },
+                        webViewState = webViewState,
                     )
                 }
             }
@@ -174,8 +222,8 @@ fun ExpandedLayout(
     selectedItem: Item?,
     expanded: Boolean = false,
     onExpandedClick: () -> Unit,
+    webViewState: WebViewState,
 ) {
-    val webViewState = rememberWebViewState(url = selectedItem?.url ?: "")
     val viewModel: SingleNewsViewModel = viewModel()
 
     Row(
@@ -187,9 +235,10 @@ fun ExpandedLayout(
                 bestCollection = bestCollection,
                 topCollection = topCollection,
                 readLaterCollection = readLaterCollection,
-                selectedItem = selectedItem,
+                selectedItem = null,
                 onItemClick = onItemClick,
                 onItemClickComments = onItemClickComments,
+                webViewState = webViewState,
                 modifier = Modifier
                     .fillMaxWidth(0.45f)
                     .fillMaxHeight()
@@ -243,6 +292,7 @@ fun CompactLayout(
     selectedItem: Item?,
     onItemClick: (Item) -> Unit,
     onItemClickComments: (Item) -> Unit,
+    webViewState: WebViewState
 ) {
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
     val coroutineScope = rememberCoroutineScope()
@@ -251,7 +301,9 @@ fun CompactLayout(
     val readLaterItems = readLaterCollection.itemListFlow.collectAsState(initial = emptyList())
     val showReadLater by derivedStateOf { readLaterItems.value.isNotEmpty() }
 
-    val viewModel: SingleNewsViewModel = viewModel()
+    val viewModel: HomePageViewModel = viewModel()
+    val itemViewModel: SingleNewsViewModel = viewModel()
+    val webViewInstance by itemViewModel.webView.collectAsState(initial = null)
 
     LaunchedEffect(readLaterCollection) {
         readLaterCollection.loadAll()
@@ -261,18 +313,23 @@ fun CompactLayout(
         state = swipeRefreshState,
         refreshTriggerDistance = 144.dp,
         onRefresh = {
-            coroutineScope.launch { bestCollection.loadAll() }
-
-            coroutineScope.launch { topCollection.loadAll() }
-
-            coroutineScope.launch { readLaterCollection.loadAll() }
+            if (selectedItem != null) {
+                webViewInstance?.reload()
+            } else {
+                coroutineScope.launch { bestCollection.refreshAll() }
+                coroutineScope.launch { topCollection.refreshAll() }
+                coroutineScope.launch { readLaterCollection.refreshAll() }
+            }
         }
     ) {
         if (selectedItem != null) {
-            LaunchedEffect(selectedItem) { viewModel.setId(selectedItem.id) }
+            LaunchedEffect(selectedItem) { itemViewModel.setId(selectedItem.id) }
 
-            ArticleView(
-                webviewState = rememberWebViewState(url = selectedItem.url ?: "")
+            TabbedView(
+                navController = navController,
+                item = selectedItem,
+                webViewState = webViewState,
+                modifier = modifier
             )
         } else {
             Column(
@@ -291,8 +348,7 @@ fun CompactLayout(
 
                 TallNewsRow(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 256.dp),
+                        .fillMaxWidth(),
                     itemCollection = bestCollection,
                     onItemClick = onItemClick,
                     onItemClickComments = onItemClickComments,
@@ -344,25 +400,9 @@ fun CompactLayout(
                         .defaultMinSize(minHeight = 384.dp),
                     itemCollection = topCollection,
                     onItemClick = onItemClick,
-                    addToCollection = { item, itemCollection ->
+                    toggleCollection = { item, itemCollection ->
                         coroutineScope.launch {
-                            when (itemCollection) {
-                                is UserDefinedItemCollection.Favorites -> {
-                                    if (!item.collections.favorite) {
-                                        topCollection.addToFavorites(item.id, itemCollection)
-                                    } else {
-                                        topCollection.removeFromFavorites(item.id, itemCollection)
-                                    }
-                                }
-                                is UserDefinedItemCollection.ReadLater -> {
-                                    if (!item.collections.readLater) {
-                                        topCollection.addToFavorites(item.id, itemCollection)
-                                    } else {
-                                        topCollection.removeFromFavorites(item.id, itemCollection)
-                                    }
-                                }
-                                else -> {}
-                            }
+                            viewModel.toggleFromCollection(item.id, itemCollection)
                         }
                     }
                 )

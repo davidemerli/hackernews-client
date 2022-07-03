@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -18,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
@@ -55,6 +57,7 @@ import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.shared.components.ArticleView
 import it.devddk.hackernewsclient.shared.components.CommentText
 import it.devddk.hackernewsclient.shared.components.ExpandableComment
+import it.devddk.hackernewsclient.shared.components.WebViewWithPrefs
 import it.devddk.hackernewsclient.shared.components.news.NewsItemAuthor
 import it.devddk.hackernewsclient.shared.components.news.NewsItemDomain
 import it.devddk.hackernewsclient.shared.components.news.NewsItemTime
@@ -67,6 +70,7 @@ import it.devddk.hackernewsclient.viewmodels.CommentUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import kotlin.math.absoluteValue
 import kotlin.math.max
 
@@ -135,7 +139,7 @@ fun ArticlePage(
                 item = item,
                 navController = navController,
                 webViewState = webviewState,
-                selectedView
+                selectedView = selectedView,
             )
         }
         WindowWidthSizeClass.Expanded -> {
@@ -180,8 +184,9 @@ fun Loading() {
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPagerApi::class)
+@OptIn(ExperimentalPagerApi::class)
 fun TabbedView(
+    modifier: Modifier = Modifier,
     item: Item,
     navController: NavController,
     webViewState: WebViewState,
@@ -211,91 +216,90 @@ fun TabbedView(
 
     BackHandler(enabled = fullScreenWebView, onBack = { fullScreenWebView = false })
 
-//    Scaffold(
-//        topBar = {
-//            AnimatedVisibility(visible = !fullScreenWebView) {
-//                SingleNewsPageTopBar(
-//                    navController = navController,
-//                    item = item,
-//                )
-//            }
-//        },
-//        containerColor = MaterialTheme.colorScheme.background,
-//        floatingActionButton = {
-//            if (pagerState.currentPage == 0 && item.url != null) {
-//                FloatingActionButton(
-//                    onClick = {
-//                        fullScreenWebView = !fullScreenWebView
-//
-//                        coroutineScope.launch {
-//                            pagerState.scrollToPage(0)
-//                        }
-//                    },
-//                ) {
-//                    Icon(
-//                        if (fullScreenWebView) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
-//                        contentDescription = "Fullscreen"
-//                    )
-//                }
-//            }
-//        }
-//    ) {
-    Column(
-//            modifier = Modifier.padding(top = it.calculateTopPadding())
-    ) {
-        if (item.url != null) {
-            AnimatedVisibility(visible = !fullScreenWebView) {
-                TabRow(
-                    selectedTabIndex = pagerState.currentPage,
-                    indicator = { tabPositions ->
-                        TabRowDefaults.Indicator(
-                            Modifier.pagerTabIndicatorOffset(
-                                pagerState,
-                                tabPositions,
-                            ),
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-                ) {
-                    tabs.forEachIndexed { index, title ->
-                        Tab(selected = pagerState.currentPage == index, onClick = {
-                            coroutineScope.launch {
-                                pagerState.animateScrollToPage(index)
-                            }
-                        }, text = {
-                            Text(text = title, color = MaterialTheme.colorScheme.secondary)
-                        })
+    BoxWithConstraints {
+        val showAdjacent = maxWidth > 800.dp
+
+        Column(
+            modifier = modifier,
+        ) {
+            if (item.url != null) {
+                if (webViewState.isLoading) {
+                    LinearProgressIndicator(
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+
+                AnimatedVisibility(visible = !fullScreenWebView && !showAdjacent) {
+                    TabRow(
+                        selectedTabIndex = pagerState.currentPage,
+                        indicator = { tabPositions ->
+                            TabRowDefaults.Indicator(
+                                Modifier.pagerTabIndicatorOffset(
+                                    pagerState,
+                                    tabPositions,
+                                ),
+                                color = MaterialTheme.colorScheme.secondary,
+                            )
+                        }
+                    ) {
+                        tabs.forEachIndexed { index, title ->
+                            Tab(selected = pagerState.currentPage == index, onClick = {
+                                coroutineScope.launch {
+                                    // FIXME: this refreshes the webview, idk if fixable
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            }, text = {
+                                Text(text = title, color = MaterialTheme.colorScheme.secondary)
+                            })
+                        }
                     }
                 }
-            }
-            HorizontalPager(
-                count = item.url?.let { 2 } ?: 1,
-                state = pagerState,
-                modifier = Modifier.fillMaxHeight(),
-                userScrollEnabled = !fullScreenWebView
-            ) { index ->
-                when (index) {
-                    0 -> {
-                        ArticleView(
-                            modifier = Modifier.fillMaxHeight(),
-                            webviewState = webViewState
-                        )
+
+                if (!showAdjacent) {
+                    HorizontalPager(
+                        count = item.url?.let { 2 } ?: 1,
+                        state = pagerState,
+                        modifier = Modifier.weight(1f),
+                        userScrollEnabled = !fullScreenWebView
+                    ) { index ->
+                        when (index) {
+                            0 -> {
+                                WebViewWithPrefs(webviewState = webViewState)
+                            }
+                            1 -> {
+                                CommentsView(
+                                    item = item,
+                                    navController = navController,
+                                    scrollState = scrollState,
+                                )
+                            }
+                        }
                     }
-                    1 -> {
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        WebViewWithPrefs(
+                            webviewState = webViewState,
+                            modifier = Modifier.fillMaxWidth(0.55f)
+                        )
+
                         CommentsView(
                             item = item,
                             navController = navController,
                             scrollState = scrollState,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
+            } else {
+                CommentsView(
+                    item = item,
+                    navController = navController,
+                    scrollState = scrollState,
+                )
             }
-        } else {
-            CommentsView(
-                item = item,
-                navController = navController,
-                scrollState = scrollState,
-            )
         }
     }
 //    }

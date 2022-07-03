@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.SvgDecoder
@@ -90,10 +91,10 @@ fun TallNewsCard(
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(16f / 9f)
-                .padding(bottom = 8.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .aspectRatio(2f)
+                .padding(bottom = 4.dp)
                 .customPlaceholder(visible = placeholder)
+                .clip(RoundedCornerShape(16.dp))
         )
 
         domain?.let { domain ->
@@ -104,17 +105,19 @@ fun TallNewsCard(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                    .padding(vertical = 2.dp)
                     .customPlaceholder(visible = placeholder)
             )
         }
 
         Text(
             text = item.title ?: context.getString(R.string.title_unknown),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleMedium.copy(
+                lineHeight = 18.sp
+            ),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 2.dp)
+                .padding(bottom = 2.dp)
                 .customPlaceholder(visible = placeholder),
         )
 
@@ -134,7 +137,7 @@ fun TallNewsCard(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 2.dp)
+                .padding(bottom = 2.dp)
                 .customPlaceholder(visible = placeholder),
         )
 
@@ -143,8 +146,7 @@ fun TallNewsCard(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 8.dp),
+                .fillMaxWidth(),
         ) {
             Text(
                 text = buildAnnotatedString {
@@ -200,7 +202,7 @@ fun TallNewsCard(
                 }
             }
 
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = { moreExpanded = !moreExpanded }) {
                 Icon(Icons.Filled.MoreVert, "More")
 
                 DropdownMenu(

@@ -88,6 +88,7 @@ dependencies {
     implementation project(path: ':domain')
     implementation 'com.google.firebase:firebase-crashlytics-ktx:18.2.11'
     implementation 'com.google.firebase:firebase-analytics-ktx:21.0.0'
+    implementation 'androidx.webkit:webkit:1.4.0'
 
     debugImplementation "androidx.compose.ui:ui-tooling:$composeVersion"
 

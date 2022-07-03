@@ -24,7 +24,7 @@ fun SwipeableNewsItem(
     placeholder: Boolean = false,
     onClick: () -> Unit = {},
     onClickComments: () -> Unit = {},
-    addToCollection: (Item, UserDefinedItemCollection) -> Unit = { _, _ -> },
+    toggleCollection: (Item, UserDefinedItemCollection) -> Unit = { _, _ -> },
 ) {
     val readLater = remember { mutableStateOf(item.collections.readLater) }
     val favorite = remember { mutableStateOf(item.collections.favorite) }
@@ -32,13 +32,19 @@ fun SwipeableNewsItem(
     val readLaterAction = SwipeAction(
         icon = rememberVectorPainter(if (!readLater.value) Icons.Filled.Update else Icons.Filled.UpdateDisabled),
         background = MaterialTheme.colorScheme.secondary,
-        onSwipe = { addToCollection(item, UserDefinedItemCollection.ReadLater) }
+        onSwipe = {
+            readLater.value = !readLater.value
+            toggleCollection(item, UserDefinedItemCollection.ReadLater)
+        }
     )
 
     val favoriteAction = SwipeAction(
         icon = rememberVectorPainter(if (!favorite.value) Icons.Filled.Star else Icons.Filled.StarOutline),
         background = MaterialTheme.colorScheme.tertiary,
-        onSwipe = { addToCollection(item, UserDefinedItemCollection.Favorites) },
+        onSwipe = {
+            favorite.value = !favorite.value
+            toggleCollection(item, UserDefinedItemCollection.Favorites)
+        },
     )
 
     SwipeableActionsBox(

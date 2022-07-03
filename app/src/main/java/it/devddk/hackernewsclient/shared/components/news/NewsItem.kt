@@ -32,7 +32,7 @@ import it.devddk.hackernewsclient.domain.model.items.favorite
 import it.devddk.hackernewsclient.domain.model.items.readLater
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.pages.parseHTML
-import it.devddk.hackernewsclient.viewmodels.NewsListViewModel
+import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -50,7 +50,7 @@ fun NewsItem(
     val context = LocalContext.current
 
     val coroutineScope = rememberCoroutineScope()
-    val viewModel: NewsListViewModel = viewModel()
+    val viewModel: HomePageViewModel = viewModel()
 
     val itemDomain = remember { item.url?.let { getDomainName(it) } }
 
@@ -221,7 +221,7 @@ fun shareStringContent(context: Context, content: String) {
 
 fun onCollectionToggle(
     coroutineScope: CoroutineScope,
-    viewModel: NewsListViewModel,
+    viewModel: HomePageViewModel,
     itemId: ItemId,
     toggleable: MutableState<Boolean>,
     collection: UserDefinedItemCollection,
@@ -229,11 +229,7 @@ fun onCollectionToggle(
     toggleable.value = !toggleable.value
 
     coroutineScope.launch {
-        if (toggleable.value) {
-            viewModel.addToFavorites(itemId, collection)
-        } else {
-            viewModel.removeFromFavorites(itemId, collection)
-        }
+        viewModel.toggleFromCollection(itemId, collection)
     }
 }
 

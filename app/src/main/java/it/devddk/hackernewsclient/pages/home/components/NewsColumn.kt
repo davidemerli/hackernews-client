@@ -22,7 +22,7 @@ fun ColumnScope.NewsColumn(
     modifier: Modifier = Modifier,
     itemCollection: ItemCollectionHolder,
     onItemClick: (Item) -> Unit,
-    addToCollection: (Item, UserDefinedItemCollection) -> Unit,
+    toggleCollection: (Item, UserDefinedItemCollection) -> Unit,
 ) {
     val pageState by remember { itemCollection.pageState }.collectAsState(NewsPageState.Loading)
     val itemListState by remember { itemCollection.itemListFlow }.collectAsState(initial = emptyList())
@@ -49,7 +49,7 @@ fun ColumnScope.NewsColumn(
                         SwipeableNewsItem(
                             item = item,
                             onClick = { onItemClick(item) },
-                            addToCollection = addToCollection,
+                            toggleCollection = toggleCollection,
                         )
                     }
                 }

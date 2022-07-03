@@ -21,6 +21,8 @@ class SettingPrefs(private val context: Context) {
         // what does the user want to see first
         private val preferredViewKey = stringPreferencesKey("preferred_view")
 
+        private val darkModeKey = booleanPreferencesKey("darkMode")
+
         // webview settings
         private val javaScriptEnabledKey = booleanPreferencesKey("javaScriptEnabled")
         private val domStorageEnabledKey = booleanPreferencesKey("domStorageEnabled")
@@ -44,6 +46,7 @@ class SettingPrefs(private val context: Context) {
 
         const val DEFAULT_DEPTH = 10f
         const val DEFAULT_PREFERRED_VIEW = "article"
+        const val DEFAULT_DARK_MODE = false
 
         val WEBVIEW_DEFAULTS = mapOf(
             "javaScriptEnabled" to true,
@@ -156,12 +159,13 @@ class SettingPrefs(private val context: Context) {
             it[supportZoomKey] ?: WEBVIEW_DEFAULTS["supportZoom"]!!
         }
 
-    suspend fun setDepth(value: Float) {
-        context.dataStore.edit { it[depthKey] = value }
-    }
+    val darkMode: Flow<Boolean>
+        get() = context.dataStore.data.map {
+            it[darkModeKey] ?: DEFAULT_DARK_MODE
+        }
 
-    suspend fun setPreferredView(value: String) {
-        context.dataStore.edit { it[preferredViewKey] = value }
+    suspend fun setDarkMode(value: Boolean) {
+        context.dataStore.edit { it[darkModeKey] = value }
     }
 
     val dataStore: DataStore<Preferences>

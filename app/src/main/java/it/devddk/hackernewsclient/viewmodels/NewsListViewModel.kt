@@ -214,6 +214,27 @@ class HomePageViewModel : ViewModel(), KoinComponent {
             refreshAllItems
         )
     }
+
+    suspend fun toggleFromCollection(itemId: Int, collection: UserDefinedItemCollection) {
+        val queryResult = collections.values
+            .map { Pair(it, it.getItemIfLoaded(itemId)) }
+            .find { it.second != null }
+
+        queryResult?.second ?: Timber.d("Cannot add to favorites a non loaded item")
+
+        val isPresent = queryResult?.second?.collections?.get(collection) != null
+
+        val result =
+            if (!isPresent) {
+                addToCollection(itemId, collection).onFailure { Timber.e(it, "Failed to add to collection") }
+            } else {
+                removeFromCollection(itemId, collection).onFailure { Timber.e(it, "Failed to remove to collection") }
+            }
+
+        if (result.isSuccess) {
+            queryResult?.first?.requestItem(itemId)
+        }
+    }
 }
 
 class ItemCollectionHolder(
@@ -317,7 +338,7 @@ class ItemCollectionHolder(
         }
     }
 
-    private fun getItemIfLoaded(itemId: Int): Item? {
+    fun getItemIfLoaded(itemId: Int): Item? {
         synchronized(items) {
             return (items[itemId] as? NewsItemState.ItemLoaded)?.item
         }
