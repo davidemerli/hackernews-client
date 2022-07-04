@@ -14,9 +14,11 @@ interface ItemRepository {
 
         val OnlineFirst = FetchMode(Cache, Online, Offline)
 
-        val OnlyOnline = FetchMode(Cache, Online)
+        val OnlineOnly = FetchMode(Cache, Online)
 
-        val OnlyOffline = FetchMode(Cache, Offline)
+        val OfflineOnly = FetchMode(Cache, Offline)
+
+        val OfflineSkipCache = FetchMode(Offline)
 
         const val MIN_TIME_FOR_REFRESH_SECS = 900
 

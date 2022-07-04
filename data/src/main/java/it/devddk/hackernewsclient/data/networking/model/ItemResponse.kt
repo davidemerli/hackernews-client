@@ -59,6 +59,7 @@ data class ItemResponse(
             LocalDateTime.now(),
             dead,
             parent,
+            null,
             text?.fixLinks() ?: "",
             kids,
             title,

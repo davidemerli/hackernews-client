@@ -28,8 +28,7 @@ data class ItemEntity(
     val poll: Int?,
     val score: Int?,
     val url: String?,
-    val htmlPage: String?,
-    val savedRefCount: Int?
+    val htmlPage: String?
 ) : DomainMapper<Item> {
 
     override fun mapToDomainModel(): Item {
@@ -42,6 +41,7 @@ data class ItemEntity(
             downloaded,
             dead,
             parent,
+            storyId,
             text,
             kids,
             title,
@@ -56,7 +56,7 @@ data class ItemEntity(
 }
 
 
-fun Item.toItemEntity(storyId : Int? = null) : ItemEntity {
+fun Item.toItemEntity() : ItemEntity {
     return ItemEntity(
         id = id,
         deleted = deleted,
@@ -76,7 +76,6 @@ fun Item.toItemEntity(storyId : Int? = null) : ItemEntity {
         url = url,
         htmlPage = htmlPage,
         saved = LocalDateTime.now(),
-        storyId = storyId,
-        savedRefCount = null
+        storyId = storyId
     )
 }

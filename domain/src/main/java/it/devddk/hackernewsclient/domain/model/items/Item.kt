@@ -40,6 +40,10 @@ data class Item(
      */
     val parent: ItemId? = null,
     /**
+     * The [id] of the root story that contains this item. Not always available
+     */
+    val storyId: ItemId? = null,
+    /**
      * The text of the Item. It is null for stories or jobs (that usually contain a link).
      * It could be null also for some removed/dead comments
      */

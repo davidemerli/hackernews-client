@@ -3,6 +3,7 @@ package it.devddk.hackernewsclient.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import it.devddk.hackernewsclient.domain.interaction.collection.AddItemToCollectionUseCase
+import it.devddk.hackernewsclient.domain.interaction.collection.GetCollectionsUseCase
 import it.devddk.hackernewsclient.domain.interaction.collection.RemoveItemFromCollectionUseCase
 import it.devddk.hackernewsclient.domain.interaction.item.GetItemUseCase
 import it.devddk.hackernewsclient.domain.interaction.item.GetNewStoriesUseCase
@@ -11,6 +12,7 @@ import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
 import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
 import it.devddk.hackernewsclient.domain.model.collection.TopStories
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
+import it.devddk.hackernewsclient.domain.model.flatMap
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.domain.utils.getValue
@@ -200,6 +202,7 @@ class HomePageViewModel : ViewModel(), KoinComponent {
 
     private val getNewStories: GetNewStoriesUseCase by inject()
     private val getItemById: GetItemUseCase by inject()
+    private val getCollectionsByItem: GetCollectionsUseCase by inject()
     private val addToCollection: AddItemToCollectionUseCase by inject()
     private val removeFromCollection: RemoveItemFromCollectionUseCase by inject()
     private val refreshAllItems: RefreshAllItemsUseCase by inject()
@@ -215,24 +218,14 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         )
     }
 
-    suspend fun toggleFromCollection(itemId: Int, collection: UserDefinedItemCollection) {
-        val queryResult = collections.values
-            .map { Pair(it, it.getItemIfLoaded(itemId)) }
-            .find { it.second != null }
-
-        queryResult?.second ?: Timber.d("Cannot add to favorites a non loaded item")
-
-        val isPresent = queryResult?.second?.collections?.get(collection) != null
-
-        val result =
-            if (!isPresent) {
+    suspend fun toggleFromCollection(itemId: Int, collection: UserDefinedItemCollection) : Result<Unit> {
+        return getCollectionsByItem(itemId).flatMap { collections ->
+            Timber.e("Collections ${collections.map { k -> k::class.java.simpleName }}")
+            if(!collections.contains(collection)) {
                 addToCollection(itemId, collection).onFailure { Timber.e(it, "Failed to add to collection") }
             } else {
                 removeFromCollection(itemId, collection).onFailure { Timber.e(it, "Failed to remove to collection") }
             }
-
-        if (result.isSuccess) {
-            queryResult?.first?.requestItem(itemId)
         }
     }
 }

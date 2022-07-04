@@ -19,8 +19,8 @@ object JobStories : HNItemCollection("HN Jobs", 200)
 
 sealed class UserDefinedItemCollection(
     entryName: String,
-    val availableOffline: Boolean,
     val saveWholeItem: Boolean,
+    val allowReinsertion: Boolean,
     val itemFilter: (Item) -> Boolean,
 ) : ItemCollection(entryName) {
 
@@ -29,15 +29,15 @@ sealed class UserDefinedItemCollection(
             return when (name) {
                 Favorites::class.simpleName -> Favorites
                 ReadLater::class.simpleName -> ReadLater
-                ReadItem::class.simpleName -> ReadItem
+                VisitedItem::class.simpleName -> VisitedItem
                 else -> null
             }
         }
 
-        val ALL_USER_QUERIES = listOf(Favorites, ReadLater, ReadItem)
+        val ALL_USER_QUERIES = listOf(Favorites, ReadLater, VisitedItem)
     }
 
-    object Favorites : UserDefinedItemCollection("Favorites", false, true, { true })
-    object ReadLater : UserDefinedItemCollection("ReadLater", true, true, { true })
-    object ReadItem : UserDefinedItemCollection("ReadItem", false, false, { it.type != ItemType.COMMENT })
+    object Favorites : UserDefinedItemCollection("Favorites",true, false, { true })
+    object ReadLater : UserDefinedItemCollection("ReadLater", true, false, { true })
+    object VisitedItem : UserDefinedItemCollection("ReadItem", false, true, { it.type != ItemType.COMMENT })
 }
