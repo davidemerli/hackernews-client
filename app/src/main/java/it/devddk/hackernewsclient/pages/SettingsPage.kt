@@ -22,7 +22,7 @@ import androidx.navigation.NavController
 import de.schnettler.datastore.compose.material3.PreferenceScreen
 import de.schnettler.datastore.compose.material3.model.Preference
 import de.schnettler.datastore.manager.PreferenceRequest
-import it.devddk.hackernewsclient.pages.home.HNModalNavigatorPanel
+import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.shared.components.topbars.HomePageTopBar
 import it.devddk.hackernewsclient.utils.SettingPrefs
 import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.DEFAULT_DEPTH

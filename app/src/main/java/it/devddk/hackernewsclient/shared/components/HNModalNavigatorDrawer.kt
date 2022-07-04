@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
-import it.devddk.hackernewsclient.pages.news.HackerNewsView
+import it.devddk.hackernewsclient.pages.home.HackerNewsView
 import it.devddk.hackernewsclient.shared.components.topbars.ROUTE_ICONS
 import it.devddk.hackernewsclient.shared.components.topbars.ROUTE_TITLES
 
