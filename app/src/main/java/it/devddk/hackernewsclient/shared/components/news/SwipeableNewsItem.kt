@@ -7,8 +7,13 @@ import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.filled.UpdateDisabled
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.RenderVectorGroup
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
@@ -17,6 +22,9 @@ import it.devddk.hackernewsclient.domain.model.items.favorite
 import it.devddk.hackernewsclient.domain.model.items.readLater
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
+import me.saket.swipe.rememberSwipeableActionsState
+import timber.log.Timber
+import kotlin.math.abs
 
 @Composable
 fun SwipeableNewsItem(
@@ -29,8 +37,27 @@ fun SwipeableNewsItem(
     val readLater = remember { mutableStateOf(item.collections.readLater) }
     val favorite = remember { mutableStateOf(item.collections.favorite) }
 
+    val swipeState = rememberSwipeableActionsState()
+
+    val c1 = MaterialTheme.colorScheme.onSurface
+    val c2 = MaterialTheme.colorScheme.background
+
+    //FIXME
+    val tintColor by derivedStateOf {
+        Timber.d("OFFSET ${swipeState.offset.value}")
+
+        if (abs(swipeState.offset.value) > 10) {
+            c1
+        } else {
+            c2
+        }
+    }
+
     val readLaterAction = SwipeAction(
-        icon = rememberVectorPainter(if (!readLater.value) Icons.Filled.Update else Icons.Filled.UpdateDisabled),
+        icon = rememberVectorPainter(
+            if (!readLater.value) Icons.Filled.Update else Icons.Filled.UpdateDisabled,
+            tintColor = tintColor
+        ),
         background = MaterialTheme.colorScheme.secondary,
         onSwipe = {
             readLater.value = !readLater.value
@@ -39,7 +66,10 @@ fun SwipeableNewsItem(
     )
 
     val favoriteAction = SwipeAction(
-        icon = rememberVectorPainter(if (!favorite.value) Icons.Filled.Star else Icons.Filled.StarOutline),
+        icon = rememberVectorPainter(
+            if (!favorite.value) Icons.Filled.Star else Icons.Filled.StarOutline,
+            tintColor = tintColor
+        ),
         background = MaterialTheme.colorScheme.tertiary,
         onSwipe = {
             favorite.value = !favorite.value
@@ -48,6 +78,7 @@ fun SwipeableNewsItem(
     )
 
     SwipeableActionsBox(
+        state = swipeState,
         startActions = listOf(favoriteAction),
         endActions = listOf(readLaterAction),
         swipeThreshold = 128.dp,
@@ -63,3 +94,17 @@ fun SwipeableNewsItem(
         )
     }
 }
+
+@Composable
+fun rememberVectorPainter(image: ImageVector, tintColor: Color) =
+    rememberVectorPainter(
+        defaultWidth = image.defaultWidth,
+        defaultHeight = image.defaultHeight,
+        viewportWidth = image.viewportWidth,
+        viewportHeight = image.viewportHeight,
+        name = image.name,
+        tintColor = tintColor,
+        tintBlendMode = image.tintBlendMode,
+        autoMirror = image.autoMirror,
+        content = { _, _ -> RenderVectorGroup(group = image.root) }
+    )
