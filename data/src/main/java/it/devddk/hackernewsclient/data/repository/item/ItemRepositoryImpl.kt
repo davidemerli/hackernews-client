@@ -200,9 +200,12 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
         val hnResult = items.child(itemId.toString()).get().await()
         val data = hnResult.getValue(ItemResponse::class.java)
         Timber.d("hnResult: $hnResult - $data")
-        val item =
+
+        val item = withContext(Dispatchers.IO) {
             checkNotNull(data?.mapToDomainModel()
                 ?.copy(downloaded = LocalDateTime.now())) { "Item $itemId not available online" }
+        }
+
         cache.put(itemId, item)
         item
     }
