@@ -63,6 +63,7 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.accompanist.web.WebViewState
 import com.google.accompanist.web.rememberWebViewState
+import com.google.accompanist.web.rememberWebViewStateWithHTMLData
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
 import it.devddk.hackernewsclient.domain.model.collection.BestStories
@@ -133,7 +134,15 @@ fun HomePage(
 
     val readabilityUrl = "https://readability.davidemerli.com?convert=${selectedItem?.url ?: ""}"
 
-    val webViewState = rememberWebViewState(if (readerMode) readabilityUrl else selectedItem?.url ?: "")
+    //TODO: refine this check and allow for switching if the user is online
+    val showDownloadedHtml = selectedItem?.htmlPage != null
+
+    val webViewState = if (showDownloadedHtml) {
+        rememberWebViewStateWithHTMLData(data = selectedItem?.htmlPage!!, baseUrl = selectedItem?.url ?: "")
+    } else {
+        rememberWebViewState(if (readerMode) readabilityUrl else selectedItem?.url ?: "")
+    }
+
     val webViewInstance by itemViewModel.webView.collectAsState(initial = null)
 
     BackHandler(enabled = selectedItem != null, onBack = {
