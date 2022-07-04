@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.data.networking.model
 
+import androidx.annotation.Keep
 import com.google.gson.annotations.SerializedName
 import it.devddk.hackernewsclient.data.networking.DomainMapper
 import it.devddk.hackernewsclient.data.networking.utils.toLocalDateTime
@@ -10,6 +11,7 @@ import it.devddk.hackernewsclient.domain.model.search.*
 import timber.log.Timber
 import java.time.LocalDateTime
 
+@Keep
 data class SearchResponse(
     val hits: List<SearchResultHitResponse>,
     val page: Int,
@@ -62,6 +64,7 @@ data class SearchResponse(
     }
 }
 
+@Keep
 data class SearchResultHitResponse(
     val title: String,
     val url: String,
@@ -82,6 +85,7 @@ data class SearchResultHitResponse(
     @SerializedName("_highlightResult") val highlightResult : HighlightDataResponse
 )
 
+@Keep
 data class HighlightDataResponse(
     val title: HighlightFieldResponse?,
     val url: HighlightFieldResponse?,
@@ -102,9 +106,9 @@ data class HighlightDataResponse(
             storyText = storyText?.toHighlightFieldIfMatches()
         )
     }
-
 }
 
+@Keep
 data class HighlightFieldResponse(
     val value: String?,
     val matchLevel: String?,

@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.data.networking.model
 
+import androidx.annotation.Keep
 import it.devddk.hackernewsclient.data.common.utils.ResponseConversionException
 import it.devddk.hackernewsclient.data.networking.DomainMapper
 import it.devddk.hackernewsclient.data.networking.utils.toLocalDateTime
@@ -10,6 +11,7 @@ import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import okio.ByteString.Companion.encode
 import org.jsoup.Jsoup
+import timber.log.Timber
 import java.time.LocalDateTime
 import kotlin.random.Random
 
@@ -21,16 +23,23 @@ fun getPreview(url: String?, itemId: ItemId): String? {
                 .followRedirects(true)
                 .execute()
 
-            return response.parse()
+            val previewUrl = response.parse()
                 .select("meta[property=og:image]")
                 .first()
                 .attr("content")
-        } catch (_: Exception) {}
+
+            Timber.d("Preview url: $previewUrl")
+
+            return previewUrl
+        } catch (_ : Exception) { }
     }
+
+    Timber.d("Preview url: ${"https://hash-bg.davidemerli.com/$itemId"}")
 
     return "https://hash-bg.davidemerli.com/$itemId"
 }
 
+@Keep
 data class ItemResponse(
     val id: Int? = null,
     val type: String? = null,

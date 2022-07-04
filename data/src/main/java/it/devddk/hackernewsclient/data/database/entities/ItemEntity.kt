@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.data.database.entities
 
+import androidx.annotation.Keep
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import it.devddk.hackernewsclient.data.networking.base.DomainMapper
@@ -8,6 +9,7 @@ import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import java.time.LocalDateTime
 
+@Keep
 @Entity(tableName = "items", primaryKeys = ["id"])
 data class ItemEntity(
     val id: Int,

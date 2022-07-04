@@ -1,6 +1,5 @@
 package it.devddk.hackernewsclient.pages.home.components
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
