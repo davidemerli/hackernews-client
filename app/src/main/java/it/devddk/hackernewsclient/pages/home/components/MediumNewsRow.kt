@@ -1,11 +1,16 @@
 package it.devddk.hackernewsclient.pages.home.components
 
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
@@ -13,7 +18,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
@@ -32,27 +40,40 @@ fun MediumNewsRow(
 ) {
     val pageState by remember { itemCollection.pageState }.collectAsState(NewsPageState.Loading)
     val itemListState by remember { itemCollection.itemListFlow }.collectAsState(initial = emptyList())
+    val scrollState = rememberLazyListState()
 
-    val scrollState = rememberScrollState()
+    var initialApiCalled by rememberSaveable { mutableStateOf(false) }
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .horizontalScroll(scrollState),
-    ) {
-        when (pageState) {
-            is NewsPageState.Loading -> {
-                LoadingPage(
-                    itemCollection = itemCollection,
-                    modifier = Modifier.height(324.dp)
-                )
-            }
-            is NewsPageState.NewsIdsError -> LoadPageError()
-            is NewsPageState.NewsIdsLoaded -> {
-                val length = min(10, itemListState.size)
+    if (!initialApiCalled) {
+        LaunchedEffect(Unit) {
+            itemCollection.loadAll()
+            initialApiCalled = true
+        }
+    }
 
-                itemListState.subList(0, length).forEachIndexed { index, itemState ->
-                    key(itemState.itemId) {
+    BoxWithConstraints {
+        LazyRow(
+            state = scrollState,
+            modifier = modifier.fillMaxWidth(),
+        ) {
+            when (pageState) {
+                is NewsPageState.Loading -> {
+                    item {
+                        LoadingPage(
+                            itemCollection = itemCollection,
+                            modifier = Modifier
+                                .height(324.dp)
+                                .width(this@BoxWithConstraints.maxWidth)
+                        )
+                    }
+                }
+                is NewsPageState.NewsIdsError -> item {
+                    LoadPageError()
+                }
+                is NewsPageState.NewsIdsLoaded -> {
+                    val length = min(10, itemListState.size)
+
+                    itemsIndexed(itemListState.subList(0, length), key = { _, itemState -> itemState.itemId }) { index, itemState ->
                         when (itemState) {
                             is NewsItemState.Loading -> {
                                 LaunchedEffect(itemState.itemId) {
@@ -79,10 +100,14 @@ fun MediumNewsRow(
 
                         if (index != length - 1) {
                             Divider(
-                                modifier = Modifier.alpha(0.1f).height(192.dp).padding(8.dp).width(1.dp)
+                                modifier = Modifier
+                                    .alpha(0.1f)
+                                    .height(192.dp)
+                                    .padding(8.dp)
+                                    .width(1.dp)
                             )
                         }
-                    }
+                        }
                 }
             }
         }

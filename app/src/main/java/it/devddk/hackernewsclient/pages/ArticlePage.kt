@@ -3,6 +3,7 @@ package it.devddk.hackernewsclient.pages
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -70,7 +71,6 @@ import it.devddk.hackernewsclient.viewmodels.CommentUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import kotlin.math.absoluteValue
 import kotlin.math.max
 
@@ -231,27 +231,32 @@ fun TabbedView(
                 }
 
                 AnimatedVisibility(visible = !fullScreenWebView && !showAdjacent) {
-                    TabRow(
-                        selectedTabIndex = pagerState.currentPage,
-                        indicator = { tabPositions ->
-                            TabRowDefaults.Indicator(
-                                Modifier.pagerTabIndicatorOffset(
-                                    pagerState,
-                                    tabPositions,
-                                ),
-                                color = MaterialTheme.colorScheme.secondary,
-                            )
-                        }
-                    ) {
-                        tabs.forEachIndexed { index, title ->
-                            Tab(selected = pagerState.currentPage == index, onClick = {
-                                coroutineScope.launch {
-                                    // FIXME: this refreshes the webview, idk if fixable
-                                    pagerState.animateScrollToPage(index)
-                                }
-                            }, text = {
-                                Text(text = title, color = MaterialTheme.colorScheme.secondary)
-                            })
+                    val tabSizePx = this@BoxWithConstraints.maxWidth.value *
+                        LocalContext.current.resources.displayMetrics.density
+
+                    BoxWithConstraints {
+                        TabRow(
+                            selectedTabIndex = pagerState.currentPage,
+                            indicator = { tabPositions ->
+                                TabRowDefaults.Indicator(
+                                    Modifier.pagerTabIndicatorOffset(
+                                        pagerState,
+                                        tabPositions,
+                                    ),
+                                    color = MaterialTheme.colorScheme.secondary,
+                                )
+                            }
+                        ) {
+                            tabs.forEachIndexed { index, title ->
+                                Tab(selected = pagerState.currentPage == index, onClick = {
+                                    coroutineScope.launch {
+                                        // FIXME: this refreshes the webview, idk if fixable
+                                        pagerState.animateScrollBy(if (index == 0) -tabSizePx else tabSizePx)
+                                    }
+                                }, text = {
+                                    Text(text = title, color = MaterialTheme.colorScheme.secondary)
+                                })
+                            }
                         }
                     }
                 }
@@ -302,7 +307,6 @@ fun TabbedView(
             }
         }
     }
-//    }
 }
 
 @Composable
