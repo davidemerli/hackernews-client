@@ -7,9 +7,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -26,7 +26,7 @@ fun NewsStatusIcons(
             Icon(
                 Icons.Filled.Favorite,
                 contentDescription = "Favorite",
-                tint = Color.Red,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .size(28.dp)
                     .padding(end = 1.dp)
@@ -37,7 +37,7 @@ fun NewsStatusIcons(
             Icon(
                 Icons.Filled.Update,
                 contentDescription = "Read later",
-                tint = Color.Green,
+                tint = MaterialTheme.colorScheme.tertiary,
                 modifier = Modifier
                     .size(28.dp)
                     .padding(end = 1.dp)

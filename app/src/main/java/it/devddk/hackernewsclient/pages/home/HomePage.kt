@@ -21,20 +21,14 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Feedback
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Divider
-import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
@@ -51,21 +45,24 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.accompanist.web.WebViewState
 import com.google.accompanist.web.rememberWebViewState
 import com.google.accompanist.web.rememberWebViewStateWithHTMLData
 import it.devddk.hackernewsclient.R
-import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
 import it.devddk.hackernewsclient.domain.model.collection.BestStories
 import it.devddk.hackernewsclient.domain.model.collection.TopStories
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
@@ -76,9 +73,8 @@ import it.devddk.hackernewsclient.pages.home.components.HNTopBar
 import it.devddk.hackernewsclient.pages.home.components.MediumNewsRow
 import it.devddk.hackernewsclient.pages.home.components.NewsColumn
 import it.devddk.hackernewsclient.pages.home.components.TallNewsRow
-import it.devddk.hackernewsclient.pages.news.HackerNewsView
-import it.devddk.hackernewsclient.shared.components.topbars.ROUTE_ICONS
-import it.devddk.hackernewsclient.shared.components.topbars.ROUTE_TITLES
+import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
+import it.devddk.hackernewsclient.shared.components.WebViewWithPrefs
 import it.devddk.hackernewsclient.utils.SettingPrefs
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.ItemCollectionHolder
@@ -87,7 +83,7 @@ import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 fun HomePage(
     navController: NavController,
     windowSizeClass: WindowSizeClass,
@@ -154,6 +150,8 @@ fun HomePage(
         expandedArticleView = false
     })
 
+    var openDialog by remember { mutableStateOf(false) }
+
     HNModalNavigatorPanel(navController = navController, state = drawerState) {
         Scaffold(
             topBar = {
@@ -182,6 +180,15 @@ fun HomePage(
                     }
                 )
             },
+            floatingActionButton = {
+                if (selectedItem != null) {
+                    FloatingActionButton(
+                        onClick = { openDialog = true }
+                    ) {
+                        Icon(Icons.Filled.Fullscreen, "Expand")
+                    }
+                }
+            }
         ) {
             when (windowSizeClass.widthSizeClass) {
                 WindowWidthSizeClass.Expanded -> {
@@ -215,10 +222,24 @@ fun HomePage(
                     )
                 }
             }
+
+            if (openDialog) {
+                Dialog(
+                    properties = DialogProperties(usePlatformDefaultWidth = false),
+                    onDismissRequest = { openDialog = false },
+                ) {
+                    WebViewWithPrefs(
+                        modifier = Modifier.fillMaxSize(),
+                        state = webViewState,
+                        verticalScrollState = null
+                    )
+                }
+            }
         }
     }
 }
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun ExpandedLayout(
     modifier: Modifier = Modifier,
@@ -291,6 +312,7 @@ fun ExpandedLayout(
     }
 }
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun CompactLayout(
     modifier: Modifier = Modifier,
@@ -409,6 +431,11 @@ fun CompactLayout(
                     toggleCollection = { item, itemCollection ->
                         coroutineScope.launch {
                             viewModel.toggleFromCollection(item.id, itemCollection)
+
+                            // reload if item is added to read later in order to update the view
+                            if (itemCollection is UserDefinedItemCollection.ReadLater) {
+                                readLaterCollection.refreshAll()
+                            }
                         }
                     },
                     modifier = Modifier
@@ -428,88 +455,5 @@ fun CompactLayout(
                 )
             }
         }
-    }
-}
-
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-fun HNModalNavigatorPanel(
-    navController: NavController,
-    state: DrawerState,
-    content: @Composable () -> Unit,
-) {
-    val scrollState = rememberScrollState()
-    val query = navController.currentDestination?.route
-
-    ModalNavigationDrawer(
-        drawerState = state,
-        gesturesEnabled = state.isOpen,
-        drawerContent = {
-            Column(
-                modifier = Modifier.verticalScroll(scrollState),
-            ) {
-                Text(text = stringResource(R.string.app_name), modifier = Modifier.padding(28.dp))
-
-                NavigationDrawerItem(
-                    icon = { Icon(Icons.Filled.Home, contentDescription = query) },
-                    label = { Text("Homepage") },
-                    selected = query == "homepage",
-                    onClick = { navController.navigate("homepage") },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-
-                ALL_QUERIES.forEach {
-                    NavigationDrawerItem(
-                        icon = {
-                            Icon(
-                                imageVector = ROUTE_ICONS[HackerNewsView(it).route]!!,
-                                contentDescription = query
-                            )
-                        },
-                        label = { Text(ROUTE_TITLES[HackerNewsView(it).route]!!) },
-                        selected = HackerNewsView(it).route == query,
-                        onClick = { navController.navigate(HackerNewsView(it).route) },
-                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                    )
-                }
-
-                Divider(
-                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                )
-
-                NavigationDrawerItem(
-                    icon = {
-                        Icon(Icons.Filled.Settings, contentDescription = "Settings")
-                    },
-                    label = { Text("Settings") },
-                    selected = query == "settings",
-                    onClick = { navController.navigate("settings") },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-
-                NavigationDrawerItem(
-                    icon = {
-                        Icon(Icons.Filled.Feedback, contentDescription = "Feedback")
-                    },
-                    label = { Text("Feedback") },
-                    selected = query == "feedback",
-                    onClick = { navController.navigate("feedback") },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-
-                NavigationDrawerItem(
-                    icon = {
-                        Icon(Icons.Filled.Info, contentDescription = "About")
-                    },
-                    label = { Text("About/Contacts") },
-                    selected = query == "about",
-                    onClick = { navController.navigate("about") },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-            }
-        }
-    ) {
-        content()
     }
 }

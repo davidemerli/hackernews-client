@@ -52,16 +52,12 @@ fun NewsItem(
     val coroutineScope = rememberCoroutineScope()
     val viewModel: HomePageViewModel = viewModel()
 
-    val itemDomain = remember { item.url?.let { getDomainName(it) } }
+    val itemDomain = item.url?.let { getDomainName(it) }
 
     val palette: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
     val primaryColor = MaterialTheme.colorScheme.primary
 
-    val hintColor = remember {
-        item.subtype()?.let {
-            palette[it.ordinal]
-        } ?: primaryColor
-    }
+    val hintColor = item.subtype()?.let { palette[it.ordinal] } ?: primaryColor
 
     ConstraintLayout(
         modifier = Modifier

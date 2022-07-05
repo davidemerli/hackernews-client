@@ -1,6 +1,7 @@
 package it.devddk.hackernewsclient.shared.components
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
@@ -23,7 +24,6 @@ import it.devddk.hackernewsclient.utils.SettingPrefs
 import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.DEFAULT_DARK_MODE
 import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.WEBVIEW_DEFAULTS
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
@@ -45,7 +45,7 @@ fun ArticleView(
 
         WebViewWithPrefs(
             modifier = modifier,
-            webviewState = webviewState
+            state = webviewState
         )
     }
 }
@@ -53,10 +53,10 @@ fun ArticleView(
 @Composable
 fun WebViewWithPrefs(
     modifier: Modifier = Modifier,
-    webviewState: WebViewState,
+    state: WebViewState,
+    verticalScrollState: ScrollState? = rememberScrollState(),
 ) {
     val context = LocalContext.current
-    val verticalScrollState = rememberScrollState()
     val dataStore = SettingPrefs(context)
 
     val itemViewModel: SingleNewsViewModel = viewModel()
@@ -125,8 +125,8 @@ fun WebViewWithPrefs(
         darkMode,
     ) {
         WebView(
-            modifier = modifier.verticalScroll(verticalScrollState),
-            state = webviewState,
+            modifier = verticalScrollState?.let { modifier.verticalScroll(it) } ?: modifier,
+            state = state,
             onCreated = { webview ->
                 coroutineScope.launch { itemViewModel.setWebView(webview) }
 

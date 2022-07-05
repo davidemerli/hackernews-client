@@ -97,7 +97,7 @@ class MainActivity : ComponentActivity() {
             }
 
             composable("search") {
-                SearchPage(navController = navController)
+                SearchPage(navController = navController, windowSizeClass = windowSizeClass)
             }
 
             composable(
@@ -110,7 +110,8 @@ class MainActivity : ComponentActivity() {
             ) { backStackEntry ->
                 SearchPage(
                     navController = navController,
-                    query = backStackEntry.arguments?.getString("query")!!
+                    query = backStackEntry.arguments?.getString("query")!!,
+                    windowSizeClass = windowSizeClass
                 )
             }
 

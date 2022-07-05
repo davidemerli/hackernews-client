@@ -59,8 +59,11 @@ fun HNTopBar(
     navController: NavController,
     drawerState: DrawerState,
     title: String = "Hacker News",
+    query: String? = "",
+    focusable: Boolean = false,
     leadingIcon: ImageVector? = null,
     selectedItem: Item? = null,
+    navigationIcon: (@Composable () -> Unit)? = null,
     readerMode: Boolean = false,
     darkMode: Boolean = false,
     onClose: () -> Unit = {},
@@ -70,7 +73,7 @@ fun HNTopBar(
     val coroutineScope = rememberCoroutineScope()
 
     var searchOpen by remember { mutableStateOf(false) }
-    var searchString by remember { mutableStateOf("") }
+    var searchString by remember { mutableStateOf(query ?:"") }
 
     val focusManager = LocalFocusManager.current
 
@@ -81,7 +84,7 @@ fun HNTopBar(
 
     @Composable
     fun buttonForeground(value: Boolean): Color {
-        return if (value) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onBackground
+        return if (value) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     SmallTopAppBar(
@@ -92,11 +95,11 @@ fun HNTopBar(
                 selectedItem = selectedItem,
                 onValueChange = { searchString = it },
                 onSearch = { navController.navigate("search/$searchString") },
-                searchOpen = searchOpen,
+                searchOpen = searchOpen or focusable,
                 searchString = searchString,
             )
         },
-        navigationIcon = {
+        navigationIcon = navigationIcon ?: {
             if (selectedItem == null) {
                 IconButton(
                     onClick = { coroutineScope.launch { drawerState.open() } },

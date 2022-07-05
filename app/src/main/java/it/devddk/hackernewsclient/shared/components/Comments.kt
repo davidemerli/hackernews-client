@@ -154,6 +154,10 @@ fun CommentCard(
 ) {
     val paddingStart = (depth * depthSize).dp + 2.dp
 
+    val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map {
+        Color(ColorUtils.blendARGB(it, MaterialTheme.colorScheme.onSurface.toArgb(), 0.3f))
+    }
+
     // obtains a background color for the comments which is a slight tint of the colorScheme secondary color
     val commentBackground = Color(
         ColorUtils.blendARGB(
@@ -177,6 +181,7 @@ fun CommentCard(
 
         DepthIndicator(
             depth = depth,
+            depthColors = depthColors,
             modifier = Modifier.constrainAs(depthIndicator) {
                 start.linkTo(parent.start)
                 top.linkTo(parent.top)
@@ -187,6 +192,7 @@ fun CommentCard(
         CommentTitle(
             item = item,
             depth = depth,
+            depthColors = depthColors,
             isOriginalPoster = isOriginalPoster,
             placeholder = placeholder,
             modifier = Modifier.constrainAs(title) {
@@ -238,12 +244,12 @@ fun CommentTitle(
     modifier: Modifier = Modifier,
     item: Item,
     depth: Int,
+    depthColors: List<Color>,
     isOriginalPoster: Boolean,
     placeholder: Boolean = false,
 ) {
     val context = LocalContext.current
 
-    val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
     val byString = "${item.by}${if (isOriginalPoster) " (OP)" else ""}"
 
     val timeString = remember(item) {
@@ -252,13 +258,15 @@ fun CommentTitle(
 
     Text(
         text = buildAnnotatedString {
+            val td1 = if (item.dead) TextDecoration.LineThrough else TextDecoration.Underline
+            val fw1 = if (isOriginalPoster) FontWeight.Black else FontWeight.SemiBold
+            val c1 = if (isOriginalPoster) MaterialTheme.colorScheme.tertiary else depthColors[depth % depthColors.size]
+
             pushStyle(
                 MaterialTheme.typography.titleMedium.copy(
-                    textDecoration = if (item.dead) TextDecoration.LineThrough else TextDecoration.Underline,
-                    fontWeight = if (isOriginalPoster) FontWeight.Black else FontWeight.SemiBold,
-                    color = if (isOriginalPoster) MaterialTheme.colorScheme.tertiary else depthColors[depth % depthColors.size].copy(
-                        alpha = 1f
-                    )
+                    textDecoration = td1,
+                    fontWeight = fw1,
+                    color = c1,
                 ).toSpanStyle()
             )
             append(byString)
@@ -341,9 +349,7 @@ fun ExpandButton(
 }
 
 @Composable
-fun DepthIndicator(modifier: Modifier = Modifier, depth: Int) {
-    val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
-
+fun DepthIndicator(modifier: Modifier = Modifier, depth: Int, depthColors: List<Color>) {
     Box(
         modifier = modifier
             .width(10.dp)

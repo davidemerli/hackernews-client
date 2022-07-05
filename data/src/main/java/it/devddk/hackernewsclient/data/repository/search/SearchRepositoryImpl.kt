@@ -13,14 +13,11 @@ import org.koin.core.component.inject
 class SearchRepositoryImpl : SearchRepository, KoinComponent {
 
     private val searchApi : AlgoliaSearchApi by inject()
-    private val itemCache : LruCache<ItemId, Item> by inject()
 
     override suspend fun searchByRelevance(query: String, page: Int) : Result<SearchResultsSlice> {
         return searchApi.searchByRelevance(query, page).asResult().mapCatching {
             val resultSlice = it.mapToDomainModel()
-            resultSlice.results.forEach { result ->
-                itemCache.put(result.item.id, result.item)
-            }
+
             resultSlice
         }
     }
