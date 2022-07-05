@@ -8,7 +8,6 @@ import it.devddk.hackernewsclient.data.common.utils.Connectivity
 import it.devddk.hackernewsclient.data.database.LocalDatabase
 import it.devddk.hackernewsclient.data.database.dao.ItemEntityDao
 import it.devddk.hackernewsclient.data.database.entities.ItemCollectionEntity
-import it.devddk.hackernewsclient.data.database.entities.ItemEntity
 import it.devddk.hackernewsclient.data.database.entities.toItemEntity
 import it.devddk.hackernewsclient.data.networking.base.asResult
 import it.devddk.hackernewsclient.data.networking.model.ItemResponse
@@ -21,6 +20,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
@@ -39,7 +40,7 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
     private val collectionDao = db.itemCollectionDao()
     private val algoliaApi: AlgoliaSearchApi by inject()
     private val connectivity: Connectivity by inject()
-
+    private val okHttpClient: OkHttpClient by inject()
 
     private val cache: LruCache<ItemId, Item> by inject()
 
@@ -170,6 +171,9 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
             val linearizedCommentTree = root.dfsWalkComments().map { item ->
                 item.toItemEntity()
             }
+
+
+
             db.withTransaction {
                 val savedItems = itemDao.insertItems(linearizedCommentTree)
                 Timber.d("Item id $item: Saved ${savedItems.size}/${linearizedCommentTree.size} sub items.")
@@ -180,6 +184,11 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
         }.onFailure {
             Timber.e("Failed to persist item. \n${it.stackTraceToString()}")
         }
+    }
+
+    private suspend fun saveUrl(url : String) {
+        val request = Request.Builder().url(url).build()
+        // getUrl(okHttpClient, request).body?.string()
     }
 
     override suspend fun removeItemFromCollection(
