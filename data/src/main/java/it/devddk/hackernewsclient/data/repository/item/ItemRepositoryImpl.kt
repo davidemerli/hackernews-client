@@ -11,13 +11,17 @@ import it.devddk.hackernewsclient.data.database.entities.ItemCollectionEntity
 import it.devddk.hackernewsclient.data.database.entities.toItemEntity
 import it.devddk.hackernewsclient.data.networking.base.asResult
 import it.devddk.hackernewsclient.data.networking.model.ItemResponse
+import it.devddk.hackernewsclient.data.networking.utils.getBody
+import it.devddk.hackernewsclient.data.networking.utils.getUrl
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
+import it.devddk.hackernewsclient.domain.model.flatMap
 import it.devddk.hackernewsclient.domain.model.items.ItemTree
 import it.devddk.hackernewsclient.domain.repository.ItemRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -145,11 +149,13 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
                         id,
                         ItemRepository.MIN_TIME_FOR_REFRESH_SECS)
 
-                if(needsSaveItem) {
+                if (needsSaveItem) {
                     saveItem(id)
                 }
 
-                Timber.d("Added item $id. Operations: Save item? $needsSaveItem.  Current refCount: ${saveItemDao.computeRefCount(id)}")
+                Timber.d("Added item $id. Operations: Save item? $needsSaveItem.  Current refCount: ${
+                    saveItemDao.computeRefCount(id)
+                }")
             }
             Timber.d("Saving transaction finished")
         }
@@ -158,37 +164,54 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
 
     override suspend fun saveItem(item: ItemId): Result<Unit> {
         Timber.d("Getting $item from algolia to be saved")
-        return algoliaApi.getItemById(item).asResult().mapCatching { algolia ->
-            val rootItemResponse = if (algolia.storyId != null) {
-                Timber.d("Algolia returned! Item is not root, requesting ${algolia.storyId}")
-                algoliaApi.getItemById(algolia.storyId).asResult().getOrThrow()
-            } else {
-                Timber.d("Algolia returned! Item is root")
-                algolia
-            }
-
-            val root = rootItemResponse.mapToDomainModel()
-            val linearizedCommentTree = root.dfsWalkComments().map { item ->
-                item.toItemEntity()
-            }
-
-
-
-            db.withTransaction {
-                val savedItems = itemDao.insertItems(linearizedCommentTree)
-                Timber.d("Item id $item: Saved ${savedItems.size}/${linearizedCommentTree.size} sub items.")
-                if (savedItems.isEmpty()) {
-                    throw IllegalStateException("Failed to save sub items in database")
+        return withContext(Dispatchers.IO) {
+            return@withContext algoliaApi.getItemById(item).asResult().mapCatching { algolia ->
+                val rootItemResponse = if (algolia.storyId != null) {
+                    Timber.d("Algolia returned! Item is not root, requesting ${algolia.storyId}")
+                    algoliaApi.getItemById(algolia.storyId).asResult().getOrThrow()
+                } else {
+                    Timber.d("Algolia returned! Item is root")
+                    algolia
                 }
+
+                val root = rootItemResponse.mapToDomainModel()
+                val linearizedCommentTree = root.dfsWalkComments().map { item ->
+                    item.toItemEntity()
+                }
+
+                db.withTransaction {
+                    val savedItems = itemDao.insertItems(linearizedCommentTree)
+                    Timber.d("Item id $item: Saved ${savedItems.size}/${linearizedCommentTree.size} sub items.")
+                    if (savedItems.isEmpty()) {
+                        throw IllegalStateException("Failed to save sub items in database")
+                    }
+                }
+                /*
+                if (root.item.url != null) {
+                    launch {
+                        Timber.d("Downloading $item url: ${root.item.url}")
+                        saveUrl(url = root.item.url!!).mapCatching { html ->
+                            itemDao.saveHtml(item, html)
+                        }.fold(onSuccess = {
+                            Timber.i("Saved $item url: ${root.item.url} with success")
+                        }, onFailure = {
+                            Timber.i("Failed to save $item url: ${root.item.url}. ${it::class.java.simpleName} ${it.message}")
+                        })
+                    }
+                }*/
+
+
+            }.onFailure {
+                Timber.e("Failed to persist item. \n${it.stackTraceToString()}")
             }
-        }.onFailure {
-            Timber.e("Failed to persist item. \n${it.stackTraceToString()}")
         }
     }
 
-    private suspend fun saveUrl(url : String) {
-        val request = Request.Builder().url(url).build()
-        // getUrl(okHttpClient, request).body?.string()
+    private suspend fun saveUrl(url: String): Result<String> {
+        return runCatching {
+            val request = Request.Builder().url(url).build()
+            getBody(okHttpClient, request)
+        }
     }
 
     override suspend fun removeItemFromCollection(
@@ -203,7 +226,7 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
                 }
                 val refCount = saveItemDao.computeRefCount(id)
                 Timber.d("Removing item $id from ${collection::class.java.simpleName}. Current refCount $refCount")
-                if(refCount == 0) {
+                if (refCount == 0) {
                     Timber.d("Removing item $id from database")
                     itemDao.deleteItem(id)
                 }

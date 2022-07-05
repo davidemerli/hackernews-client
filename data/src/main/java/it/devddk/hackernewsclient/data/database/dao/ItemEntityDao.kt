@@ -30,6 +30,9 @@ abstract class ItemEntityDao {
             "FROM items WHERE :itemId = items.id LIMIT 1")
     abstract suspend fun getDownloadedTime(itemId: ItemId): LocalDateTime?
 
+    @Query("UPDATE items SET htmlPage = :htmlPage WHERE :itemId = items.id")
+    abstract suspend fun saveHtml(itemId: ItemId, htmlPage: String)
+
     @Query("SELECT htmlPage FROM items WHERE :itemId = items.id LIMIT 1")
     abstract suspend fun getHtml(itemId: ItemId): String?
 
