@@ -81,7 +81,7 @@ fun HNTopBar(
 
     @Composable
     fun buttonForeground(value: Boolean): Color {
-        return if (value) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onBackground
+        return if (value) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     SmallTopAppBar(

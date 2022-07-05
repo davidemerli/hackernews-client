@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.RenderVectorGroup
+import androidx.compose.ui.graphics.vector.VectorPainter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
@@ -34,31 +35,23 @@ fun SwipeableNewsItem(
     onClickComments: () -> Unit = {},
     toggleCollection: (Item, UserDefinedItemCollection) -> Unit = { _, _ -> },
 ) {
+    Timber.d("title = ${item.title}")
+    Timber.d("readLater = ${item.collections.readLater}")
+    Timber.d("favorite = ${item.collections.favorite}")
+
     val readLater = remember { mutableStateOf(item.collections.readLater) }
     val favorite = remember { mutableStateOf(item.collections.favorite) }
 
     val swipeState = rememberSwipeableActionsState()
 
-    val c1 = MaterialTheme.colorScheme.onSurface
-    val c2 = MaterialTheme.colorScheme.background
-
-    //FIXME
-    val tintColor by derivedStateOf {
-        Timber.d("OFFSET ${swipeState.offset.value}")
-
-        if (abs(swipeState.offset.value) > 10) {
-            c1
-        } else {
-            c2
-        }
-    }
+    val tintColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
 
     val readLaterAction = SwipeAction(
         icon = rememberVectorPainter(
             if (!readLater.value) Icons.Filled.Update else Icons.Filled.UpdateDisabled,
             tintColor = tintColor
         ),
-        background = MaterialTheme.colorScheme.secondary,
+        background = MaterialTheme.colorScheme.tertiary,
         onSwipe = {
             readLater.value = !readLater.value
             toggleCollection(item, UserDefinedItemCollection.ReadLater)
@@ -70,7 +63,7 @@ fun SwipeableNewsItem(
             if (!favorite.value) Icons.Filled.Star else Icons.Filled.StarOutline,
             tintColor = tintColor
         ),
-        background = MaterialTheme.colorScheme.tertiary,
+        background = MaterialTheme.colorScheme.primary,
         onSwipe = {
             favorite.value = !favorite.value
             toggleCollection(item, UserDefinedItemCollection.Favorites)

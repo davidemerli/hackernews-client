@@ -58,7 +58,7 @@ fun MediumNewsRow(
                         LoadingPage(
                             itemCollection = itemCollection,
                             modifier = Modifier
-                                .height(324.dp)
+                                .height(192.dp)
                                 .width(this@BoxWithConstraints.maxWidth)
                         )
                     }

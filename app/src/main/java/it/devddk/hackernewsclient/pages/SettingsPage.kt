@@ -3,6 +3,7 @@ package it.devddk.hackernewsclient.pages
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ClearAll
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Wysiwyg
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,11 +28,12 @@ import it.devddk.hackernewsclient.shared.components.topbars.HomePageTopBar
 import it.devddk.hackernewsclient.utils.SettingPrefs
 import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.DEFAULT_DEPTH
 import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.DEFAULT_PREFERRED_VIEW
+import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.DEFAULT_THEME
 import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.WEBVIEW_DEFAULTS
 import java.util.*
 
 fun depthPreference(): Preference.PreferenceItem.SeekBarPreference {
-    val depthPreference = PreferenceRequest(
+    val depthPreferenceRequest = PreferenceRequest(
         key = floatPreferencesKey("comment_depth_size"),
         defaultValue = DEFAULT_DEPTH,
     )
@@ -53,7 +55,7 @@ fun depthPreference(): Preference.PreferenceItem.SeekBarPreference {
 
             )
         },
-        request = depthPreference,
+        request = depthPreferenceRequest,
         valueRange = min..max,
         steps = (max - min).toInt(),
         valueRepresentation = { value ->
@@ -63,7 +65,7 @@ fun depthPreference(): Preference.PreferenceItem.SeekBarPreference {
 }
 
 fun preferredViewPreference(): Preference.PreferenceItem.ListPreference {
-    val preferredViewPreference = PreferenceRequest(
+    val preferredViewPreferenceRequest = PreferenceRequest(
         key = stringPreferencesKey("preferred_view"),
         defaultValue = DEFAULT_PREFERRED_VIEW,
     )
@@ -79,8 +81,8 @@ fun preferredViewPreference(): Preference.PreferenceItem.ListPreference {
                 modifier = Modifier.padding(8.dp)
             )
         },
-        request = preferredViewPreference,
-        entries = mapOf(
+        request = preferredViewPreferenceRequest,
+        entries = mapOf( //TODO: create variables with all possible values in the setting file
             "article" to "Article",
             "comments" to "Comments",
         ),
@@ -106,6 +108,33 @@ fun webviewTogglePreference(
     )
 }
 
+fun themePreference(): Preference.PreferenceItem.ListPreference {
+    val themePreferenceRequest = PreferenceRequest(
+        key = stringPreferencesKey("theme"),
+        defaultValue = DEFAULT_THEME,
+    )
+
+    return Preference.PreferenceItem.ListPreference(
+        title = "Theme",
+        summary = "Controls the theme of the app",
+        singleLineTitle = true,
+        icon = {
+            Icon(
+                imageVector = Icons.Filled.Palette,
+                contentDescription = null,
+                modifier = Modifier.padding(8.dp)
+            )
+        },
+        request = themePreferenceRequest,
+        entries = mapOf(//TODO: create variables with all possible values in the setting file
+            "system" to "System",
+            "light" to "Light",
+            "dark" to "Dark",
+            "ycombinator_light" to "Y Combinator",
+            "ycombinator_dark" to "Y Combinator Dark",
+        ),
+    )
+}
 @Composable
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 fun SettingsPage(navController: NavController) {
@@ -131,6 +160,7 @@ fun SettingsPage(navController: NavController) {
                 items = listOf(
                     depthPreference(),
                     preferredViewPreference(),
+                    themePreference(),
                     Preference.PreferenceGroup(
                         title = "Webview",
                         preferenceItems = WEBVIEW_DEFAULTS.keys.map { pref ->

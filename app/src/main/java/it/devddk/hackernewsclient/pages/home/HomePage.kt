@@ -389,6 +389,11 @@ fun CompactLayout(
                     toggleCollection = { item, itemCollection ->
                         coroutineScope.launch {
                             viewModel.toggleFromCollection(item.id, itemCollection)
+
+                            // reload if item is added to read later in order to update the view
+                            if (itemCollection is UserDefinedItemCollection.ReadLater) {
+                                readLaterCollection.refreshAll()
+                            }
                         }
                     },
                     modifier = Modifier

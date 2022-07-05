@@ -5,6 +5,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
+import it.devddk.hackernewsclient.utils.SettingPrefs
 
 private val LightThemeColors = lightColorScheme(
     primary = md_theme_light_primary,
@@ -66,15 +70,83 @@ private val DarkThemeColors = darkColorScheme(
 //    shadow = md_theme_dark_shadow,
 )
 
+private val LightYcombinatorTheme = lightColorScheme(
+    primary = ycombinator_md_theme_light_primary,
+    onPrimary = ycombinator_md_theme_light_onPrimary,
+    primaryContainer = ycombinator_md_theme_light_primaryContainer,
+    onPrimaryContainer = ycombinator_md_theme_light_onPrimaryContainer,
+    secondary = ycombinator_md_theme_light_secondary,
+    onSecondary = ycombinator_md_theme_light_onSecondary,
+    secondaryContainer = ycombinator_md_theme_light_secondaryContainer,
+    onSecondaryContainer = ycombinator_md_theme_light_onSecondaryContainer,
+    tertiary = ycombinator_md_theme_light_tertiary,
+    onTertiary = ycombinator_md_theme_light_onTertiary,
+    tertiaryContainer = ycombinator_md_theme_light_tertiaryContainer,
+    onTertiaryContainer = ycombinator_md_theme_light_onTertiaryContainer,
+    error = ycombinator_md_theme_light_error,
+    errorContainer = ycombinator_md_theme_light_errorContainer,
+    onError = ycombinator_md_theme_light_onError,
+    onErrorContainer = ycombinator_md_theme_light_onErrorContainer,
+    background = ycombinator_md_theme_light_background,
+    onBackground = ycombinator_md_theme_light_onBackground,
+    surface = ycombinator_md_theme_light_surface,
+    onSurface = ycombinator_md_theme_light_onSurface,
+    surfaceVariant = ycombinator_md_theme_light_surfaceVariant,
+    onSurfaceVariant = ycombinator_md_theme_light_onSurfaceVariant,
+    outline = ycombinator_md_theme_light_outline,
+    inverseOnSurface = ycombinator_md_theme_light_inverseOnSurface,
+    inverseSurface = ycombinator_md_theme_light_inverseSurface,
+    inversePrimary = ycombinator_md_theme_light_inversePrimary,
+//    shadow = md_theme_light_shadow,
+)
+
+private val DarkYCombinatorTheme = darkColorScheme(
+    primary = ycombinator_md_theme_dark_primary,
+    onPrimary = ycombinator_md_theme_dark_onPrimary,
+    primaryContainer = ycombinator_md_theme_dark_primaryContainer,
+    onPrimaryContainer = ycombinator_md_theme_dark_onPrimaryContainer,
+    secondary = ycombinator_md_theme_dark_secondary,
+    onSecondary = ycombinator_md_theme_dark_onSecondary,
+    secondaryContainer = ycombinator_md_theme_dark_secondaryContainer,
+    onSecondaryContainer = ycombinator_md_theme_dark_onSecondaryContainer,
+    tertiary = ycombinator_md_theme_dark_tertiary,
+    onTertiary = ycombinator_md_theme_dark_onTertiary,
+    tertiaryContainer = ycombinator_md_theme_dark_tertiaryContainer,
+    onTertiaryContainer = ycombinator_md_theme_dark_onTertiaryContainer,
+    error = ycombinator_md_theme_dark_error,
+    errorContainer = ycombinator_md_theme_dark_errorContainer,
+    onError = ycombinator_md_theme_dark_onError,
+    onErrorContainer = ycombinator_md_theme_dark_onErrorContainer,
+    background = ycombinator_md_theme_dark_background,
+    onBackground = ycombinator_md_theme_dark_onBackground,
+    surface = ycombinator_md_theme_dark_surface,
+    onSurface = ycombinator_md_theme_dark_onSurface,
+    surfaceVariant = ycombinator_md_theme_dark_surfaceVariant,
+    onSurfaceVariant = ycombinator_md_theme_dark_onSurfaceVariant,
+    outline = ycombinator_md_theme_dark_outline,
+    inverseOnSurface = ycombinator_md_theme_dark_inverseOnSurface,
+    inverseSurface = ycombinator_md_theme_dark_inverseSurface,
+    inversePrimary = ycombinator_md_theme_dark_inversePrimary,
+//    shadow = md_theme_dark_shadow,
+)
+
+
 @Composable
 fun HackerNewsClientTheme(
     useDarkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable() () -> Unit,
 ) {
-    val colors = if (!useDarkTheme) {
-        LightThemeColors
-    } else {
-        DarkThemeColors
+    val context = LocalContext.current
+    val dataStore = SettingPrefs(context)
+    val theme by dataStore.theme.collectAsState(initial = SettingPrefs.DEFAULT_THEME)
+
+    val colors = when (theme) {
+        "system" -> if (useDarkTheme) DarkThemeColors else LightThemeColors
+        "light" -> LightThemeColors
+        "dark" -> DarkThemeColors
+        "ycombinator_light" -> LightYcombinatorTheme
+        "ycombinator_dark" -> DarkYCombinatorTheme
+        else -> DarkThemeColors
     }
 
     MaterialTheme(colorScheme = colors, typography = AppTypography, content = content)
