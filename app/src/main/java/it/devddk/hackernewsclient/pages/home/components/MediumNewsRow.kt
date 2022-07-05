@@ -35,8 +35,10 @@ fun MediumNewsRow(
     onItemClickComments: (Item) -> Unit
 ) {
     val pageState by remember { itemCollection.pageState }.collectAsState(NewsPageState.Loading)
-    val itemListState by remember { itemCollection.itemListFlow }.collectAsState(initial = emptyList())
     val scrollState = rememberLazyListState()
+    val itemListState by remember { itemCollection.itemListFlow }.collectAsState(
+        initial = List(10) { i -> NewsItemState.Loading(-i) }
+    )
 
     var initialApiCalled by rememberSaveable { mutableStateOf(false) }
 
@@ -53,18 +55,22 @@ fun MediumNewsRow(
             modifier = modifier.fillMaxWidth(),
         ) {
             when (pageState) {
-                is NewsPageState.Loading -> {
-                    item {
-                        LoadingPage(
-                            itemCollection = itemCollection,
-                            modifier = Modifier
-                                .height(192.dp)
-                                .width(this@BoxWithConstraints.maxWidth)
-                        )
-                    }
-                }
                 is NewsPageState.NewsIdsError -> item {
                     LoadPageError()
+                }
+                is NewsPageState.Loading -> {
+                    val length = min(10, itemListState.size)
+
+                    itemsIndexed(itemListState.subList(0, length), key = { _, itemState -> itemState.itemId }) { index, _ ->
+                        MediumNewsCard(
+                            modifier = Modifier.width(352.dp),
+                            placeholder = true,
+                        )
+
+                        if (index != length - 1) {
+                            Divider(modifier = Modifier.alpha(0.1f).height(192.dp).padding(8.dp).width(1.dp))
+                        }
+                    }
                 }
                 is NewsPageState.NewsIdsLoaded -> {
                     val length = min(10, itemListState.size)

@@ -95,8 +95,8 @@ fun MediumNewsCard(
                     modifier = Modifier
                         .width(96.dp)
                         .aspectRatio(1f)
-                        .clip(RoundedCornerShape(16.dp))
                         .customPlaceholder(visible = placeholder)
+                        .clip(RoundedCornerShape(16.dp))
                 )
             }
 

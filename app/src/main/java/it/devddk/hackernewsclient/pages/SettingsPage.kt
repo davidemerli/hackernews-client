@@ -82,7 +82,7 @@ fun preferredViewPreference(): Preference.PreferenceItem.ListPreference {
             )
         },
         request = preferredViewPreferenceRequest,
-        entries = mapOf( //TODO: create variables with all possible values in the setting file
+        entries = mapOf( // TODO: create variables with all possible values in the setting file
             "article" to "Article",
             "comments" to "Comments",
         ),
@@ -126,7 +126,7 @@ fun themePreference(): Preference.PreferenceItem.ListPreference {
             )
         },
         request = themePreferenceRequest,
-        entries = mapOf(//TODO: create variables with all possible values in the setting file
+        entries = mapOf( // TODO: create variables with all possible values in the setting file
             "system" to "System",
             "light" to "Light",
             "dark" to "Dark",

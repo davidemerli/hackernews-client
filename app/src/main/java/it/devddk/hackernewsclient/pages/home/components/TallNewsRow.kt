@@ -1,7 +1,5 @@
 package it.devddk.hackernewsclient.pages.home.components
 
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import it.devddk.hackernewsclient.domain.model.items.Item
-import it.devddk.hackernewsclient.shared.components.LoadingIndicatorCircular
 import it.devddk.hackernewsclient.viewmodels.ItemCollectionHolder
 import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.NewsPageState
@@ -37,8 +34,10 @@ fun TallNewsRow(
     onItemClickComments: (Item) -> Unit
 ) {
     val pageState by remember { itemCollection.pageState }.collectAsState(NewsPageState.Loading)
-    val itemListState by remember { itemCollection.itemListFlow }.collectAsState(initial = emptyList())
     val scrollState = rememberLazyListState()
+    val itemListState by remember { itemCollection.itemListFlow }.collectAsState(
+        initial = List(10) { i -> NewsItemState.Loading(-i) }
+    )
 
     var initialApiCalled by rememberSaveable { mutableStateOf(false) }
 
@@ -54,16 +53,22 @@ fun TallNewsRow(
         modifier = modifier.fillMaxWidth()
     ) {
         when (pageState) {
-            is NewsPageState.Loading -> {
-                item {
-                    LoadingPage(
-                        itemCollection = itemCollection,
-                        modifier = Modifier.height(256.dp).fillParentMaxHeight()
-                    )
-                }
-            }
             is NewsPageState.NewsIdsError -> item {
                 LoadPageError()
+            }
+            is NewsPageState.Loading -> {
+                val length = kotlin.math.min(10, itemListState.size)
+
+                itemsIndexed(itemListState.subList(0, length), key = { _, itemState -> itemState.itemId }) { index, _ ->
+                    TallNewsCard(
+                        modifier = Modifier.width(352.dp),
+                        placeholder = true,
+                    )
+
+                    if (index != length - 1) {
+                        Divider(modifier = Modifier.alpha(0.1f).height(192.dp).padding(8.dp).width(1.dp))
+                    }
+                }
             }
             is NewsPageState.NewsIdsLoaded -> {
                 val length = min(itemListState.size, 10)
@@ -94,13 +99,7 @@ fun TallNewsRow(
                     }
 
                     if (index != length - 1) {
-                        Divider(
-                            modifier = Modifier
-                                .alpha(0.1f)
-                                .height(352.dp)
-                                .padding(8.dp)
-                                .width(1.dp)
-                        )
+                        Divider(modifier = Modifier.alpha(0.1f).height(352.dp).padding(8.dp).width(1.dp))
                     }
                 }
             }
@@ -112,23 +111,6 @@ fun TallNewsRow(
 internal fun LoadPageError() {
     // TODO: improve this
     Text("Error loading items")
-}
-
-@Composable
-internal fun LoadingItem(
-    modifier: Modifier = Modifier,
-    itemCollection: ItemCollectionHolder,
-    itemState: NewsItemState,
-) {
-    LoadingIndicatorCircular(
-        modifier = modifier
-            .fillMaxHeight()
-            .aspectRatio(1.0f)
-    )
-
-    LaunchedEffect(itemState.itemId) {
-        itemCollection.requestItem(itemState.itemId)
-    }
 }
 
 @Composable

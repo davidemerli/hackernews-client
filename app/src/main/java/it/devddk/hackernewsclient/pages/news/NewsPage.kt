@@ -1,4 +1,4 @@
-package it.devddk.hackernewsclient.pages.home
+package it.devddk.hackernewsclient.pages.news
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -17,9 +17,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -38,14 +40,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.accompanist.web.WebViewState
@@ -56,6 +62,7 @@ import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.pages.TabbedView
 import it.devddk.hackernewsclient.pages.home.components.HNTopBar
 import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
+import it.devddk.hackernewsclient.shared.components.WebViewWithPrefs
 import it.devddk.hackernewsclient.shared.components.news.NewsItem
 import it.devddk.hackernewsclient.shared.components.news.SwipeableNewsItem
 import it.devddk.hackernewsclient.shared.components.topbars.ROUTE_ICONS
@@ -69,7 +76,7 @@ import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 fun NewsPage(
     navController: NavController,
     windowSizeClass: WindowSizeClass,
@@ -127,6 +134,8 @@ fun NewsPage(
         expandedArticleView = false
     })
 
+    var openDialog by remember { mutableStateOf(false) }
+
     HNModalNavigatorPanel(
         navController = navController,
         state = drawerState
@@ -160,6 +169,15 @@ fun NewsPage(
                     }
                 )
             },
+            floatingActionButton = {
+                if (selectedItem != null) {
+                    FloatingActionButton(onClick = {
+                        openDialog = true
+                    }) {
+                        Icon(Icons.Filled.Fullscreen, "Expand")
+                    }
+                }
+            }
         ) {
             when (windowSizeClass.widthSizeClass) {
                 WindowWidthSizeClass.Expanded -> {
@@ -176,8 +194,7 @@ fun NewsPage(
                     )
                 }
                 WindowWidthSizeClass.Compact,
-                WindowWidthSizeClass.Medium,
-                -> {
+                WindowWidthSizeClass.Medium -> {
                     NewsCompactLayout(
                         modifier = Modifier.padding(top = it.calculateTopPadding()),
                         navController = navController,
@@ -189,10 +206,24 @@ fun NewsPage(
                     )
                 }
             }
+
+            if (openDialog) {
+                Dialog(
+                    properties = DialogProperties(usePlatformDefaultWidth = false),
+                    onDismissRequest = { openDialog = false },
+                ) {
+                    WebViewWithPrefs(
+                        modifier = Modifier.fillMaxSize(),
+                        state = webViewState,
+                        verticalScrollState = null
+                    )
+                }
+            }
         }
     }
 }
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun NewsExpandedLayout(
     modifier: Modifier = Modifier,
@@ -261,6 +292,7 @@ fun NewsExpandedLayout(
     }
 }
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun NewsCompactLayout(
     modifier: Modifier = Modifier,

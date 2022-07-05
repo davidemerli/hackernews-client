@@ -21,10 +21,12 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -43,14 +45,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.accompanist.web.WebViewState
@@ -67,6 +73,7 @@ import it.devddk.hackernewsclient.pages.home.components.MediumNewsRow
 import it.devddk.hackernewsclient.pages.home.components.NewsColumn
 import it.devddk.hackernewsclient.pages.home.components.TallNewsRow
 import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
+import it.devddk.hackernewsclient.shared.components.WebViewWithPrefs
 import it.devddk.hackernewsclient.utils.SettingPrefs
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.ItemCollectionHolder
@@ -75,7 +82,7 @@ import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 fun HomePage(
     navController: NavController,
     windowSizeClass: WindowSizeClass,
@@ -134,6 +141,8 @@ fun HomePage(
         expandedArticleView = false
     })
 
+    var openDialog by remember { mutableStateOf(false) }
+
     HNModalNavigatorPanel(navController = navController, state = drawerState) {
         Scaffold(
             topBar = {
@@ -162,6 +171,15 @@ fun HomePage(
                     }
                 )
             },
+            floatingActionButton = {
+                if (selectedItem != null) {
+                    FloatingActionButton(
+                        onClick = { openDialog = true }
+                    ) {
+                        Icon(Icons.Filled.Fullscreen, "Expand")
+                    }
+                }
+            }
         ) {
             when (windowSizeClass.widthSizeClass) {
                 WindowWidthSizeClass.Expanded -> {
@@ -195,10 +213,24 @@ fun HomePage(
                     )
                 }
             }
+
+            if (openDialog) {
+                Dialog(
+                    properties = DialogProperties(usePlatformDefaultWidth = false),
+                    onDismissRequest = { openDialog = false },
+                ) {
+                    WebViewWithPrefs(
+                        modifier = Modifier.fillMaxSize(),
+                        state = webViewState,
+                        verticalScrollState = null
+                    )
+                }
+            }
         }
     }
 }
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun ExpandedLayout(
     modifier: Modifier = Modifier,
@@ -271,6 +303,7 @@ fun ExpandedLayout(
     }
 }
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun CompactLayout(
     modifier: Modifier = Modifier,

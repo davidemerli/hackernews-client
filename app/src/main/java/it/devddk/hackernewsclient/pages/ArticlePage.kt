@@ -115,7 +115,7 @@ fun ArticlePage(
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPagerApi::class)
 fun ArticlePage(
     navController: NavController,
     windowWidthSizeClass: WindowWidthSizeClass,
@@ -190,6 +190,7 @@ fun TabbedView(
     item: Item,
     navController: NavController,
     webViewState: WebViewState,
+    pagerState: PagerState = rememberPagerState(),
     selectedView: String? = null
 ) {
     val tabs = item.url?.let { listOf("Article", "Comments (${item.descendants ?: 0})") } ?: listOf(
@@ -197,7 +198,6 @@ fun TabbedView(
     )
 
     val coroutineScope = rememberCoroutineScope()
-    val pagerState = rememberPagerState()
     val scrollState = rememberLazyListState()
 
     var fullScreenWebView by remember { mutableStateOf(false) }
@@ -270,7 +270,7 @@ fun TabbedView(
                     ) { index ->
                         when (index) {
                             0 -> {
-                                WebViewWithPrefs(webviewState = webViewState)
+                                WebViewWithPrefs(state = webViewState)
                             }
                             1 -> {
                                 CommentsView(
@@ -286,7 +286,7 @@ fun TabbedView(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         WebViewWithPrefs(
-                            webviewState = webViewState,
+                            state = webViewState,
                             modifier = Modifier.fillMaxWidth(0.55f)
                         )
 

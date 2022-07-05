@@ -130,7 +130,6 @@ private val DarkYCombinatorTheme = darkColorScheme(
 //    shadow = md_theme_dark_shadow,
 )
 
-
 @Composable
 fun HackerNewsClientTheme(
     useDarkTheme: Boolean = isSystemInDarkTheme(),

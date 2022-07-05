@@ -20,7 +20,7 @@ class SearchPageViewModel : ViewModel(), KoinComponent {
 
     // FIXME Change this with advanced search
     private val _searchQuery = MutableStateFlow("")
-    val searchQuery = _searchQuery.asStateFlow()
+    private val searchQuery = _searchQuery.asStateFlow()
 
     private val pages: ConcurrentSkipListMap<Int, SliceLoadingState> = ConcurrentSkipListMap()
     private val _resultListFlow = MutableSharedFlow<List<SearchResultUiState>>(1)
@@ -28,7 +28,8 @@ class SearchPageViewModel : ViewModel(), KoinComponent {
 
     suspend fun updateQuery(query: String) {
         val oldQuery = searchQuery.value
-        if (oldQuery != query && query.length >= 3) {
+
+        if (oldQuery != query) { // && query.length >= 3) {
             pages.clear()
             _searchQuery.emit(query)
             updateResultList()
