@@ -28,6 +28,9 @@ data class SearchResponse(
             val metadata = SearchResultMetaData(
                 id = hit.objectId.toInt(),
                 position = startPosition + relativePosition,
+                storyId = hit.storyId,
+                storyTitle = hit.storyTitle,
+                storyUrl = hit.storyUrl,
                 highlightResult = hit.highlightResult.mapToDomainModel()
             )
             SearchResult(item, metadata)
@@ -53,6 +56,7 @@ data class SearchResponse(
             },
             // Kids not provided
             kids = emptyList(),
+            storyId = hit.storyId,
             title = hit.title,
             descendants = hit.numComments,
             // Parent poll not provided
