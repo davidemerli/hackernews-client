@@ -22,6 +22,7 @@ import it.devddk.hackernewsclient.domain.model.items.readLater
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
 import me.saket.swipe.rememberSwipeableActionsState
+import timber.log.Timber
 
 @Composable
 fun SwipeableNewsItem(
@@ -69,6 +70,7 @@ fun SwipeableNewsItem(
         swipeThreshold = 128.dp,
         backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.background
     ) {
+        Timber.d("${if(item.collections.readLater) "R" else ""} ${if(item.collections.favorite) "F" else ""} ${item.title}")
         NewsItem(
             item = item,
             placeholder = placeholder,

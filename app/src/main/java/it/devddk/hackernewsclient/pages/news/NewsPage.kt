@@ -323,7 +323,10 @@ fun NewsCompactLayout(
             if (selectedItem != null) {
                 webViewInstance?.reload()
             } else {
-                coroutineScope.launch { itemCollection.refreshAll() }
+                coroutineScope.launch {
+                    viewModel.refreshAll()
+                    itemCollection.loadAll()
+                }
             }
         }
     ) {

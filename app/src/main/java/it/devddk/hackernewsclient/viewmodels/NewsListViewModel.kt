@@ -10,193 +10,19 @@ import it.devddk.hackernewsclient.domain.interaction.item.GetNewStoriesUseCase
 import it.devddk.hackernewsclient.domain.interaction.item.RefreshAllItemsUseCase
 import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
 import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
-import it.devddk.hackernewsclient.domain.model.collection.TopStories
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
-import it.devddk.hackernewsclient.domain.model.flatMap
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
-import it.devddk.hackernewsclient.domain.utils.getValue
-import it.devddk.hackernewsclient.domain.utils.requireValue
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onSubscription
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.transform
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
-
-@Deprecated("This view model will be soon replaced with a new more powerful one")
-class NewsListViewModel : ViewModel(), KoinComponent {
-
-    // internal state
-    private val items: MutableMap<ItemId, NewsItemState> = ConcurrentHashMap()
-
-    // use cases
-    private val getNewStories: GetNewStoriesUseCase by inject()
-    private val getItemById: GetItemUseCase by inject()
-    private val addToCollection: AddItemToCollectionUseCase by inject()
-    private val removeFromCollection: RemoveItemFromCollectionUseCase by inject()
-    private val refreshAllItems: RefreshAllItemsUseCase by inject()
-
-    // state flows
-    private val _currentQuery: MutableSharedFlow<ItemCollection> =
-        MutableSharedFlow<ItemCollection>(1).apply {
-            onSubscription { emit(TopStories) }
-        }
-    val currentQuery = _currentQuery.asSharedFlow()
-
-    private val _itemListFlow: MutableSharedFlow<List<NewsItemState>> = MutableSharedFlow(1)
-    val itemListFlow = _itemListFlow.asSharedFlow()
-
-    val pageState: StateFlow<NewsPageState> = _currentQuery.transform { query ->
-        emit(NewsPageState.Loading)
-
-        getNewStories(query).fold(
-            onSuccess = {
-                synchronized(items) {
-                    items.clear()
-
-                    it.forEachIndexed { index, id ->
-                        items[index] = NewsItemState.Loading(id)
-                    }
-                }
-
-                emit(NewsPageState.NewsIdsLoaded(it))
-                updateItemList()
-            },
-            onFailure = {
-                emit(NewsPageState.NewsIdsError(it))
-                updateItemList()
-            }
-        )
-    }.flowOn(Dispatchers.IO).stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = NewsPageState.Loading
-    )
-
-    suspend fun setQuery(newQuery: ItemCollection) {
-        val oldQuery = _currentQuery.getValue()
-
-        if (oldQuery != newQuery) {
-            _currentQuery.emit(newQuery)
-
-            updateItemList()
-        }
-    }
-
-    suspend fun requestItem(index: Int) {
-        Timber.d("Requesting item $index")
-
-        val currPageState = pageState.value
-
-        // avoid requesting item if the page is not loaded
-        if (currPageState !is NewsPageState.NewsIdsLoaded) return
-
-        // FIXME: items not in the list at this stage are getting requested in favorites screen
-        if (index >= currPageState.itemIds.size) {
-            Timber.d("Requesting item $index, but it is not in the list")
-            return
-        }
-
-        val itemId = currPageState.itemIds[index]
-
-        synchronized(items) {
-            // avoid requesting item if it's already loaded
-            if (items[itemId] is NewsItemState.ItemLoaded) return
-        }
-
-        withContext(Dispatchers.IO) {
-            getItemById(itemId).fold(
-                onSuccess = {
-                    synchronized(items) {
-                        items[itemId] = NewsItemState.ItemLoaded(it)
-                    }
-                },
-                onFailure = {
-                    Timber.e("Failed to retrieve item $index. ${it.printStackTrace()}")
-                    synchronized(items) {
-                        items[itemId] = NewsItemState.ItemError(itemId, it)
-                    }
-                }
-            )
-        }
-
-        updateItemList()
-    }
-
-    suspend fun refreshItem(itemId: Int) {
-        getItemById(itemId).onSuccess {
-            synchronized(items) {
-                items[itemId] = NewsItemState.ItemLoaded(it)
-            }
-            updateItemList()
-        }
-    }
-
-    suspend fun refreshPage() {
-        refreshAllItems()
-        _currentQuery.emit(_currentQuery.requireValue())
-        updateItemList()
-    }
-
-    @Deprecated("Needs to be replaced with the new homepage viewmodel")
-    suspend fun addToFavorites(itemId: Int, collection: UserDefinedItemCollection) {
-        getItemById(itemId) // hack to make this function until we change everything to the new viewmodel
-            // , and at this point we don't have the item in the cache here
-            ?: throw IllegalStateException("Cannot add to favorites a non loaded item")
-        val result = addToCollection(itemId, collection).onFailure {
-            Timber.e(it, "Failed to add to collection")
-        }
-        if (result.isSuccess) {
-            refreshItem(itemId)
-        }
-    }
-
-    @Deprecated("Needs to be replaced with the new homepage viewmodel")
-    suspend fun removeFromFavorites(itemId: ItemId, collection: UserDefinedItemCollection) {
-        getItemById(itemId) // hack to make this function until we change everything to the new viewmodel
-            // , and at this point we don't have the item in the cache here
-            ?: throw IllegalStateException("Cannot remove from favorites a non loaded item")
-        val result = removeFromCollection(itemId, collection).onFailure {
-            Timber.e(it, "Failed to remove from collection")
-        }
-        if (result.isSuccess) {
-            refreshItem(itemId)
-        }
-    }
-
-    private fun getItemIfLoaded(itemId: Int): Item? {
-        synchronized(items) {
-            return (items[itemId] as? NewsItemState.ItemLoaded)?.item
-        }
-    }
-
-    private suspend fun updateItemList() {
-        val outputList: List<NewsItemState>?
-        synchronized(items) {
-            val itemState = pageState.value as? NewsPageState.NewsIdsLoaded
-            outputList = itemState?.itemIds?.map { id ->
-                items[id] ?: NewsItemState.Loading(id)
-            }
-        }
-
-        if (outputList != null) {
-            Timber.d("Updated List")
-            _itemListFlow.emit(outputList)
-        }
-    }
-}
 
 class HomePageViewModel : ViewModel(), KoinComponent {
 
@@ -213,20 +39,32 @@ class HomePageViewModel : ViewModel(), KoinComponent {
             getNewStories,
             getItemById,
             addToCollection,
-            removeFromCollection,
-            refreshAllItems
+            removeFromCollection
         )
     }
 
-    suspend fun toggleFromCollection(itemId: Int, collection: UserDefinedItemCollection) : Result<Unit> {
-        return getCollectionsByItem(itemId).flatMap { collections ->
-            Timber.e("Collections ${collections.map { k -> k::class.java.simpleName }}")
-            if(!collections.contains(collection)) {
-                addToCollection(itemId, collection).onFailure { Timber.e(it, "Failed to add to collection") }
+    suspend fun toggleFromCollection(
+        itemId: Int,
+        collection: UserDefinedItemCollection,
+    ): Result<Boolean> {
+        return getCollectionsByItem(itemId).mapCatching { collections ->
+            if (!collections.contains(collection)) {
+                addToCollection(itemId, collection).onFailure {
+                    Timber.e(it,
+                        "Failed to add to collection")
+                }
             } else {
-                removeFromCollection(itemId, collection).onFailure { Timber.e(it, "Failed to remove to collection") }
+                removeFromCollection(itemId, collection).onFailure {
+                    Timber.e(it,
+                        "Failed to remove to collection")
+                }
             }
+            !collections.contains(collection)
         }
+    }
+
+    suspend fun refreshAll() {
+        refreshAllItems()
     }
 }
 
@@ -235,8 +73,7 @@ class ItemCollectionHolder(
     private val getNewStories: GetNewStoriesUseCase,
     private val getItemById: GetItemUseCase,
     private val addToCollection: AddItemToCollectionUseCase,
-    private val removeFromCollection: RemoveItemFromCollectionUseCase,
-    private val refreshAllItems: RefreshAllItemsUseCase,
+    private val removeFromCollection: RemoveItemFromCollectionUseCase
 ) {
     // internal state
     private val items: MutableMap<ItemId, NewsItemState> = ConcurrentHashMap()
@@ -247,12 +84,8 @@ class ItemCollectionHolder(
     private val _itemListFlow: MutableSharedFlow<List<NewsItemState>> = MutableSharedFlow(1)
     val itemListFlow = _itemListFlow.asSharedFlow()
 
-    suspend fun refreshAll() {
-        refreshAllItems()
-        loadAll()
-    }
 
-    suspend fun loadAll(retries: Int = 3) {
+    suspend fun loadAll() {
         synchronized(items) {
             items.clear()
         }
@@ -271,9 +104,8 @@ class ItemCollectionHolder(
 
                 updateItemList()
             },
-            onFailure = { itemsId ->
-                synchronized(items) {
-                }
+            onFailure = {
+                // TODO
             }
         )
     }

@@ -239,17 +239,13 @@ enum class ItemSubtype(val value: String) {
 }
 
 fun Item.subtype(): ItemSubtype? {
-    if (title != null) {
-        if (title!!.startsWith("Ask HN")) {
-            return ItemSubtype.ASK_HN
-        } else if (title!!.startsWith("Show HN")) {
-            return ItemSubtype.SHOW_HN
-        } else if (title!!.startsWith("Tell HN")) {
-            return ItemSubtype.TELL_HN
-        }
+    return when {
+        title == null -> null
+        title!!.startsWith("Ask HN") -> ItemSubtype.ASK_HN
+        title!!.startsWith("Show HN") -> ItemSubtype.SHOW_HN
+        title!!.startsWith("Tell HN") -> ItemSubtype.TELL_HN
+        else -> null
     }
-
-    return null
 }
 
 internal val placeholderItem = Item(

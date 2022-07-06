@@ -13,8 +13,8 @@ data class ItemCollectionEntity(
     val id: Int,
     val collection: UserDefinedItemCollection,
     val timeAdded: LocalDateTime
-) : DomainMapper<ItemCollectionEntry?> {
-    override fun mapToDomainModel(): ItemCollectionEntry? {
+) : DomainMapper<ItemCollectionEntry> {
+    override fun mapToDomainModel(): ItemCollectionEntry {
         return ItemCollectionEntry(collection, timeAdded)
     }
 }

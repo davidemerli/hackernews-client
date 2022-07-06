@@ -80,6 +80,7 @@ import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.ItemCollectionHolder
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -345,9 +346,11 @@ fun CompactLayout(
             if (selectedItem != null) {
                 webViewInstance?.reload()
             } else {
-                coroutineScope.launch { bestCollection.refreshAll() }
-                coroutineScope.launch { topCollection.refreshAll() }
-                coroutineScope.launch { readLaterCollection.refreshAll() }
+                coroutineScope.launch {
+                    viewModel.refreshAll()
+                    bestCollection.loadAll()
+                    topCollection.loadAll()
+                }
             }
         }
     ) {
@@ -430,7 +433,7 @@ fun CompactLayout(
 
                             // reload if item is added to read later in order to update the view
                             if (itemCollection is UserDefinedItemCollection.ReadLater) {
-                                readLaterCollection.refreshAll()
+                                readLaterCollection.loadAll()
                             }
                         }
                     },

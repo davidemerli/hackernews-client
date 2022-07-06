@@ -71,7 +71,6 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
         val problems = mutableListOf<Throwable>()
 
         for (source in fetchOrder) {
-
             result = result.recoverCatching {
                 when (it) {
                     is IllegalFetchStrategy -> {
@@ -89,6 +88,23 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
             }
         }
 
+        // Independently from the source interrogate the database to get collections
+        result = result.mapCatching { item ->
+            try {
+                val collections = collectionDao.getAllCollectionsForItem(itemId)
+                    .map { it.mapToDomainModel() }.associateBy {
+                        it.collection
+                    }
+                item.copy(collections = collections)
+            } catch (e: Exception) {
+                item
+            }
+        }.mapCatching { item ->
+            // Save item in cache
+            cache.put(itemId, item)
+            item
+        }
+
         return result.onFailure {
             if (it !is CancellationException) {
                 Timber.e("Failed to retrieve item $itemId:\n${
@@ -97,7 +113,6 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
                     }
                 }")
             }
-
         }
     }
 
@@ -141,7 +156,7 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
                 cache.get(id)?.let { item ->
                     cache.put(id,
                         item.copy(collections = item.collections.plus(Pair(collection,
-                            itemEntityToPut.mapToDomainModel()!!))))
+                            itemEntityToPut.mapToDomainModel()))))
                 }
 
                 val needsSaveItem =
@@ -274,15 +289,12 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
             checkNotNull(data?.mapToDomainModel()
                 ?.copy(downloaded = LocalDateTime.now())) { "Item $itemId not available online" }
         }
-
-        cache.put(itemId, item)
         item
     }
 
     private val fetchFromOffline: suspend (Int) -> Item = { itemId: Int ->
         val item =
             checkNotNull(itemDao.getItem(itemId)) { "Item $itemId not available offline" }.mapToDomainModel()
-        cache.put(itemId, item)
         item
     }
 
