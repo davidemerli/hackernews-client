@@ -199,7 +199,6 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
         // Start asking for item on HN api
         val hnResult = items.child(itemId.toString()).get().await()
         val data = hnResult.getValue(ItemResponse::class.java)
-        Timber.d("hnResult: $hnResult - $data")
 
         val item = withContext(Dispatchers.IO) {
             checkNotNull(data?.mapToDomainModel()

@@ -32,10 +32,6 @@ fun SwipeableNewsItem(
     onClickComments: () -> Unit = {},
     toggleCollection: (Item, UserDefinedItemCollection) -> Unit = { _, _ -> },
 ) {
-    Timber.d("title = ${item.title}")
-    Timber.d("readLater = ${item.collections.readLater}")
-    Timber.d("favorite = ${item.collections.favorite}")
-
     val readLater = remember { mutableStateOf(item.collections.readLater) }
     val favorite = remember { mutableStateOf(item.collections.favorite) }
 
