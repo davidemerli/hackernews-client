@@ -46,6 +46,9 @@ val networkingModule = module {
     single(named("item")) {
         get<FirebaseDatabase>(named("HN")).getReference("v0/item")
     }
+    single(named("user")) {
+        get<FirebaseDatabase>(named("HN")).getReference("v0/user")
+    }
     single(named("root")) {
         get<FirebaseDatabase>(named("HN")).getReference("v0")
     }

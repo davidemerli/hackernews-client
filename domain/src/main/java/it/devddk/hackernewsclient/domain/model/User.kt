@@ -1,14 +1,13 @@
 package it.devddk.hackernewsclient.domain.model
 
 
-import it.devddk.hackernewsclient.domain.model.items.IBaseItem
+import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import java.time.*
 
 data class User(
     val id: String,
-    val createdGMT: LocalDateTime,
-    val karma: Int,
-    val delay: Period? = null,
+    val created: LocalDateTime? = null,
+    val karma: Int? = null,
     val about: String? = null,
-    val submitted: List<IBaseItem>,
+    val submitted: List<ItemId> = emptyList(),
 )

@@ -16,6 +16,8 @@ import it.devddk.hackernewsclient.domain.interaction.item.RefreshAllItemsUseCase
 import it.devddk.hackernewsclient.domain.interaction.item.RefreshAllItemsUseCaseImpl
 import it.devddk.hackernewsclient.domain.interaction.search.SearchItemByRelevanceUseCase
 import it.devddk.hackernewsclient.domain.interaction.search.SearchItemByRelevanceUseCaseImpl
+import it.devddk.hackernewsclient.domain.interaction.user.GetUserByUsernameUseCase
+import it.devddk.hackernewsclient.domain.interaction.user.GetUserByUsernameUseCaseImpl
 import org.koin.dsl.module
 
 val interactionModule = module {
@@ -27,4 +29,5 @@ val interactionModule = module {
     factory<RemoveItemFromCollectionUseCase> { RemoveItemFromCollectionUseCaseImpl() }
     factory<GetCollectionsUseCase> { GetCollectionsUseCaseImpl() }
     factory<RefreshAllItemsUseCase> { RefreshAllItemsUseCaseImpl() }
+    factory<GetUserByUsernameUseCase> { GetUserByUsernameUseCaseImpl() }
 }

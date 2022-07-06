@@ -25,6 +25,8 @@ object AskStories : HNItemCollection("Ask HN", 200)
 object ShowStories : HNItemCollection("Show HN", 200)
 @Keep
 object JobStories : HNItemCollection("HN Jobs", 200)
+@Keep
+data class UserStories(val name: String) : ItemCollection("User $name")
 
 @Keep
 sealed class UserDefinedItemCollection(

@@ -9,6 +9,7 @@ import it.devddk.hackernewsclient.domain.model.collection.JobStories
 import it.devddk.hackernewsclient.domain.model.collection.NewStories
 import it.devddk.hackernewsclient.domain.model.collection.ShowStories
 import it.devddk.hackernewsclient.domain.model.collection.TopStories
+import it.devddk.hackernewsclient.domain.model.collection.UserStories
 import it.devddk.hackernewsclient.domain.model.utils.*
 import it.devddk.hackernewsclient.domain.repository.HNCollectionRepository
 import kotlinx.coroutines.tasks.await
@@ -20,7 +21,7 @@ import timber.log.Timber
 class HNCollectionRepositoryImpl : HNCollectionRepository, KoinComponent {
 
 
-    val root: DatabaseReference by inject(named("root"))
+    private val root: DatabaseReference by inject(named("root"))
 
     override suspend fun getStories(query: HNItemCollection): Result<List<ItemId>> {
         return runCatching {
