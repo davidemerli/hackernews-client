@@ -253,7 +253,6 @@ fun TabbedView(
                             tabs.forEachIndexed { index, title ->
                                 Tab(selected = pagerState.currentPage == index, onClick = {
                                     coroutineScope.launch {
-                                        // FIXME: this refreshes the webview, idk if fixable
                                         pagerState.animateScrollBy(if (index == 0) -tabSizePx else tabSizePx)
                                     }
                                 }, text = {

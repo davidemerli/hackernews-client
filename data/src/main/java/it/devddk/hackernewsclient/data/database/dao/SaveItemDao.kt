@@ -1,6 +1,7 @@
 package it.devddk.hackernewsclient.data.database.dao
 
 import androidx.room.Dao
+import androidx.room.Query
 import androidx.room.Transaction
 import it.devddk.hackernewsclient.data.database.LocalDatabase
 import it.devddk.hackernewsclient.data.database.entities.ItemCollectionEntity
@@ -45,12 +46,11 @@ abstract class SaveItemDao(val database: LocalDatabase) {
         }
     }
 
-    @Transaction
-    open suspend fun removeWholeStoryIfUnused(
-        itemId: Int
-    ) {
-
-    }
+    @Query("SELECT COUNT(*) FROM " +
+            " items_collection AS ic " +
+            "INNER JOIN items ON items.id = ic.id " +
+            "WHERE items.storyId == :itemId AND ic.collection IN ('Favorites','ReadLater')")
+    abstract suspend fun computeRefCount(itemId: Int) : Int
 
 
     @Transaction

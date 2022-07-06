@@ -42,6 +42,8 @@ data class AlgoliaItemResponse(
         deleted = false,
         by = author,
         time = createdAtInstant?.toLocalDateTime(),
+        parent = parentId,
+        storyId = storyId ?: id.toInt(),
         downloaded = LocalDateTime.now(),
         dead = false,
         text = text,

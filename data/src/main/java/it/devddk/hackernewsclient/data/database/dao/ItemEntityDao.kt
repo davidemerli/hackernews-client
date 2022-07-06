@@ -1,6 +1,7 @@
 package it.devddk.hackernewsclient.data.database.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -10,36 +11,32 @@ import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import java.time.LocalDateTime
 
 @Dao
-interface ItemEntityDao {
+abstract class ItemEntityDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertItem(entity: ItemEntity) : Long
+    abstract suspend fun insertItem(entity: ItemEntity) : Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertItems(entities: List<ItemEntity>) : List<Long>
+    abstract suspend fun insertItems(entities: List<ItemEntity>) : List<Long>
 
     @Query("SELECT * FROM items WHERE :itemId = items.id LIMIT 1")
-    suspend fun getItem(itemId: ItemId): ItemEntity?
+    abstract suspend fun getItem(itemId: ItemId): ItemEntity?
 
     @Query("SELECT saved " +
             "FROM items WHERE :itemId = items.id LIMIT 1")
-    suspend fun getSavedTime(itemId: ItemId): LocalDateTime?
+    abstract suspend fun getSavedTime(itemId: ItemId): LocalDateTime?
 
     @Query("SELECT downloaded " +
             "FROM items WHERE :itemId = items.id LIMIT 1")
-    suspend fun getDownloadedTime(itemId: ItemId): LocalDateTime?
+    abstract suspend fun getDownloadedTime(itemId: ItemId): LocalDateTime?
+
+    @Query("UPDATE items SET htmlPage = :htmlPage WHERE :itemId = items.id")
+    abstract suspend fun saveHtml(itemId: ItemId, htmlPage: String)
 
     @Query("SELECT htmlPage FROM items WHERE :itemId = items.id LIMIT 1")
-    suspend fun getHtml(itemId: ItemId): String?
+    abstract suspend fun getHtml(itemId: ItemId): String?
 
-    @Transaction
-    suspend fun _increaseRefCount(itemId: ItemId) {
-
-    }
-
-    @Transaction
-    suspend fun _decreaseRefCount(itemId: ItemId) {
-
-    }
+    @Query("DELETE FROM items WHERE :itemId == items.id")
+    abstract suspend fun deleteItem(itemId: ItemId) : Int
 
 }
