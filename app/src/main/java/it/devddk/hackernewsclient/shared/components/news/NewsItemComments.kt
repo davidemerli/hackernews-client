@@ -10,8 +10,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.placeholder.material.color
-import com.google.accompanist.placeholder.material.placeholder
 import it.devddk.hackernewsclient.shared.components.customPlaceholder
 
 @Composable
