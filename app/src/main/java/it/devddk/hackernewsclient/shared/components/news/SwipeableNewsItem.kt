@@ -22,7 +22,6 @@ import it.devddk.hackernewsclient.domain.model.items.readLater
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
 import me.saket.swipe.rememberSwipeableActionsState
-import timber.log.Timber
 
 @Composable
 fun SwipeableNewsItem(

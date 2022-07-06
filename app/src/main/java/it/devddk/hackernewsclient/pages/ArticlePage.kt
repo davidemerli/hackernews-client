@@ -3,6 +3,7 @@ package it.devddk.hackernewsclient.pages
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -38,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.platform.LocalContext
@@ -71,6 +73,7 @@ import it.devddk.hackernewsclient.viewmodels.CommentUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import kotlin.math.absoluteValue
 import kotlin.math.max
 
@@ -184,7 +187,7 @@ fun Loading() {
 }
 
 @Composable
-@OptIn(ExperimentalPagerApi::class)
+@OptIn(ExperimentalPagerApi::class, ExperimentalComposeUiApi::class)
 fun TabbedView(
     modifier: Modifier = Modifier,
     item: Item,
@@ -261,16 +264,28 @@ fun TabbedView(
                     }
                 }
 
+                var userScroll by remember { mutableStateOf(true) }
+
                 if (!showAdjacent) {
                     HorizontalPager(
                         count = item.url?.let { 2 } ?: 1,
                         state = pagerState,
                         modifier = Modifier.weight(1f),
-                        userScrollEnabled = !fullScreenWebView
+                        userScrollEnabled = !fullScreenWebView and userScroll,
                     ) { index ->
                         when (index) {
                             0 -> {
-                                WebViewWithPrefs(state = webViewState)
+                                Box(
+                                    modifier = Modifier.clickable {
+                                        Timber.d("owo")
+                                    }
+                                ) {
+                                    WebViewWithPrefs(
+                                        state = webViewState,
+                                        setScroll = { value -> userScroll = value },
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                }
                             }
                             1 -> {
                                 CommentsView(

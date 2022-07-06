@@ -1,11 +1,12 @@
 package it.devddk.hackernewsclient.shared.components
 
 import android.annotation.SuppressLint
+import android.os.Build
+import android.view.MotionEvent
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -54,6 +55,7 @@ fun ArticleView(
 fun WebViewWithPrefs(
     modifier: Modifier = Modifier,
     state: WebViewState,
+    setScroll: (Boolean) -> Unit = {},
     verticalScrollState: ScrollState? = rememberScrollState(),
 ) {
     val context = LocalContext.current
@@ -125,9 +127,21 @@ fun WebViewWithPrefs(
         darkMode,
     ) {
         WebView(
-            modifier = verticalScrollState?.let { modifier.verticalScroll(it) } ?: modifier,
+            modifier = modifier,
             state = state,
             onCreated = { webview ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    webview.setOnTouchListener { view, event ->
+                        if (event.action == MotionEvent.ACTION_UP) setScroll(true)
+
+                        view.performClick()
+                    }
+
+                    webview.setOnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
+                        if (scrollY - oldScrollY != 0) setScroll(false)
+                    }
+                }
+
                 coroutineScope.launch { itemViewModel.setWebView(webview) }
 
                 if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK) && darkMode) {

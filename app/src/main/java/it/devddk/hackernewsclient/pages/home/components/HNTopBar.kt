@@ -73,7 +73,7 @@ fun HNTopBar(
     val coroutineScope = rememberCoroutineScope()
 
     var searchOpen by remember { mutableStateOf(false) }
-    var searchString by remember { mutableStateOf(query ?:"") }
+    var searchString by remember { mutableStateOf(query ?: "") }
 
     val focusManager = LocalFocusManager.current
 

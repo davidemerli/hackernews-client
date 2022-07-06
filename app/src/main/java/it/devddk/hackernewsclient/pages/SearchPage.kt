@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -22,9 +21,7 @@ import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Fullscreen
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -74,20 +71,14 @@ import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.pages.home.components.HNTopBar
-import it.devddk.hackernewsclient.pages.news.NewsCompactLayout
-import it.devddk.hackernewsclient.pages.news.NewsExpandedLayout
 import it.devddk.hackernewsclient.shared.components.WebViewWithPrefs
 import it.devddk.hackernewsclient.shared.components.news.NewsItem
-import it.devddk.hackernewsclient.shared.components.news.SwipeableNewsItem
 import it.devddk.hackernewsclient.utils.SettingPrefs
-import it.devddk.hackernewsclient.viewmodels.ItemCollectionHolder
-import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.SearchPageViewModel
 import it.devddk.hackernewsclient.viewmodels.SearchResultUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -141,7 +132,7 @@ fun SearchPage(
     val lazyListState = rememberLazyListState()
     val resultList = viewModel.resultListFlow.collectAsState(initial = emptyList())
 
-    if (searchQuery != null){
+    if (searchQuery != null) {
         LaunchedEffect(searchQuery) {
             if (searchQuery!!.length >= 3) {
                 viewModel.updateQuery(searchQuery!!)
@@ -208,43 +199,43 @@ fun SearchPage(
         }
     ) {
         when (windowSizeClass.widthSizeClass) {
-                WindowWidthSizeClass.Expanded -> {
-                    SearchExpandedLayout(
-                        modifier = Modifier.padding(top = it.calculateTopPadding()),
-                        navController = navController,
-                        onItemClick = { item -> onItemClick(item) },
-                        onItemClickComments = { item -> onItemClickComments(item) },
-                        selectedItem = selectedItem,
-                        expanded = expandedArticleView,
-                        onExpandedClick = { expandedArticleView = !expandedArticleView },
-                        webViewState = webViewState,
-                    )
-                }
-                WindowWidthSizeClass.Compact,
-                WindowWidthSizeClass.Medium -> {
-                    SearchCompactLayout(
-                        modifier = Modifier.padding(top = it.calculateTopPadding()),
-                        navController = navController,
-                        selectedItem = selectedItem,
-                        onItemClick = { item -> onItemClick(item) },
-                        onItemClickComments = { item -> onItemClickComments(item) },
-                        webViewState = webViewState,
-                    )
-                }
+            WindowWidthSizeClass.Expanded -> {
+                SearchExpandedLayout(
+                    modifier = Modifier.padding(top = it.calculateTopPadding()),
+                    navController = navController,
+                    onItemClick = { item -> onItemClick(item) },
+                    onItemClickComments = { item -> onItemClickComments(item) },
+                    selectedItem = selectedItem,
+                    expanded = expandedArticleView,
+                    onExpandedClick = { expandedArticleView = !expandedArticleView },
+                    webViewState = webViewState,
+                )
             }
+            WindowWidthSizeClass.Compact,
+            WindowWidthSizeClass.Medium -> {
+                SearchCompactLayout(
+                    modifier = Modifier.padding(top = it.calculateTopPadding()),
+                    navController = navController,
+                    selectedItem = selectedItem,
+                    onItemClick = { item -> onItemClick(item) },
+                    onItemClickComments = { item -> onItemClickComments(item) },
+                    webViewState = webViewState,
+                )
+            }
+        }
 
-            if (openDialog) {
-                Dialog(
-                    properties = DialogProperties(usePlatformDefaultWidth = false),
-                    onDismissRequest = { openDialog = false },
-                ) {
-                    WebViewWithPrefs(
-                        modifier = Modifier.fillMaxSize(),
-                        state = webViewState,
-                        verticalScrollState = null
-                    )
-                }
+        if (openDialog) {
+            Dialog(
+                properties = DialogProperties(usePlatformDefaultWidth = false),
+                onDismissRequest = { openDialog = false },
+            ) {
+                WebViewWithPrefs(
+                    modifier = Modifier.fillMaxSize(),
+                    state = webViewState,
+                    verticalScrollState = null
+                )
             }
+        }
     }
 }
 
@@ -303,7 +294,6 @@ fun SearchBar(
         }
     )
 }
-
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
@@ -397,7 +387,7 @@ fun SearchCompactLayout(
             if (selectedItem != null) {
                 webViewInstance?.reload()
             } else {
-                //TODO:
+                // TODO:
             }
         }
     ) {
