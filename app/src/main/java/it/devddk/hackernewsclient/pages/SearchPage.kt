@@ -4,12 +4,16 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,7 +25,6 @@ import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Fullscreen
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -53,10 +56,14 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -70,15 +77,20 @@ import com.google.accompanist.web.rememberWebViewState
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
+import it.devddk.hackernewsclient.domain.model.search.SearchResult
 import it.devddk.hackernewsclient.pages.home.components.HNTopBar
+import it.devddk.hackernewsclient.shared.components.DepthIndicator
 import it.devddk.hackernewsclient.shared.components.WebViewWithPrefs
+import it.devddk.hackernewsclient.shared.components.news.NewsColorHint
 import it.devddk.hackernewsclient.shared.components.news.NewsItem
 import it.devddk.hackernewsclient.utils.SettingPrefs
+import it.devddk.hackernewsclient.utils.TimeDisplayUtils
 import it.devddk.hackernewsclient.viewmodels.SearchPageViewModel
 import it.devddk.hackernewsclient.viewmodels.SearchResultUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -124,7 +136,8 @@ fun SearchPage(
 
     val readabilityUrl = "https://readability.davidemerli.com?convert=${selectedItem?.url ?: ""}"
 
-    val webViewState = rememberWebViewState(if (readerMode) readabilityUrl else selectedItem?.url ?: "")
+    val webViewState =
+        rememberWebViewState(if (readerMode) readabilityUrl else selectedItem?.url ?: "")
     val webViewInstance by itemViewModel.webView.collectAsState(initial = null)
 
     var searchQuery by rememberSaveable { mutableStateOf(query) }
@@ -212,7 +225,8 @@ fun SearchPage(
                 )
             }
             WindowWidthSizeClass.Compact,
-            WindowWidthSizeClass.Medium -> {
+            WindowWidthSizeClass.Medium,
+            -> {
                 SearchCompactLayout(
                     modifier = Modifier.padding(top = it.calculateTopPadding()),
                     navController = navController,
@@ -239,14 +253,72 @@ fun SearchPage(
     }
 }
 
+@OptIn(ExperimentalTextApi::class)
 @Composable
-fun ResultItem(item: Item, onClick: () -> Unit = {}) {
-    when (item.type) {
+fun ResultItem(result: SearchResult, onClick: () -> Unit = {}) {
+    Timber.d("ResultItem: ${result.item.by} - ${result.item.type}")
+
+    val context = LocalContext.current
+
+    when (result.item.type) {
         ItemType.STORY -> {
-            NewsItem(item = item, onClick = onClick, placeholder = false)
+            NewsItem(item = result.item, onClick = onClick, placeholder = false)
+        }
+        ItemType.COMMENT -> {
+            val timeString = remember(result.item) { TimeDisplayUtils(context).toDateTimeAgoInterval(result.item.time) }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Max)
+                    .padding(8.dp)
+            ) {
+                NewsColorHint(color = MaterialTheme.colorScheme.tertiary)
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                ) {
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(
+                                MaterialTheme.typography.titleMedium.copy(
+                                    color = MaterialTheme.colorScheme.tertiary
+                                ).toSpanStyle()
+                            ) {
+                                append("${result.item.by}")
+                            }
+
+                            withStyle(
+                                MaterialTheme.typography.titleMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurface
+                                ).toSpanStyle()
+                            ) {
+                                append(" on `${"STORY_TITLE"}`")
+                            }
+                        }
+                    )
+                    Text(
+                        text = "${result.item.text?.parseHTML() ?: "no_text"}\n\n\n\n",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.onSurface,
+                                    MaterialTheme.colorScheme.onSurface,
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                                ),
+                            ),
+                        ),
+                        maxLines = 4
+                    )
+
+                    Text(timeString, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
         }
         else -> {
-            Text(item.id.toString())
+            Text(result.item.id.toString())
         }
     }
 }
@@ -368,7 +440,7 @@ fun SearchCompactLayout(
     selectedItem: Item?,
     onItemClick: (Item) -> Unit,
     onItemClickComments: (Item) -> Unit,
-    webViewState: WebViewState
+    webViewState: WebViewState,
 ) {
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
     val coroutineScope = rememberCoroutineScope()
@@ -415,7 +487,7 @@ fun SearchCompactLayout(
 
                         is SearchResultUiState.ResultLoaded -> {
                             ResultItem(
-                                result.result.item,
+                                result.result,
                                 onClick = { onItemClick(result.result.item) }
                             )
                         }

@@ -36,7 +36,7 @@ data class SearchResponse(
     }
 
     private fun buildItemFromHit(hit : SearchResultHitResponse) : Item {
-        val itemType = hit.type.toItemType() ?: ItemType.STORY
+        val itemType = hit.tags[0].toItemType() ?: ItemType.STORY
         Timber.d("Object id ${hit.objectId}")
         return Item(
             id = hit.objectId.toInt(),
@@ -70,7 +70,6 @@ data class SearchResultHitResponse(
     val url: String,
     val author: String?,
     val points: Int?,
-    val type: String?,
     @SerializedName("story_text") val storyText: String?,
     @SerializedName("comment_text") val commentText: String?,
     @SerializedName("story_id") val storyId: Int?,
@@ -79,7 +78,7 @@ data class SearchResultHitResponse(
     @SerializedName("parent_id") val parentId: Int?,
     @SerializedName("created_at_i") val created: Long?,
     @SerializedName("relevancy_score") val relevancyScore: Int?,
-    val tags: List<String>,
+    @SerializedName("_tags") val tags: List<String>,
     @SerializedName("num_comments") val numComments: Int?,
     @SerializedName("objectID") val objectId: String,
     @SerializedName("_highlightResult") val highlightResult : HighlightDataResponse
