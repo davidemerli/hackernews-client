@@ -24,19 +24,16 @@ fun NewsItemComments(
             modifier = modifier,
             onClick = onClick
         ) {
-            Icon(
-                Icons.Filled.Email,
-                contentDescription = "Options",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
             Text(
                 "$commentsNumber",
                 style = MaterialTheme.typography.bodySmall.copy(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
-                modifier = Modifier
-                    .offset(x = 4.dp)
-                    .customPlaceholder(visible = placeholder),
+            )
+            Icon(
+                Icons.Filled.Email,
+                contentDescription = "Options",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

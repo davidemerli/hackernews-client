@@ -58,6 +58,7 @@ import com.google.accompanist.web.WebViewState
 import com.google.accompanist.web.rememberWebViewState
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
+import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.pages.TabbedView
 import it.devddk.hackernewsclient.pages.home.components.HNTopBar
@@ -303,6 +304,7 @@ fun NewsCompactLayout(
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberLazyListState()
 
+    val viewModel: HomePageViewModel = viewModel()
     val itemViewModel: SingleNewsViewModel = viewModel()
     val webViewInstance by itemViewModel.webView.collectAsState(initial = null)
 
@@ -351,6 +353,11 @@ fun NewsCompactLayout(
                                 itemState.item,
                                 onClick = { onItemClick(itemState.item) },
                                 onClickComments = { onItemClickComments(itemState.item) },
+                                toggleCollection = { item, itemCollection ->
+                                    coroutineScope.launch {
+                                        viewModel.toggleFromCollection(item.id, itemCollection)
+                                    }
+                                },
                                 placeholder = false
                             )
                         }
