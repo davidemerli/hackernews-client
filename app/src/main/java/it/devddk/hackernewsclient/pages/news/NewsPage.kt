@@ -236,8 +236,6 @@ fun NewsExpandedLayout(
     onExpandedClick: () -> Unit,
     webViewState: WebViewState,
 ) {
-    val viewModel: SingleNewsViewModel = viewModel()
-
     Row(
         modifier = modifier.fillMaxSize()
     ) {
@@ -256,8 +254,6 @@ fun NewsExpandedLayout(
         }
 
         if (selectedItem != null) {
-            LaunchedEffect(selectedItem) { viewModel.setId(selectedItem.id) }
-
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -330,8 +326,6 @@ fun NewsCompactLayout(
         }
     ) {
         if (selectedItem != null) {
-            LaunchedEffect(selectedItem) { itemViewModel.setId(selectedItem.id) }
-
             TabbedView(
                 navController = navController,
                 item = selectedItem,

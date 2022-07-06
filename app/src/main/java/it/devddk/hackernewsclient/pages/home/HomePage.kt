@@ -267,8 +267,6 @@ fun ExpandedLayout(
         }
 
         if (selectedItem != null) {
-            LaunchedEffect(selectedItem) { viewModel.setId(selectedItem.id) }
-
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -345,8 +343,6 @@ fun CompactLayout(
         }
     ) {
         if (selectedItem != null) {
-            LaunchedEffect(selectedItem) { itemViewModel.setId(selectedItem.id) }
-
             TabbedView(
                 navController = navController,
                 item = selectedItem,
