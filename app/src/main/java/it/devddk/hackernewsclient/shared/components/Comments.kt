@@ -16,6 +16,10 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BookmarkAdd
+import androidx.compose.material.icons.filled.BookmarkRemove
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MoveUp
@@ -59,12 +63,16 @@ import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import it.devddk.hackernewsclient.R
+import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
+import it.devddk.hackernewsclient.domain.model.items.favorite
+import it.devddk.hackernewsclient.domain.model.items.readLater
 import it.devddk.hackernewsclient.pages.parseHTML
 import it.devddk.hackernewsclient.shared.components.news.shareStringContent
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
 import it.devddk.hackernewsclient.viewmodels.CommentUiState
+import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -372,6 +380,8 @@ fun MoreOptions(
     val context = LocalContext.current
     var expanded by rememberSaveable { mutableStateOf(false) }
 
+    val viewModel: HomePageViewModel = viewModel()
+
     val mViewModel: SingleNewsViewModel = viewModel()
     val comments = mViewModel.commentList.collectAsState(emptyList())
 
@@ -459,6 +469,32 @@ fun MoreOptions(
                     }
                 }
             }
+
+            DropdownMenuItem(
+                text = { Text(if (!item.collections.favorite) "Add to favorites" else "Remove from favorites") },
+                leadingIcon = {
+                    Icon(if (!item.collections.favorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, contentDescription = if (!item.collections.favorite) "Add to favorites" else "Remove from favorites")
+                },
+                onClick = {
+                    coroutineScope.launch {
+                        viewModel.toggleFromCollection(item.id, UserDefinedItemCollection.Favorites)
+                    }
+                    expanded = false
+                }
+            )
+
+            DropdownMenuItem(
+                text = { Text(if (!item.collections.readLater) "Add to read later" else "Remove from read later") },
+                leadingIcon = {
+                    Icon(if (!item.collections.readLater) Icons.Filled.BookmarkAdd else Icons.Filled.BookmarkRemove, contentDescription = if (!item.collections.favorite) "Add to read later" else "Remove from read later")
+                },
+                onClick = {
+                    coroutineScope.launch {
+                        viewModel.toggleFromCollection(item.id, UserDefinedItemCollection.ReadLater)
+                    }
+                    expanded = false
+                }
+            )
 
             DropdownMenuItem(
                 text = { Text("Share Comment") },

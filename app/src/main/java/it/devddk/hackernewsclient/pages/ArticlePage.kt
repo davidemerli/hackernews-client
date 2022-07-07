@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.pages
 
+import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -57,7 +58,7 @@ import com.google.accompanist.pager.rememberPagerState
 import com.google.accompanist.web.WebViewState
 import com.google.accompanist.web.rememberWebViewState
 import it.devddk.hackernewsclient.domain.model.items.Item
-import it.devddk.hackernewsclient.shared.components.ArticleView
+import it.devddk.hackernewsclient.pages.home.components.HNTopBar
 import it.devddk.hackernewsclient.shared.components.CommentText
 import it.devddk.hackernewsclient.shared.components.ExpandableComment
 import it.devddk.hackernewsclient.shared.components.WebViewWithPrefs
@@ -66,7 +67,6 @@ import it.devddk.hackernewsclient.shared.components.news.NewsItemDomain
 import it.devddk.hackernewsclient.shared.components.news.NewsItemTime
 import it.devddk.hackernewsclient.shared.components.news.NewsItemTitle
 import it.devddk.hackernewsclient.shared.components.news.getDomainName
-import it.devddk.hackernewsclient.shared.components.topbars.SingleNewsPageTopBar
 import it.devddk.hackernewsclient.utils.SettingPrefs
 import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.DEFAULT_PREFERRED_VIEW
 import it.devddk.hackernewsclient.viewmodels.CommentUiState
@@ -104,7 +104,7 @@ fun ArticlePage(
             Error(throwable = uiStateValue.throwable)
         }
         is SingleNewsUiState.Loading -> {
-            Loading()
+            Loading() //TODO: better loading screen
         }
         is SingleNewsUiState.ItemLoaded -> {
             ArticlePage(
@@ -126,42 +126,47 @@ fun ArticlePage(
     selectedView: String? = null,
 ) {
     val viewModel: SingleNewsViewModel = viewModel()
-    val webviewState = rememberWebViewState(item.url ?: "")
+    val webViewState = rememberWebViewState(item.url ?: "")
 
     val scrollState = rememberLazyListState()
+
+    val activity = LocalContext.current as? Activity
 
     LaunchedEffect(item.id) {
         viewModel.setId(item.id)
     }
 
-    when (windowWidthSizeClass) {
-        WindowWidthSizeClass.Compact,
-        WindowWidthSizeClass.Medium,
-        -> {
-            TabbedView(
-                item = item,
+    Scaffold(
+        topBar = {
+            HNTopBar(
                 navController = navController,
-                webViewState = webviewState,
-                selectedView = selectedView,
+                selectedItem = item,
+                onClose = {
+                    if (!navController.popBackStack()) {
+                        activity?.finish()
+                    }
+                }
             )
-        }
-        WindowWidthSizeClass.Expanded -> {
-            Scaffold(
-                topBar = {
-                    SingleNewsPageTopBar(
-                        item = item,
-                        navController = navController,
-                    )
-                },
-            ) {
+        },
+    ) {
+        when (windowWidthSizeClass) {
+            WindowWidthSizeClass.Compact,
+            WindowWidthSizeClass.Medium -> {
+                TabbedView(
+                    item = item,
+                    navController = navController,
+                    webViewState = webViewState,
+                    selectedView = selectedView,
+                    modifier = Modifier.padding(top = it.calculateTopPadding())
+                )
+            }
+            WindowWidthSizeClass.Expanded -> {
                 Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = it.calculateTopPadding())
+                    modifier = Modifier.fillMaxSize().padding(top = it.calculateTopPadding())
                 ) {
-                    ArticleView(
+                    WebViewWithPrefs(
                         modifier = Modifier.fillMaxWidth(0.5f),
-                        webviewState = webviewState
+                        state = webViewState
                     )
 
                     CommentsView(

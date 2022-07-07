@@ -57,7 +57,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 fun HNTopBar(
     navController: NavController,
-    drawerState: DrawerState,
+    drawerState: DrawerState? = null,
     title: String = "Hacker News",
     query: String? = "",
     focusable: Boolean = false,
@@ -100,7 +100,7 @@ fun HNTopBar(
             )
         },
         navigationIcon = navigationIcon ?: {
-            if (selectedItem == null) {
+            if (selectedItem == null && drawerState != null) {
                 IconButton(
                     onClick = { coroutineScope.launch { drawerState.open() } },
                 ) {
