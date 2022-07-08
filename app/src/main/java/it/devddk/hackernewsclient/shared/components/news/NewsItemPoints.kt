@@ -3,7 +3,6 @@ package it.devddk.hackernewsclient.shared.components.news
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -20,9 +19,7 @@ fun NewsItemPoints(
 ) {
     val context = LocalContext.current
 
-    val pointsString = remember {
-        context.getString(R.string.points, score)
-    }
+    val pointsString = context.getString(R.string.points, score)
 
     Text(
         pointsString,

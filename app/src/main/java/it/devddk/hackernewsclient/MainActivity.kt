@@ -25,6 +25,7 @@ import it.devddk.hackernewsclient.pages.ArticlePage
 import it.devddk.hackernewsclient.pages.FeedbackPage
 import it.devddk.hackernewsclient.pages.SearchPage
 import it.devddk.hackernewsclient.pages.SettingsPage
+import it.devddk.hackernewsclient.pages.UserPage
 import it.devddk.hackernewsclient.pages.home.HomePage
 import it.devddk.hackernewsclient.pages.news.HackerNewsView
 import it.devddk.hackernewsclient.pages.news.NewsPage
@@ -93,6 +94,21 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     windowWidthSizeClass = windowSizeClass.widthSizeClass,
                     id = backStackEntry.arguments?.getInt("itemId")!!
+                )
+            }
+
+            composable(
+                "user/{username}",
+                arguments = listOf(
+                    navArgument("username") {
+                        type = NavType.StringType
+                    }
+                )
+            ) { backStackEntry ->
+                UserPage(
+                    navController = navController,
+                    windowSizeClass = windowSizeClass,
+                    username = backStackEntry.arguments?.getString("username")!!
                 )
             }
 

@@ -13,11 +13,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun NewsColorHint(
+fun ItemColorHint(
     modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.background,
 ) {
-
     Box(
         modifier = modifier
             .width(8.dp)

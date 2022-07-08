@@ -18,12 +18,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.BookmarkRemove
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MoveUp
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material.icons.filled.SubdirectoryArrowRight
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
@@ -35,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -69,6 +70,7 @@ import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.items.favorite
 import it.devddk.hackernewsclient.domain.model.items.readLater
 import it.devddk.hackernewsclient.pages.parseHTML
+import it.devddk.hackernewsclient.shared.components.news.NewsStatusIcons
 import it.devddk.hackernewsclient.shared.components.news.shareStringContent
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
 import it.devddk.hackernewsclient.viewmodels.CommentUiState
@@ -159,6 +161,8 @@ fun CommentCard(
     onClick: () -> Unit = {},
     placeholder: Boolean = false,
     navController: NavController,
+    favorite: MutableState<Boolean> = remember { mutableStateOf(item.collections.favorite) },
+    readLater: MutableState<Boolean> = remember { mutableStateOf(item.collections.readLater) },
 ) {
     val paddingStart = (depth * depthSize).dp + 2.dp
 
@@ -185,7 +189,7 @@ fun CommentCard(
             .padding(paddingStart, 4.dp, 4.dp, 4.dp)
             .background(commentBackground)
     ) {
-        val (depthIndicator, title, text, expand, more) = createRefs()
+        val (depthIndicator, title, text, expand, more, icons) = createRefs()
 
         DepthIndicator(
             depth = depth,
@@ -234,15 +238,26 @@ fun CommentCard(
             )
         }
 
+        NewsStatusIcons(
+            favorite = favorite.value,
+            readLater =readLater.value,
+            modifier = Modifier.constrainAs(icons) {
+                top.linkTo(parent.top, margin = 2.dp)
+                end.linkTo(more.start)
+            }.offset(x = 4.dp)
+        )
+
         MoreOptions(
             item = item, placeholder = placeholder,
             listState = listState,
             rootItem = rootItem,
             navController = navController,
+            favorite = favorite,
+            readLater = readLater,
             modifier = Modifier.constrainAs(more) {
                 top.linkTo(parent.top, margin = 2.dp)
                 end.linkTo(parent.end, margin = 2.dp)
-            }
+            }.offset(y = (-2).dp)
         )
     }
 }
@@ -376,6 +391,8 @@ fun MoreOptions(
     rootItem: Item,
     listState: LazyListState,
     navController: NavController,
+    favorite: MutableState<Boolean>,
+    readLater: MutableState<Boolean>
 ) {
     val context = LocalContext.current
     var expanded by rememberSaveable { mutableStateOf(false) }
@@ -471,27 +488,39 @@ fun MoreOptions(
             }
 
             DropdownMenuItem(
-                text = { Text(if (!item.collections.favorite) "Add to favorites" else "Remove from favorites") },
+                text = { Text(if (!favorite.value) "Add to favorites" else "Remove from favorites") },
                 leadingIcon = {
-                    Icon(if (!item.collections.favorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, contentDescription = if (!item.collections.favorite) "Add to favorites" else "Remove from favorites")
+                    Icon(
+                        if (!favorite.value) Icons.Filled.Star else Icons.Filled.StarOutline,
+                        contentDescription = if (!favorite.value) "Add to favorites" else "Remove from favorites"
+                    )
                 },
                 onClick = {
+                    favorite.value = !favorite.value
+
                     coroutineScope.launch {
                         viewModel.toggleFromCollection(item.id, UserDefinedItemCollection.Favorites)
                     }
+
                     expanded = false
                 }
             )
 
             DropdownMenuItem(
-                text = { Text(if (!item.collections.readLater) "Add to read later" else "Remove from read later") },
+                text = { Text(if (!readLater.value) "Add to read later" else "Remove from read later") },
                 leadingIcon = {
-                    Icon(if (!item.collections.readLater) Icons.Filled.BookmarkAdd else Icons.Filled.BookmarkRemove, contentDescription = if (!item.collections.favorite) "Add to read later" else "Remove from read later")
+                    Icon(
+                        if (!readLater.value) Icons.Filled.BookmarkAdd else Icons.Filled.BookmarkRemove,
+                        contentDescription = if (!readLater.value) "Add to read later" else "Remove from read later"
+                    )
                 },
                 onClick = {
+                    readLater.value = !readLater.value
+
                     coroutineScope.launch {
                         viewModel.toggleFromCollection(item.id, UserDefinedItemCollection.ReadLater)
                     }
+
                     expanded = false
                 }
             )

@@ -1,6 +1,5 @@
 package it.devddk.hackernewsclient.shared.components.news
 
-import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Icon
@@ -9,8 +8,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import it.devddk.hackernewsclient.shared.components.customPlaceholder
 
 @Composable
 fun NewsItemComments(

@@ -44,6 +44,7 @@ fun NewsItem(
     placeholder: Boolean = false,
     onClick: () -> Unit = {},
     onClickComments: () -> Unit = {},
+    onClickAuthor: () -> Unit = {},
     favorite: MutableState<Boolean> = remember { mutableStateOf(item.collections.favorite) },
     readLater: MutableState<Boolean> = remember { mutableStateOf(item.collections.readLater) },
 ) {
@@ -73,7 +74,7 @@ fun NewsItem(
 
         val (pt, by, time) = createRefs()
 
-        NewsColorHint(
+        ItemColorHint(
             color = hintColor,
             modifier = Modifier
                 .constrainAs(colorHint) {
@@ -140,6 +141,7 @@ fun NewsItem(
 
         NewsItemAuthor(
             author = item.by,
+            onClick = onClickAuthor,
             placeholder = placeholder,
             modifier = Modifier.constrainAs(by) {
                 bottom.linkTo(parent.bottom)

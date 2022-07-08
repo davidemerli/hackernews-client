@@ -15,7 +15,7 @@ import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollect
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.shared.components.LoadingIndicatorCircular
 import it.devddk.hackernewsclient.shared.components.news.NewsItem
-import it.devddk.hackernewsclient.shared.components.news.SwipeableNewsItem
+import it.devddk.hackernewsclient.shared.components.news.SwipeableItem
 import it.devddk.hackernewsclient.viewmodels.ItemCollectionHolder
 import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.NewsPageState
@@ -26,6 +26,7 @@ fun ColumnScope.NewsColumn(
     modifier: Modifier = Modifier,
     itemCollection: ItemCollectionHolder,
     onItemClick: (Item) -> Unit,
+    onClickAuthor: (Item) -> Unit = {},
     toggleCollection: (Item, UserDefinedItemCollection) -> Unit,
 ) {
     var hasLoaded by rememberSaveable { mutableStateOf(false) }
@@ -65,9 +66,10 @@ fun ColumnScope.NewsColumn(
                     is NewsItemState.ItemLoaded -> {
                         val item = itemState.item
 
-                        SwipeableNewsItem(
+                        SwipeableItem(
                             item = item,
                             onClick = { onItemClick(item) },
+                            onClickAuthor = { onClickAuthor(item) },
                             toggleCollection = toggleCollection,
                         )
                     }

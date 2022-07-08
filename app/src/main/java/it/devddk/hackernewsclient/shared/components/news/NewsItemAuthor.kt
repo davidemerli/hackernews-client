@@ -3,7 +3,6 @@ package it.devddk.hackernewsclient.shared.components.news
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -16,16 +15,15 @@ import it.devddk.hackernewsclient.shared.components.customPlaceholder
 @Composable
 fun NewsItemAuthor(
     modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
     author: String?,
-    placeholder: Boolean = false
+    placeholder: Boolean = false,
 ) {
     val context = LocalContext.current
 
-    val userString = remember {
-        when (author) {
-            null -> context.getString(R.string.author_unknown)
-            else -> context.getString(R.string.author, author)
-        }
+    val userString = when (author) {
+        null -> context.getString(R.string.author_unknown)
+        else -> context.getString(R.string.author, author)
     }
 
     ClickableText(
@@ -35,6 +33,6 @@ fun NewsItemAuthor(
             textDecoration = TextDecoration.Underline,
         ),
         modifier = modifier.customPlaceholder(visible = placeholder),
-        onClick = { /*TODO*/ }
+        onClick = { onClick() }
     )
 }

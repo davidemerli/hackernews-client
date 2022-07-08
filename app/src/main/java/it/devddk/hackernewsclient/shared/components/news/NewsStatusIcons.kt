@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Update
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -24,7 +24,7 @@ fun NewsStatusIcons(
     ) {
         if (!placeholder && favorite) {
             Icon(
-                Icons.Filled.Favorite,
+                Icons.Filled.Star,
                 contentDescription = "Favorite",
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
@@ -35,7 +35,7 @@ fun NewsStatusIcons(
 
         if (!placeholder && readLater) {
             Icon(
-                Icons.Filled.Update,
+                Icons.Filled.Bookmark,
                 contentDescription = "Read later",
                 tint = MaterialTheme.colorScheme.tertiary,
                 modifier = Modifier

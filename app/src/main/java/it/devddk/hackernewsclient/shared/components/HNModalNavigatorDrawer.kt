@@ -56,19 +56,26 @@ fun HNModalNavigatorPanel(
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
 
-                ALL_QUERIES.forEach {
+                ALL_QUERIES.forEachIndexed { index, itemCollection ->
                     NavigationDrawerItem(
                         icon = {
                             Icon(
-                                imageVector = ROUTE_ICONS[HackerNewsView(it).route]!!,
+                                imageVector = ROUTE_ICONS[HackerNewsView(itemCollection).route]!!,
                                 contentDescription = query
                             )
                         },
-                        label = { Text(ROUTE_TITLES[HackerNewsView(it).route]!!) },
-                        selected = HackerNewsView(it).route == query,
-                        onClick = { navController.navigate(HackerNewsView(it).route) },
+                        label = { Text(ROUTE_TITLES[HackerNewsView(itemCollection).route]!!) },
+                        selected = HackerNewsView(itemCollection).route == query,
+                        onClick = { navController.navigate(HackerNewsView(itemCollection).route) },
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                     )
+
+                    if (index == ALL_QUERIES.size - 3) {
+                        Divider(
+                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                        )
+                    }
                 }
 
                 Divider(
