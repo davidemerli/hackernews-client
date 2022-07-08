@@ -118,10 +118,10 @@ fun NewsItem(
                     .padding(end = 56.dp) // to avoid overlapping with the dropdown menu
                     .constrainAs(title) {
                         top.linkTo(domain.bottom, margin = 2.dp)
-                        if(itemDomain != null) {
-                            start.linkTo(colorHint.end, margin = 6.dp)
-                        } else {
-                            start.linkTo(statusIcons.end, margin = 2.dp)
+                        start.linkTo(colorHint.end, margin = 6.dp)
+
+                        if (itemDomain == null) {
+                            top.linkTo(statusIcons.bottom, margin = 2.dp)
                         }
                     }
             )

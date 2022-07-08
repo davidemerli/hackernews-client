@@ -62,7 +62,10 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -253,8 +256,8 @@ fun SearchPage(
     }
 }
 
-@OptIn(ExperimentalTextApi::class)
 @Composable
+@OptIn(ExperimentalTextApi::class)
 fun ResultItem(result: SearchResult, onClick: () -> Unit = {}) {
     Timber.d("ResultItem: ${result.item.by} - ${result.item.type}")
 
@@ -295,12 +298,20 @@ fun ResultItem(result: SearchResult, onClick: () -> Unit = {}) {
                                     color = MaterialTheme.colorScheme.onSurface
                                 ).toSpanStyle()
                             ) {
-                                append(" on `${"STORY_TITLE"}`")
+                                append(" on ")
                             }
                         }
                     )
                     Text(
-                        text = "${result.item.text?.parseHTML() ?: "no_text"}\n\n\n\n",
+                        text = "${result.searchMetadata.storyTitle}" + " ".repeat(30),
+                        style = MaterialTheme.typography.bodyLarge.copy(fontStyle = FontStyle.Italic, color = MaterialTheme.colorScheme.primary),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(bottom = 6.dp),
+                    )
+
+                    Text(
+                        text = "${result.item.text?.parseHTML() ?: "no_text"}\n\n\n\n\n",
                         style = MaterialTheme.typography.bodyLarge.copy(
                             brush = Brush.verticalGradient(
                                 colors = listOf(
@@ -310,7 +321,7 @@ fun ResultItem(result: SearchResult, onClick: () -> Unit = {}) {
                                 ),
                             ),
                         ),
-                        maxLines = 4
+                        maxLines = 5,
                     )
 
                     Text(timeString, style = MaterialTheme.typography.bodyMedium)
