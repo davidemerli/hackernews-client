@@ -18,6 +18,7 @@ import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.domain.model.flatMap
 import it.devddk.hackernewsclient.domain.model.items.ItemTree
+import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.repository.ItemRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -88,14 +89,15 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
             }
         }
 
-        // Independently from the source interrogate the database to get collections
+        // Independently from the source interrogate the database to get collections and storyId
         result = result.mapCatching { item ->
             try {
                 val collections = collectionDao.getAllCollectionsForItem(itemId)
                     .map { it.mapToDomainModel() }.associateBy {
                         it.collection
                     }
-                item.copy(collections = collections)
+                val storyId = item.storyId ?: itemDao.getParentStoryId(itemId)
+                item.copy(collections = collections, storyId = storyId)
             } catch (e: Exception) {
                 item
             }
