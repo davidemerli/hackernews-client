@@ -454,7 +454,6 @@ fun SearchCompactLayout(
     webViewState: WebViewState,
 ) {
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
-    val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberLazyListState()
 
     val itemViewModel: SingleNewsViewModel = viewModel()
@@ -486,23 +485,20 @@ fun SearchCompactLayout(
                 state = scrollState,
                 modifier = modifier.fillMaxSize()
             ) {
-                items(resultList.value.size) { index ->
+                items(resultList.value.size + 1) { index ->
                     LaunchedEffect(index.div(20)) {
                         viewModel.requestItem(index)
                     }
 
                     when (val result = resultList.value.getOrNull(index)) {
-                        is SearchResultUiState.Loading -> {
-                            Text("Loading More...")
-                        }
-
                         is SearchResultUiState.ResultLoaded -> {
                             ResultItem(
                                 result.result,
                                 onClick = { onItemClick(result.result.item) }
                             )
                         }
-                        null -> {
+                        else -> {
+                            Text("Loading More...")
                         }
                     }
                 }
