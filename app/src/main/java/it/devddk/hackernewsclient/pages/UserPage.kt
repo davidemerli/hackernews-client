@@ -1,7 +1,6 @@
-package it.devddk.hackernewsclient.pages.news
+package it.devddk.hackernewsclient.pages
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -16,6 +15,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Fullscreen
@@ -53,23 +53,18 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.PagerState
-import com.google.accompanist.pager.rememberPagerState
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.accompanist.web.WebViewState
 import com.google.accompanist.web.rememberWebViewState
 import it.devddk.hackernewsclient.R
-import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
+import it.devddk.hackernewsclient.domain.model.collection.UserStories
 import it.devddk.hackernewsclient.domain.model.items.Item
-import it.devddk.hackernewsclient.pages.TabbedView
 import it.devddk.hackernewsclient.pages.home.components.HNTopBar
 import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.shared.components.WebViewWithPrefs
 import it.devddk.hackernewsclient.shared.components.news.NewsItem
 import it.devddk.hackernewsclient.shared.components.news.SwipeableItem
-import it.devddk.hackernewsclient.shared.components.topbars.ROUTE_ICONS
-import it.devddk.hackernewsclient.shared.components.topbars.ROUTE_TITLES
 import it.devddk.hackernewsclient.utils.SettingPrefs
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.ItemCollectionHolder
@@ -77,15 +72,13 @@ import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class,
-    ExperimentalPagerApi::class)
-fun NewsPage(
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+fun UserPage(
     navController: NavController,
     windowSizeClass: WindowSizeClass,
-    itemCollection: ItemCollection,
+    username: String,
 ) {
     val context = LocalContext.current
     val dataStore = SettingPrefs(context)
@@ -95,7 +88,7 @@ fun NewsPage(
     val viewModel: HomePageViewModel = viewModel()
     val itemViewModel: SingleNewsViewModel = viewModel()
 
-    val itemCollectionHolder = viewModel.collections[itemCollection]!!
+    val itemCollectionHolder = viewModel.userCollection(UserStories(username))
 
     val itemUiState by itemViewModel.uiState.collectAsState(initial = SingleNewsUiState.Loading)
 
@@ -110,11 +103,6 @@ fun NewsPage(
     val darkMode by dataStore.darkMode.collectAsState(initial = SettingPrefs.DEFAULT_DARK_MODE)
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val pagerState = rememberPagerState()
-
-    val shouldShowFAB by remember {
-        derivedStateOf { pagerState.currentPage == 0 && pagerState.pageCount == 2 }
-    }
 
     val onItemClick = { item: Item ->
         coroutineScope.launch {
@@ -153,8 +141,8 @@ fun NewsPage(
         Scaffold(
             topBar = {
                 HNTopBar(
-                    title = ROUTE_TITLES[itemCollection::class.java.simpleName] ?: "route_name_error",
-                    leadingIcon = ROUTE_ICONS[itemCollection::class.java.simpleName],
+                    title = "$username History",
+                    leadingIcon = Icons.Filled.Badge,
                     navController = navController,
                     drawerState = drawerState,
                     selectedItem = selectedItem,
@@ -181,21 +169,17 @@ fun NewsPage(
             },
             floatingActionButton = {
                 if (selectedItem != null) {
-                    AnimatedVisibility(
-                        visible = shouldShowFAB
-                    ) {
-                        FloatingActionButton(onClick = {
-                            openDialog = true
-                        }) {
-                            Icon(Icons.Filled.Fullscreen, "Expand")
-                        }
+                    FloatingActionButton(onClick = {
+                        openDialog = true
+                    }) {
+                        Icon(Icons.Filled.Fullscreen, "Expand")
                     }
                 }
             }
         ) {
             when (windowSizeClass.widthSizeClass) {
                 WindowWidthSizeClass.Expanded -> {
-                    NewsExpandedLayout(
+                    UserExpandedLayout(
                         modifier = Modifier.padding(top = it.calculateTopPadding()),
                         navController = navController,
                         itemCollection = itemCollectionHolder,
@@ -205,12 +189,11 @@ fun NewsPage(
                         expanded = expandedArticleView,
                         onExpandedClick = { expandedArticleView = !expandedArticleView },
                         webViewState = webViewState,
-                        pagerState = pagerState,
                     )
                 }
                 WindowWidthSizeClass.Compact,
                 WindowWidthSizeClass.Medium -> {
-                    NewsCompactLayout(
+                    UserCompactLayout(
                         modifier = Modifier.padding(top = it.calculateTopPadding()),
                         navController = navController,
                         itemCollection = itemCollectionHolder,
@@ -240,7 +223,7 @@ fun NewsPage(
 
 @Composable
 @OptIn(ExperimentalPagerApi::class)
-fun NewsExpandedLayout(
+fun UserExpandedLayout(
     modifier: Modifier = Modifier,
     navController: NavController,
     itemCollection: ItemCollectionHolder,
@@ -250,13 +233,12 @@ fun NewsExpandedLayout(
     expanded: Boolean = false,
     onExpandedClick: () -> Unit,
     webViewState: WebViewState,
-    pagerState: PagerState,
 ) {
     Row(
         modifier = modifier.fillMaxSize()
     ) {
         if (!expanded) {
-            NewsCompactLayout(
+            UserCompactLayout(
                 navController = navController,
                 selectedItem = null,
                 itemCollection = itemCollection,
@@ -292,7 +274,6 @@ fun NewsExpandedLayout(
                 navController = navController,
                 item = selectedItem,
                 webViewState = webViewState,
-                pagerState = pagerState,
             )
         } else {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -305,9 +286,9 @@ fun NewsExpandedLayout(
     }
 }
 
-@OptIn(ExperimentalPagerApi::class)
 @Composable
-fun NewsCompactLayout(
+@OptIn(ExperimentalPagerApi::class)
+fun UserCompactLayout(
     modifier: Modifier = Modifier,
     navController: NavController,
     itemCollection: ItemCollectionHolder,
@@ -372,7 +353,6 @@ fun NewsCompactLayout(
                                 item = itemState.item,
                                 onClick = { onItemClick(itemState.item) },
                                 onClickComments = { onItemClickComments(itemState.item) },
-                                onClickAuthor = { navController.navigate("user/${itemState.item.by}") },
                                 toggleCollection = { item, itemCollection ->
                                     coroutineScope.launch {
                                         viewModel.toggleFromCollection(item.id, itemCollection)
@@ -392,11 +372,4 @@ fun NewsCompactLayout(
             }
         }
     }
-}
-
-sealed class NewsPageRoutes
-
-// TODO: refactor this?
-data class HackerNewsView(val query: ItemCollection) : NewsPageRoutes() {
-    val route: String = query::class.java.simpleName
 }

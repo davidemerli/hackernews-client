@@ -3,7 +3,6 @@ package it.devddk.hackernewsclient.shared.components.news
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.google.accompanist.placeholder.material.placeholder
@@ -19,7 +18,7 @@ fun NewsItemTime(
 ) {
     val context = LocalContext.current
 
-    val timeString = remember { TimeDisplayUtils(context).toDateTimeAgoInterval(time) }
+    val timeString = TimeDisplayUtils(context).toDateTimeAgoInterval(time)
 
     Text(
         timeString,

@@ -1,7 +1,6 @@
 package it.devddk.hackernewsclient.viewmodels
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import it.devddk.hackernewsclient.domain.interaction.collection.AddItemToCollectionUseCase
 import it.devddk.hackernewsclient.domain.interaction.collection.GetCollectionsUseCase
 import it.devddk.hackernewsclient.domain.interaction.collection.RemoveItemFromCollectionUseCase
@@ -11,6 +10,7 @@ import it.devddk.hackernewsclient.domain.interaction.item.RefreshAllItemsUseCase
 import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
 import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
+import it.devddk.hackernewsclient.domain.model.collection.UserStories
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import kotlinx.coroutines.CancellationException
@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import timber.log.Timber
@@ -43,6 +42,16 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         )
     }
 
+    fun userCollection(userStories: UserStories): ItemCollectionHolder {
+        return ItemCollectionHolder(
+            userStories,
+            getNewStories,
+            getItemById,
+            addToCollection,
+            removeFromCollection,
+        )
+    }
+
     suspend fun toggleFromCollection(
         itemId: Int,
         collection: UserDefinedItemCollection,
@@ -50,13 +59,17 @@ class HomePageViewModel : ViewModel(), KoinComponent {
         return getCollectionsByItem(itemId).mapCatching { collections ->
             if (!collections.contains(collection)) {
                 addToCollection(itemId, collection).onFailure {
-                    Timber.e(it,
-                        "Failed to add to collection")
+                    Timber.e(
+                        it,
+                        "Failed to add to collection"
+                    )
                 }
             } else {
                 removeFromCollection(itemId, collection).onFailure {
-                    Timber.e(it,
-                        "Failed to remove to collection")
+                    Timber.e(
+                        it,
+                        "Failed to remove to collection"
+                    )
                 }
             }
             !collections.contains(collection)
@@ -73,7 +86,7 @@ class ItemCollectionHolder(
     private val getNewStories: GetNewStoriesUseCase,
     private val getItemById: GetItemUseCase,
     private val addToCollection: AddItemToCollectionUseCase,
-    private val removeFromCollection: RemoveItemFromCollectionUseCase
+    private val removeFromCollection: RemoveItemFromCollectionUseCase,
 ) {
     // internal state
     private val items: MutableMap<ItemId, NewsItemState> = ConcurrentHashMap()
@@ -84,12 +97,12 @@ class ItemCollectionHolder(
     private val _itemListFlow: MutableSharedFlow<List<NewsItemState>> = MutableSharedFlow(1)
     val itemListFlow = _itemListFlow.asSharedFlow()
 
-
     suspend fun loadAll() {
         synchronized(items) {
             items.clear()
         }
         _pageState.emit(NewsPageState.Loading)
+
         getNewStories(collection).fold(
             onSuccess = { itemsId ->
                 synchronized(items) {
@@ -105,7 +118,7 @@ class ItemCollectionHolder(
                 updateItemList()
             },
             onFailure = {
-                // TODO
+                Timber.e(it, "Failed to load items")
             }
         )
     }

@@ -80,7 +80,6 @@ import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.ItemCollectionHolder
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -131,7 +130,7 @@ fun HomePage(
 
     val readabilityUrl = "https://readability.davidemerli.com?convert=${selectedItem?.url ?: ""}"
 
-    //TODO: refine this check and allow for switching if the user is online
+    // TODO: refine this check and allow for switching if the user is online
     val showDownloadedHtml = selectedItem?.htmlPage != null
 
     val webViewState = if (showDownloadedHtml) {
@@ -427,6 +426,7 @@ fun CompactLayout(
                 NewsColumn(
                     itemCollection = topCollection,
                     onItemClick = onItemClick,
+                    onClickAuthor = { item -> navController.navigate("user/${item.by}") },
                     toggleCollection = { item, itemCollection ->
                         coroutineScope.launch {
                             viewModel.toggleFromCollection(item.id, itemCollection)

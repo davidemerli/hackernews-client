@@ -20,6 +20,4 @@ class UserRepositoryImpl : UserRepository, KoinComponent{
             checkNotNull(user) { "Failed to retrieve user $username" }
         }
     }
-
-
 }

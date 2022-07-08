@@ -7,16 +7,16 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Menu
@@ -109,8 +109,8 @@ val ROUTE_ICONS = mapOf(
     "JobStories" to Icons.Filled.Work,
     "Settings" to Icons.Filled.Settings,
     "Feedback" to Icons.Filled.Feedback,
-    "Favorites" to Icons.Filled.Favorite,
-    "ReadLater" to Icons.Filled.Update,
+    "Favorites" to Icons.Filled.Star,
+    "ReadLater" to Icons.Filled.Bookmark,
     "About" to Icons.Filled.Info
 )
 

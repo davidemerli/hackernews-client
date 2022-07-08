@@ -1,15 +1,16 @@
 package it.devddk.hackernewsclient.shared.components.news
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BookmarkAdd
+import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
-import androidx.compose.material.icons.filled.Update
-import androidx.compose.material.icons.filled.UpdateDisabled
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.RenderVectorGroup
@@ -17,19 +18,25 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.domain.model.items.Item
+import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.items.favorite
 import it.devddk.hackernewsclient.domain.model.items.readLater
+import it.devddk.hackernewsclient.domain.model.search.SearchResultMetaData
+import it.devddk.hackernewsclient.shared.components.comments.CommentItem
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
 import me.saket.swipe.rememberSwipeableActionsState
 import timber.log.Timber
 
 @Composable
-fun SwipeableNewsItem(
+fun SwipeableItem(
+    modifier: Modifier = Modifier,
     item: Item = placeholderItem,
+    searchMetaData: SearchResultMetaData? = null,
     placeholder: Boolean = false,
     onClick: () -> Unit = {},
     onClickComments: () -> Unit = {},
+    onClickAuthor: () -> Unit = {},
     toggleCollection: (Item, UserDefinedItemCollection) -> Unit = { _, _ -> },
 ) {
     val readLater = remember { mutableStateOf(item.collections.readLater) }
@@ -41,7 +48,7 @@ fun SwipeableNewsItem(
 
     val readLaterAction = SwipeAction(
         icon = rememberVectorPainter(
-            if (!readLater.value) Icons.Filled.Update else Icons.Filled.UpdateDisabled,
+            if (!readLater.value) Icons.Filled.BookmarkAdd else Icons.Filled.BookmarkRemove,
             tintColor = tintColor
         ),
         background = MaterialTheme.colorScheme.tertiary,
@@ -68,17 +75,38 @@ fun SwipeableNewsItem(
         startActions = listOf(favoriteAction),
         endActions = listOf(readLaterAction),
         swipeThreshold = 128.dp,
-        backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.background
+        backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.background,
+        modifier = modifier,
     ) {
-        Timber.d("${if(item.collections.readLater) "R" else ""} ${if(item.collections.favorite) "F" else ""} ${item.title}")
-        NewsItem(
-            item = item,
-            placeholder = placeholder,
-            onClick = onClick,
-            onClickComments = onClickComments,
-            readLater = readLater,
-            favorite = favorite
-        )
+        Timber.d("${if (item.collections.readLater) "R" else ""} ${if (item.collections.favorite) "F" else ""} ${item.title}")
+
+        when(item.type) {
+            ItemType.JOB,
+            ItemType.POLL,
+            ItemType.STORY ->
+                NewsItem(
+                    item = item,
+                    placeholder = placeholder,
+                    onClick = onClick,
+                    onClickComments = onClickComments,
+                    onClickAuthor = onClickAuthor,
+                    readLater = readLater,
+                    favorite = favorite
+                )
+            ItemType.COMMENT ->
+                CommentItem(
+                    item = item,
+                    searchMetaData = searchMetaData,
+                    placeholder = placeholder,
+                    onClick = onClick,
+                    readLater = readLater,
+                    favorite = favorite
+                )
+            else -> {
+                Text("${item.id}")
+            }
+        }
+
     }
 }
 

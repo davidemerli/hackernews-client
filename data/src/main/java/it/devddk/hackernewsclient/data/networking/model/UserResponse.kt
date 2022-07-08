@@ -5,7 +5,7 @@ import it.devddk.hackernewsclient.data.networking.utils.toLocalDateTime
 import it.devddk.hackernewsclient.domain.model.User
 
 data class UserResponse(
-    val id: String,
+    val id: String? = null,
     val created: Long? = null,
     val karma: Int? = null,
     val about: String? = null,
@@ -13,7 +13,7 @@ data class UserResponse(
 ) : DomainMapper<User> {
     override fun mapToDomainModel(): User {
         return User(
-            id,
+            id!!,
             created?.toLocalDateTime(),
             karma,
             about,

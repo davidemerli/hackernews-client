@@ -104,7 +104,7 @@ fun ArticlePage(
             Error(throwable = uiStateValue.throwable)
         }
         is SingleNewsUiState.Loading -> {
-            Loading() //TODO: better loading screen
+            Loading() // TODO: better loading screen
         }
         is SingleNewsUiState.ItemLoaded -> {
             ArticlePage(
@@ -192,7 +192,7 @@ fun Loading() {
 }
 
 @Composable
-@OptIn(ExperimentalPagerApi::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalPagerApi::class)
 fun TabbedView(
     modifier: Modifier = Modifier,
     item: Item,

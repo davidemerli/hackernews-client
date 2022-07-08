@@ -2,12 +2,12 @@ package it.devddk.hackernewsclient.shared.components.news
 
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.BookmarkAdd
+import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Update
-import androidx.compose.material.icons.filled.UpdateDisabled
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -68,7 +68,7 @@ fun AddToFavorite(
         text = { Text(if (!favorite) "Add to favorites" else "Remove from favorites") },
         leadingIcon = {
             Icon(
-                if (!favorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                if (!favorite) Icons.Filled.Star else Icons.Filled.StarOutline,
                 contentDescription = "Favorite",
             )
         },
@@ -85,7 +85,7 @@ fun AddToReadLater(
         text = { Text(if (!readLater) "Read later" else "Remove from read later") },
         leadingIcon = {
             Icon(
-                if (!readLater) Icons.Filled.Update else Icons.Filled.UpdateDisabled,
+                if (!readLater) Icons.Filled.BookmarkAdd else Icons.Filled.BookmarkRemove,
                 contentDescription = "Read later",
             )
         },
