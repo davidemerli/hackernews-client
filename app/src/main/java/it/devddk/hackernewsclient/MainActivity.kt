@@ -13,9 +13,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import it.devddk.hackernewsclient.domain.model.utils.ALL_QUERIES
+import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
+import it.devddk.hackernewsclient.pages.AboutPage
+import it.devddk.hackernewsclient.pages.FeedbackPage
 import it.devddk.hackernewsclient.pages.HackerNewsView
 import it.devddk.hackernewsclient.pages.NewsPage
 import it.devddk.hackernewsclient.pages.SearchPage
@@ -77,6 +80,60 @@ class MainActivity : ComponentActivity() {
 
             composable("settings") {
                 SettingsPage(navController = navController)
+            }
+
+            composable("about") {
+                AboutPage(navController = navController)
+            }
+
+            composable("feedback") {
+                FeedbackPage(navController = navController)
+            }
+
+            composable(
+                "feedback/{itemId}",
+                arguments = listOf(
+                    navArgument("itemId") {
+                        type = NavType.IntType
+                    }
+                ),
+            ) { backStackEntry ->
+                FeedbackPage(
+                    navController = navController,
+                    itemId = backStackEntry.arguments?.getInt("itemId")!!
+                )
+            }
+
+            composable(
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "https://news.ycombinator.com/item?id={itemId}" }
+                ),
+                arguments = listOf(
+                    navArgument("itemId") {
+                        type = NavType.IntType
+                    }
+                ),
+                route = "items/{itemId}"
+            ) { backStackEntry ->
+                SingleNewsPage(
+                    navController = navController,
+                    id = backStackEntry.arguments?.getInt("itemId")!!
+                )
+            }
+
+            composable(
+                arguments = listOf(
+                    navArgument("itemId") {
+                        type = NavType.IntType
+                    }
+                ),
+                route = "items/{itemId}/comments"
+            ) { backStackEntry ->
+                SingleNewsPage(
+                    navController = navController,
+                    id = backStackEntry.arguments?.getInt("itemId")!!,
+                    selectedView = "comments"
+                )
             }
         }
     }

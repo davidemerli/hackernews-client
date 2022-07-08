@@ -3,82 +3,150 @@ package it.devddk.hackernewsclient.widget
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.glance.Button
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
-import androidx.glance.LocalContext
+import androidx.glance.ImageProvider
+import androidx.glance.action.Action
 import androidx.glance.action.ActionParameters
+import androidx.glance.action.actionParametersOf
+import androidx.glance.action.actionStartActivity
+import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
-import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.lazy.items
 import androidx.glance.appwidget.state.updateAppWidgetState
+import androidx.glance.appwidget.updateAll
 import androidx.glance.background
 import androidx.glance.currentState
+import androidx.glance.layout.Alignment
+import androidx.glance.layout.Column
 import androidx.glance.layout.Row
+import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
+import androidx.glance.layout.padding
 import androidx.glance.state.GlanceStateDefinition
 import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.Text
+import androidx.glance.text.TextStyle
+import androidx.glance.unit.ColorProvider
+import com.google.accompanist.pager.ExperimentalPagerApi
+import it.devddk.hackernewsclient.MainActivity
+import it.devddk.hackernewsclient.R
+import it.devddk.hackernewsclient.components.getDomainName
+import it.devddk.hackernewsclient.components.openInBrowser
 import it.devddk.hackernewsclient.domain.interaction.item.GetItemUseCase
 import it.devddk.hackernewsclient.domain.interaction.item.GetNewStoriesUseCase
+import it.devddk.hackernewsclient.domain.model.collection.TopStories
+import it.devddk.hackernewsclient.domain.model.utils.ItemId
+import it.devddk.hackernewsclient.ui.theme.md_theme_dark_onBackground
+import it.devddk.hackernewsclient.ui.theme.md_theme_dark_onSurface
+import it.devddk.hackernewsclient.utils.decodeJson
+import it.devddk.hackernewsclient.utils.encodeJson
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.java.KoinJavaComponent.inject
+import timber.log.Timber
 
 class ExactAppWidget : GlanceAppWidget() {
     override val sizeMode: SizeMode = SizeMode.Exact
 
     override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
 
+    @OptIn(ExperimentalPagerApi::class, ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
-        val context = LocalContext.current
         val prefs = currentState<Preferences>()
+        val items = prefs[ExactAppWidgetReceiver.itemList]?.map {
+            it.decodeJson(Result::class.java)
+        }
 
-        val test = prefs[ExactAppWidgetReceiver.test]
+        Timber.d("itemList: $items")
 
-        LazyColumn(
-            modifier = GlanceModifier.fillMaxSize().background(Color.Red)
+        Column(
+            modifier = GlanceModifier
+                .fillMaxSize()
+                .background(Color.Transparent)
         ) {
-            item {
-                Row(
-                    modifier = GlanceModifier.fillMaxWidth()
-                ) {
-                    Button(
-                        text = "refresh", onClick = actionRunCallback<RefreshNewsCallback>()
-                    )
-                }
+            Row(
+                modifier = GlanceModifier
+                    .fillMaxWidth()
+                    .background(ImageProvider(R.drawable.widget_background))
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "HackerNews",
+                )
+
+                Spacer(GlanceModifier.defaultWeight())
+
+                Button(
+                    text = "Refresh",
+                    onClick = actionRunCallback<RefreshNewsCallback>()
+                )
             }
 
-            test?.let {
-                items(test.toList()) { item ->
-                    Text(text = item)
+            Column(
+                modifier = GlanceModifier
+                    .fillMaxSize()
+                    .background(ImageProvider(R.drawable.widget_background))
+                    .padding(8.dp),
+            ) {
+                items?.map { it ->
+                    it.getOrNull()?.let { item ->
+
+                        val itemMap = item as Map<*, *>
+
+                        Column(
+                            modifier = GlanceModifier
+                                .padding(horizontal = 4.dp, vertical=8.dp)
+                                .clickable(onClick = actionStartActivity<MainActivity>())
+                        ) {
+                            Text(
+                                text = "${itemMap["by"]} - ${getDomainName(itemMap["url"].toString())}",
+                                style = TextStyle(
+                                    color = ColorProvider(color = md_theme_dark_onBackground),
+                                    fontSize = MaterialTheme.typography.titleMedium.fontSize
+                                )
+                            )
+
+                            Text(
+                                text = itemMap["title"].toString(),
+                                style = TextStyle(
+                                    color = ColorProvider(color = md_theme_dark_onBackground),
+                                    fontSize = MaterialTheme.typography.titleLarge.fontSize
+                                )
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-class ExactAppWidgetReceiver : GlanceAppWidgetReceiver() {
+class ExactAppWidgetReceiver : GlanceAppWidgetReceiver(), KoinComponent {
     override val glanceAppWidget = ExactAppWidget()
 
     private val coroutineScope = MainScope()
 
-    @Inject
-    private lateinit var getNewStories: GetNewStoriesUseCase
-
-    @Inject
-    private lateinit var getItemById: GetItemUseCase
+    private val getNewStoriesUseCase: GetNewStoriesUseCase by inject()
+    private val getItemUseCase: GetItemUseCase by inject()
 
     override fun onUpdate(
         context: Context,
@@ -93,39 +161,55 @@ class ExactAppWidgetReceiver : GlanceAppWidgetReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
 
-        observeData(context)
+        when (intent.action) {
+            RefreshNewsCallback.UPDATE_ACTION -> observeData(context)
+        }
     }
 
     private fun observeData(context: Context) {
         coroutineScope.launch {
-//                getNewStories(TopStories).fold(
-//                onSuccess = { it.map { id -> id.toString() }.toSet() },
-//                onFailure = { setOf("error") }
-//            )
 
-            val glanceId = GlanceAppWidgetManager(context).getGlanceIds(ExactAppWidget::class.java)
-                .firstOrNull()
+            getNewStoriesUseCase(TopStories).getOrNull()?.let {
+                val glanceId = GlanceAppWidgetManager(context).getGlanceIds(ExactAppWidget::class.java)
+                    .firstOrNull()
 
-            glanceId?.let {
-                updateAppWidgetState(context, PreferencesGlanceStateDefinition, it) { pref ->
-                    pref.toMutablePreferences().apply {
+                Timber.d("items $it")
 
-                        this[test] = setOf("1 - ${Math.random()}", "2 - ${Math.random()}", "3 - ${Math.random()}")
+                val items = it.subList(0, 5).map { item ->
+                    Timber.d("item $item - ${getItemUseCase(item).encodeJson()}")
+
+                    getItemUseCase(item).encodeJson()
+                }.toSet()
+
+                glanceId?.let { id ->
+                    updateAppWidgetState(context, PreferencesGlanceStateDefinition, id) { pref ->
+
+                        pref.toMutablePreferences().apply {
+                            this[itemList] = items
+
+                            glanceAppWidget.updateAll(context)
+                        }
                     }
                 }
-
-                glanceAppWidget.update(context, it)
             }
         }
     }
 
+    private fun openArticle(context: Context) {
+
+    }
+
     companion object {
-        val test = stringSetPreferencesKey("test")
+        val itemList = stringSetPreferencesKey("itemList")
     }
 }
 
 class RefreshNewsCallback : ActionCallback {
-    override suspend fun onRun(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
+    override suspend fun onRun(
+        context: Context,
+        glanceId: GlanceId,
+        parameters: ActionParameters
+    ) {
         val intent = Intent(context, ExactAppWidgetReceiver::class.java).apply {
             action = UPDATE_ACTION
         }
@@ -137,3 +221,19 @@ class RefreshNewsCallback : ActionCallback {
         const val UPDATE_ACTION = "updateAction"
     }
 }
+
+class OpenArticleCallback : ActionCallback {
+    override suspend fun onRun(
+        context: Context,
+        glanceId: GlanceId,
+        parameters: ActionParameters
+    ) {
+        openInBrowser(context, "https://news.ycombinator.com/item?id=${parameters[actionWidgetKey]}")
+
+        // start actiity
+
+    }
+
+}
+
+val actionWidgetKey = ActionParameters.Key<ItemId>("action-widget-itemid")

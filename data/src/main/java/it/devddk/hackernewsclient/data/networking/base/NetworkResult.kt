@@ -4,13 +4,14 @@ import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
 
-interface DomainMapper<T : Any> {
+interface DomainMapper<T : Any?> {
     fun mapToDomainModel(): T
 }
 
 interface RoomMapper<out T : Any> {
     fun mapToRoomEntity(): T
 }
+
 /*
 
 /**

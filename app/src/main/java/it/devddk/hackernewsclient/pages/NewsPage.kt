@@ -14,18 +14,24 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import it.devddk.hackernewsclient.components.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.components.HomePageTopBar
 import it.devddk.hackernewsclient.components.NewsItem
-import it.devddk.hackernewsclient.domain.model.utils.CollectionQueryType
-import it.devddk.hackernewsclient.domain.model.utils.TopStories
+import it.devddk.hackernewsclient.components.SwipeableNewsItem
+import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
+import it.devddk.hackernewsclient.domain.model.collection.TopStories
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.NewsPageState
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,7 +42,7 @@ fun NewsPage(navController: NavController, route: NewsPageRoutes) {
 
     val pageState = viewModel.pageState.collectAsState(NewsPageState.Loading)
 
-    val query = viewModel.uiState.collectAsState(initial = TopStories)
+    val query = viewModel.currentQuery.collectAsState(initial = TopStories)
 
     LaunchedEffect(route) {
         when (route) {
@@ -81,35 +87,58 @@ fun ItemInfiniteList(navController: NavController, modifier: Modifier = Modifier
     val itemListState =
         viewModel.itemListFlow.collectAsState(initial = List(TopStories.maxAmount) { NewsItemState.Loading })
 
-    LazyColumn(
-        modifier = modifier,
-        state = lazyListState
-    ) {
-        itemsIndexed(itemListState.value) { index, itemState ->
-            when (itemState) {
-                is NewsItemState.ItemLoaded -> {
-                    NewsItem(
-                        itemState.item,
-                        onClick = { navController.navigate("items/${itemState.item.id}") },
-                        placeholder = false
-                    )
-                }
-                is NewsItemState.Loading, is NewsItemState.ItemError -> {
-                    LaunchedEffect(index) {
-                        viewModel.requestItem(index)
-                    }
+    val coroutineScope = rememberCoroutineScope()
 
-                    NewsItem(placeholder = true)
-                }
+    val refreshState = rememberSwipeRefreshState(isRefreshing = false)
+
+    SwipeRefresh(
+        state = refreshState,
+        onRefresh = {
+            coroutineScope.launch {
+                Timber.d("refreshing")
+                viewModel.refreshPage()
             }
+        },
+    ) {
+        LazyColumn(
+            modifier = modifier,
+            state = lazyListState,
+        ) {
+            itemsIndexed(itemListState.value) { index, itemState ->
+                when (itemState) {
+                    is NewsItemState.ItemLoaded -> {
+                        SwipeableNewsItem(
+                            itemState.item,
+                            onClick = {
+                                navController.navigate(
+                                    "items/${itemState.item.id}"
+                                )
+                            },
+                            onClickComments = {
+                                navController.navigate(
+                                    "items/${itemState.item.id}/comments"
+                                )
+                            },
+                            placeholder = false
+                        )
+                    }
+                    is NewsItemState.Loading, is NewsItemState.ItemError -> {
+                        LaunchedEffect(index) {
+                            viewModel.requestItem(index)
+                        }
 
-            Divider(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
-                thickness = 0.5.dp
-            )
+                        NewsItem(placeholder = true)
+                    }
+                }
 
-            itemListState.value[index]
+                Divider(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
+                    thickness = 0.5.dp
+                )
+
+                itemListState.value[index]
+            }
         }
     }
 }
@@ -126,6 +155,6 @@ fun LoadingScreen() {
 
 sealed class NewsPageRoutes
 
-data class HackerNewsView(val query: CollectionQueryType) : NewsPageRoutes() {
+data class HackerNewsView(val query: ItemCollection) : NewsPageRoutes() {
     val route: String = query::class.java.simpleName
 }

@@ -1,9 +1,9 @@
 package it.devddk.hackernewsclient.pages
 
-import android.text.Html
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
@@ -40,12 +39,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
-import androidx.compose.ui.unit.sp
+import androidx.core.text.HtmlCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -54,12 +52,12 @@ import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import com.google.accompanist.web.rememberWebViewState
 import it.devddk.hackernewsclient.components.ArticleView
+import it.devddk.hackernewsclient.components.CommentText
 import it.devddk.hackernewsclient.components.ExpandableComment
 import it.devddk.hackernewsclient.components.ItemBy
 import it.devddk.hackernewsclient.components.ItemDomain
 import it.devddk.hackernewsclient.components.ItemTime
 import it.devddk.hackernewsclient.components.ItemTitle
-import it.devddk.hackernewsclient.components.LinkifyText
 import it.devddk.hackernewsclient.components.SingleNewsPageTopBar
 import it.devddk.hackernewsclient.components.WebViewWithPrefs
 import it.devddk.hackernewsclient.domain.model.items.Item
@@ -71,14 +69,16 @@ import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.max
-import androidx.compose.foundation.layout.Row as Row1
 
 fun String.toSpanned(): String {
-    return Html.fromHtml(this, Html.FROM_HTML_MODE_COMPACT).toString()
+    return HtmlCompat.fromHtml(
+        this,
+        HtmlCompat.FROM_HTML_MODE_LEGACY
+    ).toString().trim()
 }
 
 @Composable
-fun SingleNewsPage(navController: NavController, id: Int?) {
+fun SingleNewsPage(navController: NavController, id: Int?, selectedView: String? = null) {
 
     val mViewModel: SingleNewsViewModel = viewModel()
     val uiState = mViewModel.uiState.collectAsState(SingleNewsUiState.Loading)
@@ -95,9 +95,20 @@ fun SingleNewsPage(navController: NavController, id: Int?) {
             Loading()
         }
         is SingleNewsUiState.ItemLoaded -> {
-            TabbedView(uiStateValue.item, navController)
+            TabbedView(uiStateValue.item, navController, selectedView)
         }
     }
+}
+
+@Composable
+fun SingleNewsPage(navController: NavController, item: Item, selectedView: String? = null) {
+    val viewModel: SingleNewsViewModel = viewModel()
+
+    LaunchedEffect(item.id) {
+        viewModel.setId(item.id)
+    }
+
+    TabbedView(item = item, navController = navController, selectedView)
 }
 
 @Composable
@@ -115,10 +126,11 @@ fun Loading() {
     ExperimentalMaterial3Api::class,
     ExperimentalPagerApi::class,
 )
-fun TabbedView(item: Item, navController: NavController) {
+fun TabbedView(item: Item, navController: NavController, selectedView: String?) {
     val tabs = item.url?.let { listOf("Article", "Comments (${item.descendants ?: 0})") } ?: listOf(
         "Comments (${item.descendants ?: 0})"
     )
+
     val coroutineScope = rememberCoroutineScope()
     val pagerState = rememberPagerState()
 
@@ -126,18 +138,23 @@ fun TabbedView(item: Item, navController: NavController) {
     val webviewState = rememberWebViewState(url = item.url ?: "")
 
     val dataStore = SettingPrefs(LocalContext.current)
-    val preferredView = dataStore.preferredView.collectAsState(initial = DEFAULT_PREFERRED_VIEW)
+    val preferredView = selectedView
+        ?: dataStore.preferredView.collectAsState(initial = DEFAULT_PREFERRED_VIEW).value
 
     if (tabs.size > 1) {
         LaunchedEffect(preferredView) {
             coroutineScope.launch {
-                pagerState.scrollToPage(if (preferredView.value == "Article") 0 else 1)
+                pagerState.scrollToPage(if (preferredView == "article") 0 else 1)
             }
         }
     }
 
     Scaffold(
-        topBar = { SingleNewsPageTopBar(item, navController) },
+        topBar = {
+            if (!fullScreenWebView) {
+                SingleNewsPageTopBar(item, navController)
+            }
+        },
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             if (tabs[pagerState.currentPage] == "Article") {
@@ -192,13 +209,13 @@ fun TabbedView(item: Item, navController: NavController) {
                                 ArticleView(item, webviewState)
                             }
                             1 -> {
-                                CommentsView(item)
+                                CommentsView(item, navController = navController)
                             }
                         }
                     }
                 }
             } else {
-                CommentsView(item)
+                CommentsView(item, navController = navController)
             }
         }
     }
@@ -206,7 +223,7 @@ fun TabbedView(item: Item, navController: NavController) {
 
 @Composable
 @OptIn(ExperimentalFoundationApi::class, ExperimentalFoundationApi::class)
-fun CommentsView(item: Item) {
+fun CommentsView(item: Item, navController: NavController) {
     val context = LocalContext.current
     val dataStore = SettingPrefs(context)
     val depthSize = dataStore.depth.collectAsState(initial = SettingPrefs.DEFAULT_DEPTH)
@@ -218,7 +235,12 @@ fun CommentsView(item: Item) {
 
     LazyColumn(
         state = scrollState,
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize()
+        // .scrollbar(
+        //    scrollState,
+        //    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+        //    knobColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        // )
     ) {
         item {
             Column(
@@ -228,7 +250,7 @@ fun CommentsView(item: Item) {
             ) {
                 ItemDomain(item = item)
                 ItemTitle(item = item)
-                Row1 {
+                Row {
                     ItemBy(item = item)
 
                     Text(text = " - ")
@@ -250,7 +272,9 @@ fun CommentsView(item: Item) {
                 ExpandableComment(
                     comment = comment,
                     rootItem = item,
-                    depthSize = depthSize.value.toInt()
+                    depthSize = depthSize.value.toInt(),
+                    listState = scrollState,
+                    navController = navController,
                 )
             }
         }
@@ -273,18 +297,7 @@ fun CommentsView(item: Item) {
 @Composable
 fun ArticleDescription(item: Item) {
     if (!item.text.isNullOrBlank()) {
-        SelectionContainer {
-            LinkifyText(
-                item.text!!.toSpanned(),
-                modifier = Modifier.padding(8.dp),
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Light,
-                    lineHeight = 19.5.sp
-                ),
-                linkColor = MaterialTheme.colorScheme.secondary
-            )
-        }
+        CommentText(item = item)
     }
 }
 
