@@ -248,7 +248,7 @@ fun SearchPage(
 fun ResultItem(result: SearchResult, onClick: () -> Unit = {}) {
     Timber.d("ResultItem: ${result.item.by} - ${result.item.type}")
 
-    //TODO: differentiate onClick
+    // TODO: differentiate onClick
 
     when (result.item.type) {
         ItemType.COMMENT,

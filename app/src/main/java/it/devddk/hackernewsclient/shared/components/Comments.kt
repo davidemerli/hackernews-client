@@ -240,7 +240,7 @@ fun CommentCard(
 
         NewsStatusIcons(
             favorite = favorite.value,
-            readLater =readLater.value,
+            readLater = readLater.value,
             modifier = Modifier.constrainAs(icons) {
                 top.linkTo(parent.top, margin = 2.dp)
                 end.linkTo(more.start)

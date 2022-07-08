@@ -77,11 +77,12 @@ import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class,
-    ExperimentalPagerApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class,
+    ExperimentalPagerApi::class
+)
 fun NewsPage(
     navController: NavController,
     windowSizeClass: WindowSizeClass,

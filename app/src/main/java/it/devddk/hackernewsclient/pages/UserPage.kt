@@ -127,6 +127,8 @@ fun UserPage(
 
     var openDialog by remember { mutableStateOf(false) }
 
+    // TODO: make this a bottomSheet with only compact view
+
     HNModalNavigatorPanel(
         navController = navController,
         state = drawerState

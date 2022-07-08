@@ -80,7 +80,7 @@ fun SwipeableItem(
     ) {
         Timber.d("${if (item.collections.readLater) "R" else ""} ${if (item.collections.favorite) "F" else ""} ${item.title}")
 
-        when(item.type) {
+        when (item.type) {
             ItemType.JOB,
             ItemType.POLL,
             ItemType.STORY ->
@@ -106,7 +106,6 @@ fun SwipeableItem(
                 Text("${item.id}")
             }
         }
-
     }
 }
 
