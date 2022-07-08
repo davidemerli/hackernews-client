@@ -35,4 +35,5 @@
     </plurals>
     <string name="close_comments">Close comments</string>
     <string name="open_comments">Open comments</string>
+    <string name="no_item_selected">No Item Selected</string>
 </resources>

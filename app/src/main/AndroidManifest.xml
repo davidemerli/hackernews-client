@@ -11,7 +11,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Material3.Dark"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        android:largeHeap="true">
 
         <activity
             android:name="it.devddk.hackernewsclient.MainActivity"
@@ -29,9 +30,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data
-                    android:host="news.combinator.com"
-                    android:scheme="https" />
+                <data android:scheme="https" android:host="news.ycombinator.com" android:pathPattern="/item" />
             </intent-filter>
         </activity>
 

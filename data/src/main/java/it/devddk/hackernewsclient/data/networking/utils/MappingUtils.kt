@@ -5,17 +5,17 @@ import it.devddk.hackernewsclient.domain.model.items.ItemType
 import org.jsoup.Jsoup
 import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 
-fun String?.toItemType(): ItemType {
+fun String?.toItemType(): ItemType? {
     return when (this) {
         "story" -> ItemType.STORY
         "poll" -> ItemType.POLL
         "pollopt" -> ItemType.POLL_OPT
         "job" -> ItemType.JOB
         "comment" -> ItemType.COMMENT
-        null -> throw ResponseConversionException("null string is not a valid item type")
-        else -> throw ResponseConversionException("Invalid type")
+        else -> null
     }
 }
 
@@ -38,5 +38,8 @@ fun String.fixLinks(): String {
 
 }
 
-fun Long.convertTimestamp(): LocalDateTime =
-    LocalDateTime.ofInstant(Instant.ofEpochSecond(this), ZoneOffset.UTC)
+fun Long.toLocalDateTime(): LocalDateTime =
+    LocalDateTime.ofInstant(Instant.ofEpochSecond(this), ZoneId.systemDefault())
+
+fun LocalDateTime.toLongTimestamp(): Long =
+    this.atZone(ZoneId.systemDefault()).toEpochSecond()

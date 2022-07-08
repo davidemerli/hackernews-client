@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.viewmodels
 
+import android.webkit.WebView
 import androidx.lifecycle.ViewModel
 import it.devddk.hackernewsclient.domain.interaction.item.GetItemUseCase
 import it.devddk.hackernewsclient.domain.model.items.Item
@@ -32,6 +33,9 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
 
     private val _commentList = MutableSharedFlow<List<CommentUiState>>(1)
     val commentList = _commentList.asSharedFlow()
+
+    private val _webView = MutableSharedFlow<WebView>()
+    val webView = _webView.asSharedFlow()
 
     private fun dfs(root: ItemId, map: Map<ItemId, CommentUiState>): List<CommentUiState> {
         val result: MutableList<CommentUiState> = mutableListOf()
@@ -168,6 +172,10 @@ class SingleNewsViewModel : ViewModel(), KoinComponent {
             }
             else -> {}
         }
+    }
+
+    suspend fun setWebView(webView: WebView) {
+        _webView.emit(webView)
     }
 }
 
