@@ -5,16 +5,14 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringSetPreferencesKey
-import androidx.glance.Button
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.ImageProvider
-import androidx.glance.action.Action
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
 import androidx.glance.action.actionStartActivity
@@ -24,18 +22,16 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.ActionCallback
-import androidx.glance.appwidget.action.actionRunCallback
-import androidx.glance.appwidget.lazy.items
+import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.appwidget.updateAll
 import androidx.glance.background
 import androidx.glance.currentState
-import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
-import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
+import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.state.GlanceStateDefinition
 import androidx.glance.state.PreferencesGlanceStateDefinition
@@ -43,23 +39,24 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.google.accompanist.pager.ExperimentalPagerApi
-import it.devddk.hackernewsclient.MainActivity
 import it.devddk.hackernewsclient.R
-import it.devddk.hackernewsclient.components.getDomainName
-import it.devddk.hackernewsclient.components.openInBrowser
+import it.devddk.hackernewsclient.activities.ArticleActivity
+import it.devddk.hackernewsclient.activities.ItemIdKey
 import it.devddk.hackernewsclient.domain.interaction.item.GetItemUseCase
 import it.devddk.hackernewsclient.domain.interaction.item.GetNewStoriesUseCase
 import it.devddk.hackernewsclient.domain.model.collection.TopStories
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
+import it.devddk.hackernewsclient.shared.components.news.getDomainName
+import it.devddk.hackernewsclient.shared.components.topbars.openInBrowser
 import it.devddk.hackernewsclient.ui.theme.md_theme_dark_onBackground
-import it.devddk.hackernewsclient.ui.theme.md_theme_dark_onSurface
+import it.devddk.hackernewsclient.ui.theme.md_theme_dark_secondary
+import it.devddk.hackernewsclient.ui.theme.md_theme_dark_tertiary
 import it.devddk.hackernewsclient.utils.decodeJson
 import it.devddk.hackernewsclient.utils.encodeJson
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.koin.java.KoinJavaComponent.inject
 import timber.log.Timber
 
 class ExactAppWidget : GlanceAppWidget() {
@@ -67,8 +64,8 @@ class ExactAppWidget : GlanceAppWidget() {
 
     override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
 
-    @OptIn(ExperimentalPagerApi::class, ExperimentalMaterial3Api::class)
     @Composable
+    @OptIn(ExperimentalPagerApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
     override fun Content() {
         val prefs = currentState<Preferences>()
         val items = prefs[ExactAppWidgetReceiver.itemList]?.map {
@@ -80,58 +77,79 @@ class ExactAppWidget : GlanceAppWidget() {
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .background(Color.Transparent)
+                .background(ImageProvider(R.drawable.widget_background))
         ) {
-            Row(
-                modifier = GlanceModifier
-                    .fillMaxWidth()
-                    .background(ImageProvider(R.drawable.widget_background))
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "HackerNews",
-                )
+            Text(
+                text = "HackerNews",
+                style = TextStyle(
+                    fontSize = MaterialTheme.typography.titleMedium.fontSize
+                ),
+                modifier = GlanceModifier.fillMaxWidth().padding(top = 16.dp, start = 12.dp, bottom = 12.dp)
+            )
 
-                Spacer(GlanceModifier.defaultWeight())
-
-                Button(
-                    text = "Refresh",
-                    onClick = actionRunCallback<RefreshNewsCallback>()
-                )
-            }
-
-            Column(
+            LazyColumn(
                 modifier = GlanceModifier
                     .fillMaxSize()
-                    .background(ImageProvider(R.drawable.widget_background))
                     .padding(8.dp),
             ) {
+                item {
+                    Text(
+                        "Top Stories",
+                        modifier = GlanceModifier.fillMaxWidth().padding(8.dp)
+                    )
+                }
+
                 items?.map { it ->
                     it.getOrNull()?.let { item ->
 
                         val itemMap = item as Map<*, *>
+                        val itemId = (itemMap["id"] as Double).toInt()
 
-                        Column(
-                            modifier = GlanceModifier
-                                .padding(horizontal = 4.dp, vertical=8.dp)
-                                .clickable(onClick = actionStartActivity<MainActivity>())
-                        ) {
-                            Text(
-                                text = "${itemMap["by"]} - ${getDomainName(itemMap["url"].toString())}",
-                                style = TextStyle(
-                                    color = ColorProvider(color = md_theme_dark_onBackground),
-                                    fontSize = MaterialTheme.typography.titleMedium.fontSize
+                        item {
+                            Column(
+                                modifier = GlanceModifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                                    .background(ImageProvider(R.drawable.widget_background2))
+                                    .clickable(
+                                        onClick = actionStartActivity<ArticleActivity>(
+                                            actionParametersOf(
+                                                ItemIdKey to itemId
+                                            )
+                                        )
+                                    ) // TODO: navigate to item
+                            ) {
+                                Text(
+                                    text = "${itemMap["by"]}" + itemMap["url"]?.let { "@ ${getDomainName(it.toString())}" },
+                                    style = TextStyle(
+                                        color = ColorProvider(color = md_theme_dark_secondary),
+                                        fontSize = MaterialTheme.typography.titleSmall.fontSize
+                                    )
                                 )
-                            )
 
-                            Text(
-                                text = itemMap["title"].toString(),
-                                style = TextStyle(
-                                    color = ColorProvider(color = md_theme_dark_onBackground),
-                                    fontSize = MaterialTheme.typography.titleLarge.fontSize
+                                Text(
+                                    text = itemMap["title"].toString(),
+                                    style = TextStyle(
+                                        color = ColorProvider(color = md_theme_dark_onBackground),
+                                        fontSize = MaterialTheme.typography.titleMedium.fontSize
+                                    )
                                 )
-                            )
+
+                                val points = itemMap["score"].toString().removeSuffix(".0")
+                                val comments = (itemMap["descendants"] ?: "0").toString().removeSuffix(".0")
+
+                                Text(
+                                    text = "$points pt - $comments comments",
+                                    style = TextStyle(
+                                        color = ColorProvider(color = md_theme_dark_tertiary),
+                                        fontSize = MaterialTheme.typography.titleSmall.fontSize
+                                    )
+                                )
+                            }
+                        }
+
+                        item {
+                            Spacer(modifier = GlanceModifier.height(8.dp))
                         }
                     }
                 }
@@ -175,7 +193,7 @@ class ExactAppWidgetReceiver : GlanceAppWidgetReceiver(), KoinComponent {
 
                 Timber.d("items $it")
 
-                val items = it.subList(0, 5).map { item ->
+                val items = it.subList(0, 10).map { item ->
                     Timber.d("item $item - ${getItemUseCase(item).encodeJson()}")
 
                     getItemUseCase(item).encodeJson()
@@ -196,7 +214,6 @@ class ExactAppWidgetReceiver : GlanceAppWidgetReceiver(), KoinComponent {
     }
 
     private fun openArticle(context: Context) {
-
     }
 
     companion object {
@@ -208,7 +225,7 @@ class RefreshNewsCallback : ActionCallback {
     override suspend fun onRun(
         context: Context,
         glanceId: GlanceId,
-        parameters: ActionParameters
+        parameters: ActionParameters,
     ) {
         val intent = Intent(context, ExactAppWidgetReceiver::class.java).apply {
             action = UPDATE_ACTION
@@ -226,14 +243,14 @@ class OpenArticleCallback : ActionCallback {
     override suspend fun onRun(
         context: Context,
         glanceId: GlanceId,
-        parameters: ActionParameters
+        parameters: ActionParameters,
     ) {
         openInBrowser(context, "https://news.ycombinator.com/item?id=${parameters[actionWidgetKey]}")
 
+        Intent()
+
         // start actiity
-
     }
-
 }
 
 val actionWidgetKey = ActionParameters.Key<ItemId>("action-widget-itemid")
