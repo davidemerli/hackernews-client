@@ -72,8 +72,6 @@ import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.search.SearchResult
 import it.devddk.hackernewsclient.pages.home.components.HNTopBar
 import it.devddk.hackernewsclient.shared.components.WebViewWithPrefs
-import it.devddk.hackernewsclient.shared.components.comments.CommentItem
-import it.devddk.hackernewsclient.shared.components.news.NewsItem
 import it.devddk.hackernewsclient.shared.components.news.SwipeableItem
 import it.devddk.hackernewsclient.utils.SettingPrefs
 import it.devddk.hackernewsclient.viewmodels.SearchPageViewModel
@@ -248,7 +246,7 @@ fun SearchPage(
 fun ResultItem(result: SearchResult, onClick: () -> Unit = {}) {
     Timber.d("ResultItem: ${result.item.by} - ${result.item.type}")
 
-    //TODO: differentiate onClick
+    // TODO: differentiate onClick
 
     when (result.item.type) {
         ItemType.COMMENT,
