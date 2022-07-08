@@ -1,4 +1,4 @@
-package it.devddk.hackernewsclient.components
+package it.devddk.hackernewsclient.shared.components
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.animateColor

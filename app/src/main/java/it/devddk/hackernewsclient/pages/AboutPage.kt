@@ -21,9 +21,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import it.devddk.hackernewsclient.BuildConfig
-import it.devddk.hackernewsclient.components.HNModalNavigatorPanel
-import it.devddk.hackernewsclient.components.HomePageTopBar
-import it.devddk.hackernewsclient.components.openInBrowser
+import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
+import it.devddk.hackernewsclient.shared.components.topbars.HomePageTopBar
+import it.devddk.hackernewsclient.shared.components.topbars.openInBrowser
 import timber.log.Timber
 
 @Composable
@@ -40,7 +40,6 @@ fun AboutPage(navController: NavController) {
     HNModalNavigatorPanel(
         navController = navController,
         state = drawerState,
-        query = "About",
     ) {
         Scaffold(
             topBar = {
@@ -167,6 +166,11 @@ fun AboutPage(navController: NavController) {
                             url = "https://news.ycombinator.com"
                         )
                         append(" and we are not responsible for the content, nor we are affiliated with Y Combinator in any way.\n\n")
+
+                        append("Contact ycombinator at ")
+
+                        clickableUrl(text = "hn@ycombinator.com", url = "mailto:hn@ycombinator.com")
+                        append("\n\n")
                     }
 
                 ClickableText(

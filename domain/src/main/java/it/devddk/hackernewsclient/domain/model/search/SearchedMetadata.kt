@@ -6,6 +6,9 @@ import it.devddk.hackernewsclient.domain.model.utils.ItemId
 data class SearchResultMetaData(
     val id: ItemId,
     val position: Int,
+    val storyId: Int?,
+    val storyTitle: String?,
+    val storyUrl: String?,
     val highlightResult : HighlightData
 )
 

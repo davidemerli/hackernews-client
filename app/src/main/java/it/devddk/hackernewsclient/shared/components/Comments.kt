@@ -1,4 +1,4 @@
-package it.devddk.hackernewsclient.components
+package it.devddk.hackernewsclient.shared.components
 
 import android.text.util.Linkify
 import android.widget.TextView
@@ -16,10 +16,14 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BookmarkAdd
+import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MoveUp
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material.icons.filled.SubdirectoryArrowRight
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
@@ -31,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,17 +63,18 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.accompanist.placeholder.PlaceholderDefaults
-import com.google.accompanist.placeholder.PlaceholderHighlight
-import com.google.accompanist.placeholder.material.color
-import com.google.accompanist.placeholder.material.fade
-import com.google.accompanist.placeholder.placeholder
 import it.devddk.hackernewsclient.R
+import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
-import it.devddk.hackernewsclient.pages.toSpanned
+import it.devddk.hackernewsclient.domain.model.items.favorite
+import it.devddk.hackernewsclient.domain.model.items.readLater
+import it.devddk.hackernewsclient.pages.parseHTML
+import it.devddk.hackernewsclient.shared.components.news.NewsStatusIcons
+import it.devddk.hackernewsclient.shared.components.news.shareStringContent
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
 import it.devddk.hackernewsclient.viewmodels.CommentUiState
+import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -155,8 +161,14 @@ fun CommentCard(
     onClick: () -> Unit = {},
     placeholder: Boolean = false,
     navController: NavController,
+    favorite: MutableState<Boolean> = remember { mutableStateOf(item.collections.favorite) },
+    readLater: MutableState<Boolean> = remember { mutableStateOf(item.collections.readLater) },
 ) {
     val paddingStart = (depth * depthSize).dp + 2.dp
+
+    val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map {
+        Color(ColorUtils.blendARGB(it, MaterialTheme.colorScheme.onSurface.toArgb(), 0.3f))
+    }
 
     // obtains a background color for the comments which is a slight tint of the colorScheme secondary color
     val commentBackground = Color(
@@ -177,10 +189,11 @@ fun CommentCard(
             .padding(paddingStart, 4.dp, 4.dp, 4.dp)
             .background(commentBackground)
     ) {
-        val (depthIndicator, title, text, expand, more) = createRefs()
+        val (depthIndicator, title, text, expand, more, icons) = createRefs()
 
         DepthIndicator(
             depth = depth,
+            depthColors = depthColors,
             modifier = Modifier.constrainAs(depthIndicator) {
                 start.linkTo(parent.start)
                 top.linkTo(parent.top)
@@ -191,6 +204,7 @@ fun CommentCard(
         CommentTitle(
             item = item,
             depth = depth,
+            depthColors = depthColors,
             isOriginalPoster = isOriginalPoster,
             placeholder = placeholder,
             modifier = Modifier.constrainAs(title) {
@@ -224,15 +238,26 @@ fun CommentCard(
             )
         }
 
+        NewsStatusIcons(
+            favorite = favorite.value,
+            readLater = readLater.value,
+            modifier = Modifier.constrainAs(icons) {
+                top.linkTo(parent.top, margin = 2.dp)
+                end.linkTo(more.start)
+            }.offset(x = 4.dp)
+        )
+
         MoreOptions(
             item = item, placeholder = placeholder,
             listState = listState,
             rootItem = rootItem,
             navController = navController,
+            favorite = favorite,
+            readLater = readLater,
             modifier = Modifier.constrainAs(more) {
                 top.linkTo(parent.top, margin = 2.dp)
                 end.linkTo(parent.end, margin = 2.dp)
-            }
+            }.offset(y = (-2).dp)
         )
     }
 }
@@ -242,12 +267,12 @@ fun CommentTitle(
     modifier: Modifier = Modifier,
     item: Item,
     depth: Int,
+    depthColors: List<Color>,
     isOriginalPoster: Boolean,
     placeholder: Boolean = false,
 ) {
     val context = LocalContext.current
 
-    val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
     val byString = "${item.by}${if (isOriginalPoster) " (OP)" else ""}"
 
     val timeString = remember(item) {
@@ -256,13 +281,15 @@ fun CommentTitle(
 
     Text(
         text = buildAnnotatedString {
+            val td1 = if (item.dead) TextDecoration.LineThrough else TextDecoration.Underline
+            val fw1 = if (isOriginalPoster) FontWeight.Black else FontWeight.SemiBold
+            val c1 = if (isOriginalPoster) MaterialTheme.colorScheme.tertiary else depthColors[depth % depthColors.size]
+
             pushStyle(
                 MaterialTheme.typography.titleMedium.copy(
-                    textDecoration = if (item.dead) TextDecoration.LineThrough else TextDecoration.Underline,
-                    fontWeight = if (isOriginalPoster) FontWeight.Black else FontWeight.SemiBold,
-                    color = if (isOriginalPoster) MaterialTheme.colorScheme.tertiary else depthColors[depth % depthColors.size].copy(
-                        alpha = 1f
-                    )
+                    textDecoration = td1,
+                    fontWeight = fw1,
+                    color = c1,
                 ).toSpanStyle()
             )
             append(byString)
@@ -273,12 +300,7 @@ fun CommentTitle(
         },
         modifier = modifier
             .padding(4.dp)
-            .placeholder(
-                visible = placeholder,
-                color = PlaceholderDefaults.color(contentAlpha = 0.6f),
-                shape = RoundedCornerShape(8.dp),
-                highlight = PlaceholderHighlight.fade(),
-            ),
+            .customPlaceholder(visible = placeholder),
         style = MaterialTheme.typography.bodyLarge,
     )
 }
@@ -307,7 +329,7 @@ fun CommentText(modifier: Modifier = Modifier, item: Item, placeholder: Boolean 
                 it.setTextColor(textColor.toArgb())
                 it.highlightColor = highlightColor.toArgb()
 
-                it.text = item.text!!.toSpanned()
+                it.text = item.text!!.parseHTML()
                 it.setTextIsSelectable(true)
                 Linkify.addLinks(it, Linkify.WEB_URLS)
             },
@@ -315,15 +337,10 @@ fun CommentText(modifier: Modifier = Modifier, item: Item, placeholder: Boolean 
                 .padding(
                     top = 4.dp,
                     start = 4.dp,
-                    end = 4.dp,
+                    end = 16.dp,
                     bottom = if (item.kids.isNotEmpty()) 4.dp else 16.dp
                 )
-                .placeholder(
-                    visible = placeholder,
-                    color = PlaceholderDefaults.color(contentAlpha = 0.6f),
-                    shape = RoundedCornerShape(8.dp),
-                    highlight = PlaceholderHighlight.fade(),
-                ),
+                .customPlaceholder(visible = placeholder),
         )
     }
 }
@@ -355,9 +372,7 @@ fun ExpandButton(
 }
 
 @Composable
-fun DepthIndicator(modifier: Modifier = Modifier, depth: Int) {
-    val depthColors: List<Color> = integerArrayResource(id = R.array.depth_colors).map { Color(it) }
-
+fun DepthIndicator(modifier: Modifier = Modifier, depth: Int, depthColors: List<Color>) {
     Box(
         modifier = modifier
             .width(10.dp)
@@ -376,9 +391,13 @@ fun MoreOptions(
     rootItem: Item,
     listState: LazyListState,
     navController: NavController,
+    favorite: MutableState<Boolean>,
+    readLater: MutableState<Boolean>
 ) {
     val context = LocalContext.current
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by rememberSaveable { mutableStateOf(false) }
+
+    val viewModel: HomePageViewModel = viewModel()
 
     val mViewModel: SingleNewsViewModel = viewModel()
     val comments = mViewModel.commentList.collectAsState(emptyList())
@@ -419,7 +438,7 @@ fun MoreOptions(
                             },
                             onClick = {
                                 coroutineScope.launch {
-                                    listState.animateScrollToItem(index, -2)
+                                    listState.animateScrollToItem(index)
                                 }
                                 expanded = false
                             }
@@ -467,6 +486,44 @@ fun MoreOptions(
                     }
                 }
             }
+
+            DropdownMenuItem(
+                text = { Text(if (!favorite.value) "Add to favorites" else "Remove from favorites") },
+                leadingIcon = {
+                    Icon(
+                        if (!favorite.value) Icons.Filled.Star else Icons.Filled.StarOutline,
+                        contentDescription = if (!favorite.value) "Add to favorites" else "Remove from favorites"
+                    )
+                },
+                onClick = {
+                    favorite.value = !favorite.value
+
+                    coroutineScope.launch {
+                        viewModel.toggleFromCollection(item.id, UserDefinedItemCollection.Favorites)
+                    }
+
+                    expanded = false
+                }
+            )
+
+            DropdownMenuItem(
+                text = { Text(if (!readLater.value) "Add to read later" else "Remove from read later") },
+                leadingIcon = {
+                    Icon(
+                        if (!readLater.value) Icons.Filled.BookmarkAdd else Icons.Filled.BookmarkRemove,
+                        contentDescription = if (!readLater.value) "Add to read later" else "Remove from read later"
+                    )
+                },
+                onClick = {
+                    readLater.value = !readLater.value
+
+                    coroutineScope.launch {
+                        viewModel.toggleFromCollection(item.id, UserDefinedItemCollection.ReadLater)
+                    }
+
+                    expanded = false
+                }
+            )
 
             DropdownMenuItem(
                 text = { Text("Share Comment") },

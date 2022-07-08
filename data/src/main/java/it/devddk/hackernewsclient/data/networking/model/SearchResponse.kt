@@ -1,14 +1,17 @@
 package it.devddk.hackernewsclient.data.networking.model
 
+import androidx.annotation.Keep
 import com.google.gson.annotations.SerializedName
 import it.devddk.hackernewsclient.data.networking.DomainMapper
-import it.devddk.hackernewsclient.data.networking.utils.convertTimestamp
+import it.devddk.hackernewsclient.data.networking.utils.toLocalDateTime
 import it.devddk.hackernewsclient.data.networking.utils.toItemType
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.search.*
 import timber.log.Timber
+import java.time.LocalDateTime
 
+@Keep
 data class SearchResponse(
     val hits: List<SearchResultHitResponse>,
     val page: Int,
@@ -25,6 +28,9 @@ data class SearchResponse(
             val metadata = SearchResultMetaData(
                 id = hit.objectId.toInt(),
                 position = startPosition + relativePosition,
+                storyId = hit.storyId,
+                storyTitle = hit.storyTitle,
+                storyUrl = hit.storyUrl,
                 highlightResult = hit.highlightResult.mapToDomainModel()
             )
             SearchResult(item, metadata)
@@ -33,15 +39,16 @@ data class SearchResponse(
     }
 
     private fun buildItemFromHit(hit : SearchResultHitResponse) : Item {
-        val itemType = hit.type.toItemType() ?: ItemType.STORY
+        val itemType = hit.tags[0].toItemType() ?: ItemType.STORY
         Timber.d("Object id ${hit.objectId}")
         return Item(
             id = hit.objectId.toInt(),
             type = itemType,
             deleted = false,
             dead = false,
+            downloaded = LocalDateTime.now(),
             by = hit.author,
-            time = hit.created?.convertTimestamp(),
+            time = hit.created?.toLocalDateTime(),
             parent = hit.parentId,
             text = when(itemType) {
                 ItemType.COMMENT -> hit.commentText
@@ -49,6 +56,7 @@ data class SearchResponse(
             },
             // Kids not provided
             kids = emptyList(),
+            storyId = hit.storyId,
             title = hit.title,
             descendants = hit.numComments,
             // Parent poll not provided
@@ -60,12 +68,12 @@ data class SearchResponse(
     }
 }
 
+@Keep
 data class SearchResultHitResponse(
     val title: String,
     val url: String,
     val author: String?,
     val points: Int?,
-    val type: String?,
     @SerializedName("story_text") val storyText: String?,
     @SerializedName("comment_text") val commentText: String?,
     @SerializedName("story_id") val storyId: Int?,
@@ -74,12 +82,13 @@ data class SearchResultHitResponse(
     @SerializedName("parent_id") val parentId: Int?,
     @SerializedName("created_at_i") val created: Long?,
     @SerializedName("relevancy_score") val relevancyScore: Int?,
-    val tags: List<String>,
+    @SerializedName("_tags") val tags: List<String>,
     @SerializedName("num_comments") val numComments: Int?,
     @SerializedName("objectID") val objectId: String,
     @SerializedName("_highlightResult") val highlightResult : HighlightDataResponse
 )
 
+@Keep
 data class HighlightDataResponse(
     val title: HighlightFieldResponse?,
     val url: HighlightFieldResponse?,
@@ -100,9 +109,9 @@ data class HighlightDataResponse(
             storyText = storyText?.toHighlightFieldIfMatches()
         )
     }
-
 }
 
+@Keep
 data class HighlightFieldResponse(
     val value: String?,
     val matchLevel: String?,

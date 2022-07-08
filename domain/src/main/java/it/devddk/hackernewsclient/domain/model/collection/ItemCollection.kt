@@ -1,24 +1,46 @@
 package it.devddk.hackernewsclient.domain.model.collection
 
+import androidx.annotation.Keep
 import it.devddk.hackernewsclient.domain.model.items.Item
+import it.devddk.hackernewsclient.domain.model.items.ItemType
 
+@Keep
 sealed class ItemCollection(val entryName: String)
 
+@Keep
 sealed class HNItemCollection(entryName: String, val maxAmount: Int) : ItemCollection(entryName)
 
-val ALL_QUERIES = listOf(TopStories, NewStories, JobStories, ShowStories, BestStories, AskStories,
-    UserDefinedItemCollection.Favorites, UserDefinedItemCollection.ReadLater)
+val ALL_QUERIES = listOf(
+    TopStories,
+    NewStories,
+    JobStories,
+    ShowStories,
+    BestStories,
+    AskStories,
+    UserDefinedItemCollection.Favorites,
+    UserDefinedItemCollection.ReadLater
+)
 
+@Keep
 object NewStories : HNItemCollection("New Stories", 500)
+@Keep
 object TopStories : HNItemCollection("Top Stories", 500)
+@Keep
 object BestStories : HNItemCollection("Best Stories", 500)
+@Keep
 object AskStories : HNItemCollection("Ask HN", 200)
+@Keep
 object ShowStories : HNItemCollection("Show HN", 200)
+@Keep
 object JobStories : HNItemCollection("HN Jobs", 200)
+@Keep
+data class UserStories(val name: String) : ItemCollection("User $name")
 
+@Keep
 sealed class UserDefinedItemCollection(
     entryName: String,
-    val availableOffline: Boolean,
+    val saveWholeItem: Boolean,
+    val allowReinsertion: Boolean,
     val itemFilter: (Item) -> Boolean,
 ) : ItemCollection(entryName) {
 
@@ -27,15 +49,21 @@ sealed class UserDefinedItemCollection(
             return when (name) {
                 Favorites::class.simpleName -> Favorites
                 ReadLater::class.simpleName -> ReadLater
-                ApplyLater::class.simpleName -> ApplyLater
+                VisitedItem::class.simpleName -> VisitedItem
                 else -> null
             }
         }
+
+        val ALL_USER_QUERIES = listOf(Favorites, ReadLater, VisitedItem)
     }
 
-    object Favorites : UserDefinedItemCollection("Favorites", true, { true })
-    object ReadLater : UserDefinedItemCollection("ReadLater", true, { true })
-    object ApplyLater : UserDefinedItemCollection("ApplyLater", true, { true })
 
+    //TODO: avoid using classNames
+    @Keep
+    object Favorites : UserDefinedItemCollection("Favorites", true, false,{ true })
+    @Keep
+    object ReadLater : UserDefinedItemCollection("ReadLater", true, false,{ true })
+    @Keep
+    object VisitedItem : UserDefinedItemCollection("ReadItem", false, true, { it.type != ItemType.COMMENT })
 
 }

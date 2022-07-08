@@ -1,8 +1,9 @@
-package it.devddk.hackernewsclient.components
+package it.devddk.hackernewsclient.shared.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -60,8 +61,8 @@ fun Modifier.scrollbar(
     fixedKnobRatio: Float? = null,
     knobCornerRadius: Dp = 4.dp,
     trackCornerRadius: Dp = 2.dp,
-    knobColor: Color = Color.Black,
-    trackColor: Color = Color.White,
+    knobColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    trackColor: Color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
     padding: Dp = 0.dp,
     visibleAlpha: Float = 1f,
     hiddenAlpha: Float = 0f,

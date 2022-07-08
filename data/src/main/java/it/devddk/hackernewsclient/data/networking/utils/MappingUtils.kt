@@ -5,6 +5,7 @@ import it.devddk.hackernewsclient.domain.model.items.ItemType
 import org.jsoup.Jsoup
 import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 
 fun String?.toItemType(): ItemType? {
@@ -37,5 +38,8 @@ fun String.fixLinks(): String {
 
 }
 
-fun Long.convertTimestamp(): LocalDateTime =
-    LocalDateTime.ofInstant(Instant.ofEpochSecond(this), ZoneOffset.UTC)
+fun Long.toLocalDateTime(): LocalDateTime =
+    LocalDateTime.ofInstant(Instant.ofEpochSecond(this), ZoneId.systemDefault())
+
+fun LocalDateTime.toLongTimestamp(): Long =
+    this.atZone(ZoneId.systemDefault()).toEpochSecond()

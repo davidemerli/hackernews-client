@@ -1,4 +1,4 @@
-package it.devddk.hackernewsclient.components
+package it.devddk.hackernewsclient.shared.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
