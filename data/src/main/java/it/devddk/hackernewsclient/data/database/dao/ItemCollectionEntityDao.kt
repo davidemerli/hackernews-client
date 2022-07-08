@@ -51,7 +51,7 @@ abstract class ItemCollectionEntityDao {
      * @param collection The name of the ItemCollection (java simple name of the collection object)
      * @return All items id inside the collection (wrapped inside [ItemCollectionEntity])
      */
-    @Query("SELECT * FROM items_collection AS ic WHERE :collection = ic.collection")
+    @Query("SELECT * FROM items_collection AS ic WHERE :collection = ic.collection ORDER BY ic.timeAdded DESC")
     abstract suspend fun getAllIdsForCollection(collection: UserDefinedItemCollection) : List<ItemCollectionEntity>
 
 }
