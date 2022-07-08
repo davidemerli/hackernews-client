@@ -13,6 +13,9 @@ interface AlgoliaSearchApi {
     suspend fun getItemById(@Path("id") id: Int) : Response<AlgoliaItemResponse>
 
     @GET("search")
-    suspend fun searchByRelevance(@Query("query") query : String, @Query("page") page : Int) : Response<SearchResponse>
+    suspend fun searchByRelevance(@Query("query") query : String, @Query("page") page : Int, @Query("tags") tags : AlgoliaTags = AlgoliaTags.NoPolls) : Response<SearchResponse>
+
+    @GET("search_by_date")
+    suspend fun searchByDate(@Query("query") query : String, @Query("page") page : Int) : Response<SearchResponse>
 
 }
