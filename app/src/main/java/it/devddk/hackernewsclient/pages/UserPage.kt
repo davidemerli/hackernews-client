@@ -2,24 +2,12 @@ package it.devddk.hackernewsclient.pages
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Badge
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Fullscreen
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -40,37 +28,29 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.google.accompanist.web.WebViewState
 import com.google.accompanist.web.rememberWebViewState
-import it.devddk.hackernewsclient.R
-import it.devddk.hackernewsclient.domain.model.collection.UserStories
 import it.devddk.hackernewsclient.domain.model.items.Item
+import it.devddk.hackernewsclient.domain.model.search.SearchQuery
+import it.devddk.hackernewsclient.domain.model.search.SearchTags
 import it.devddk.hackernewsclient.pages.home.components.HNTopBar
 import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.shared.components.WebViewWithPrefs
-import it.devddk.hackernewsclient.shared.components.news.NewsItem
-import it.devddk.hackernewsclient.shared.components.news.SwipeableItem
+import it.devddk.hackernewsclient.shared.components.customPlaceholder
 import it.devddk.hackernewsclient.utils.SettingPrefs
-import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
-import it.devddk.hackernewsclient.viewmodels.ItemCollectionHolder
-import it.devddk.hackernewsclient.viewmodels.NewsItemState
+import it.devddk.hackernewsclient.viewmodels.SearchPageViewModel
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
+import it.devddk.hackernewsclient.viewmodels.UserUIState
+import it.devddk.hackernewsclient.viewmodels.UserViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -85,10 +65,9 @@ fun UserPage(
 
     val coroutineScope = rememberCoroutineScope()
 
-    val viewModel: HomePageViewModel = viewModel()
+    val viewModel: SearchPageViewModel = viewModel()
     val itemViewModel: SingleNewsViewModel = viewModel()
-
-    val itemCollectionHolder = viewModel.userCollection(UserStories(username))
+    val userViewModel: UserViewModel = viewModel()
 
     val itemUiState by itemViewModel.uiState.collectAsState(initial = SingleNewsUiState.Loading)
 
@@ -120,8 +99,22 @@ fun UserPage(
 
     val readabilityUrl = "https://readability.davidemerli.com?convert=${selectedItem?.url ?: ""}"
 
-    val webViewState = rememberWebViewState(if (readerMode) readabilityUrl else selectedItem?.url ?: "")
+    val webViewState =
+        rememberWebViewState(if (readerMode) readabilityUrl else selectedItem?.url ?: "")
     val webViewInstance by itemViewModel.webView.collectAsState(initial = null)
+
+    LaunchedEffect(Unit) {
+        viewModel.updateAdvancedQuery(
+            SearchQuery(
+                tags = SearchTags.andOf(
+                    SearchTags.NoPolls,
+                    SearchTags.Author(username)
+                )
+            )
+        )
+        userViewModel.requestUser(username)
+    }
+
 
     BackHandler(enabled = selectedItem != null, onBack = {
         coroutineScope.launch {
@@ -179,29 +172,32 @@ fun UserPage(
         ) {
             when (windowSizeClass.widthSizeClass) {
                 WindowWidthSizeClass.Expanded -> {
-                    UserExpandedLayout(
+                    SearchExpandedLayout(
                         modifier = Modifier.padding(top = it.calculateTopPadding()),
                         navController = navController,
-                        itemCollection = itemCollectionHolder,
                         onItemClick = { item -> onItemClick(item) },
                         onItemClickComments = { item -> onItemClickComments(item) },
                         selectedItem = selectedItem,
                         expanded = expandedArticleView,
                         onExpandedClick = { expandedArticleView = !expandedArticleView },
                         webViewState = webViewState,
-                    )
+                    ) {
+                        UserDetails()
+                    }
                 }
                 WindowWidthSizeClass.Compact,
-                WindowWidthSizeClass.Medium -> {
-                    UserCompactLayout(
+                WindowWidthSizeClass.Medium,
+                -> {
+                    SearchCompactLayout(
                         modifier = Modifier.padding(top = it.calculateTopPadding()),
                         navController = navController,
-                        itemCollection = itemCollectionHolder,
                         selectedItem = selectedItem,
                         onItemClick = { item -> onItemClick(item) },
                         onItemClickComments = { item -> onItemClickComments(item) },
                         webViewState = webViewState,
-                    )
+                    ) {
+                        UserDetails()
+                    }
                 }
             }
 
@@ -221,155 +217,52 @@ fun UserPage(
     }
 }
 
+
+@OptIn(ExperimentalTextApi::class)
 @Composable
-@OptIn(ExperimentalPagerApi::class)
-fun UserExpandedLayout(
-    modifier: Modifier = Modifier,
-    navController: NavController,
-    itemCollection: ItemCollectionHolder,
-    onItemClick: (Item) -> Unit,
-    onItemClickComments: (Item) -> Unit,
-    selectedItem: Item?,
-    expanded: Boolean = false,
-    onExpandedClick: () -> Unit,
-    webViewState: WebViewState,
-) {
-    Row(
-        modifier = modifier.fillMaxSize()
-    ) {
-        if (!expanded) {
-            UserCompactLayout(
-                navController = navController,
-                selectedItem = null,
-                itemCollection = itemCollection,
-                onItemClick = onItemClick,
-                onItemClickComments = onItemClickComments,
-                webViewState = webViewState,
-                modifier = Modifier
-                    .fillMaxWidth(0.45f)
-                    .fillMaxHeight()
+fun UserDetails() {
+
+    val viewModel: UserViewModel = viewModel()
+
+    val userState = viewModel.uiState.collectAsState()
+    when (val theUserState = userState.value) {
+        is UserUIState.Error -> {
+
+        }
+        is UserUIState.Loading -> {
+            Text(
+                text = "AAAAAAAAAAAAAAAAAAAAAAAAAA\n\n\n\n\n",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.onSurface,
+                            MaterialTheme.colorScheme.onSurface,
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                        ),
+                    ),
+                ),
+                maxLines = 5,
+                modifier = Modifier.customPlaceholder(true),
             )
         }
-
-        if (selectedItem != null) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .padding(4.dp)
-            ) {
-                Icon(
-                    if (expanded) Icons.Filled.ChevronRight else Icons.Filled.ChevronLeft,
-                    contentDescription = if (!expanded) "Expand View" else "Collapse View",
-                    tint = MaterialTheme.colorScheme.background,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(100))
-                        .background(MaterialTheme.colorScheme.primary)
-                        .size(28.dp)
-                        .clickable { onExpandedClick() }
-                )
-            }
-
-            TabbedView(
-                navController = navController,
-                item = selectedItem,
-                webViewState = webViewState,
+        is UserUIState.UserLoaded -> {
+            Text(
+                text = theUserState.userData.about?.parseHTML() ?: "no_text",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.onSurface,
+                            MaterialTheme.colorScheme.onSurface,
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                        ),
+                    ),
+                ),
+                maxLines = 5,
+                modifier = Modifier.customPlaceholder(false),
             )
-        } else {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = stringResource(R.string.no_item_selected),
-                    modifier = Modifier.alpha(0.5f)
-                )
-            }
         }
     }
 }
 
-@Composable
-@OptIn(ExperimentalPagerApi::class)
-fun UserCompactLayout(
-    modifier: Modifier = Modifier,
-    navController: NavController,
-    itemCollection: ItemCollectionHolder,
-    selectedItem: Item?,
-    onItemClick: (Item) -> Unit,
-    onItemClickComments: (Item) -> Unit,
-    webViewState: WebViewState
-) {
-    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
-    val coroutineScope = rememberCoroutineScope()
-    val scrollState = rememberLazyListState()
 
-    val viewModel: HomePageViewModel = viewModel()
-    val itemViewModel: SingleNewsViewModel = viewModel()
-    val webViewInstance by itemViewModel.webView.collectAsState(initial = null)
 
-    val itemListState = itemCollection.itemListFlow.collectAsState(initial = emptyList())
-
-    LaunchedEffect(Unit) {
-        coroutineScope.launch {
-            itemCollection.loadAll()
-        }
-    }
-
-    SwipeRefresh(
-        state = swipeRefreshState,
-        refreshTriggerDistance = 144.dp,
-        onRefresh = {
-            if (selectedItem != null) {
-                webViewInstance?.reload()
-            } else {
-                coroutineScope.launch {
-                    viewModel.refreshAll()
-                    itemCollection.loadAll()
-                }
-            }
-        }
-    ) {
-        if (selectedItem != null) {
-            TabbedView(
-                navController = navController,
-                item = selectedItem,
-                webViewState = webViewState,
-                modifier = modifier
-            )
-        } else {
-            LazyColumn(
-                state = scrollState,
-                modifier = modifier.fillMaxSize()
-            ) {
-                itemsIndexed(itemListState.value, key = { _, item -> item.itemId }) { index, itemState ->
-                    when (itemState) {
-                        is NewsItemState.Loading, is NewsItemState.ItemError -> {
-                            LaunchedEffect(index) {
-                                itemCollection.requestItem(itemState.itemId)
-                            }
-
-                            NewsItem(placeholder = true)
-                        }
-                        is NewsItemState.ItemLoaded -> {
-                            SwipeableItem(
-                                item = itemState.item,
-                                onClick = { onItemClick(itemState.item) },
-                                onClickComments = { onItemClickComments(itemState.item) },
-                                toggleCollection = { item, itemCollection ->
-                                    coroutineScope.launch {
-                                        viewModel.toggleFromCollection(item.id, itemCollection)
-                                    }
-                                },
-                                placeholder = false
-                            )
-                        }
-                    }
-
-                    Divider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
-                        thickness = 0.5.dp
-                    )
-                }
-            }
-        }
-    }
-}

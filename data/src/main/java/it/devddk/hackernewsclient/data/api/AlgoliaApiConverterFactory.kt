@@ -1,5 +1,7 @@
 package it.devddk.hackernewsclient.data.api
 
+import it.devddk.hackernewsclient.domain.model.search.NumericalSearchFilters
+import it.devddk.hackernewsclient.domain.model.search.SearchTags
 import retrofit2.Converter
 import retrofit2.Retrofit
 import java.lang.reflect.Type
@@ -12,8 +14,11 @@ class AlgoliaApiConverterFactory : Converter.Factory() {
             retrofit: Retrofit
         ): Converter<*, String>? {
             return when {
-                AlgoliaTags::class.java.isAssignableFrom(type as Class<*>) -> Converter<AlgoliaTags, String> {
+                SearchTags::class.java.isAssignableFrom(type as Class<*>) -> Converter<SearchTags, String> {
                     it.string
+                }
+                NumericalSearchFilters::class.java.isAssignableFrom(type as Class<*>) -> Converter<NumericalSearchFilters, String> {
+                    it.toString()
                 }
                 else -> super.stringConverter(type, annotations, retrofit)
         }

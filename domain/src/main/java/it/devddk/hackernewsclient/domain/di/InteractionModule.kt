@@ -14,8 +14,10 @@ import it.devddk.hackernewsclient.domain.interaction.item.GetNewStoriesUseCase
 import it.devddk.hackernewsclient.domain.interaction.item.GetNewStoriesUseCaseImpl
 import it.devddk.hackernewsclient.domain.interaction.item.RefreshAllItemsUseCase
 import it.devddk.hackernewsclient.domain.interaction.item.RefreshAllItemsUseCaseImpl
-import it.devddk.hackernewsclient.domain.interaction.search.SearchItemByRelevanceUseCase
-import it.devddk.hackernewsclient.domain.interaction.search.SearchItemByRelevanceUseCaseImpl
+import it.devddk.hackernewsclient.domain.interaction.search.AdvancedSearchItemByRelevanceUseCase
+import it.devddk.hackernewsclient.domain.interaction.search.AdvancedSearchItemByRelevanceUseCaseImpl
+import it.devddk.hackernewsclient.domain.interaction.search.SimpleSearchItemByRelevanceUseCase
+import it.devddk.hackernewsclient.domain.interaction.search.SimpleSearchItemByRelevanceUseCaseImpl
 import it.devddk.hackernewsclient.domain.interaction.user.GetUserByUsernameUseCase
 import it.devddk.hackernewsclient.domain.interaction.user.GetUserByUsernameUseCaseImpl
 import org.koin.dsl.module
@@ -23,7 +25,8 @@ import org.koin.dsl.module
 val interactionModule = module {
     factory<GetItemUseCase> { GetItemUseCaseImpl() }
     factory<GetNewStoriesUseCase> { GetNewStoriesUseCaseImpl() }
-    factory<SearchItemByRelevanceUseCase> { SearchItemByRelevanceUseCaseImpl() }
+    factory<SimpleSearchItemByRelevanceUseCase> { SimpleSearchItemByRelevanceUseCaseImpl() }
+    factory<AdvancedSearchItemByRelevanceUseCase> { AdvancedSearchItemByRelevanceUseCaseImpl() }
     factory<PostFeedbackUseCase> { PostFeedbackUseCaseImpl() }
     factory<AddItemToCollectionUseCase> { AddItemToCollectionUseCaseImpl() }
     factory<RemoveItemFromCollectionUseCase> { RemoveItemFromCollectionUseCaseImpl() }

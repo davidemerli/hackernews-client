@@ -1,9 +1,11 @@
 package it.devddk.hackernewsclient.pages
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -72,8 +74,6 @@ import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.search.SearchResult
 import it.devddk.hackernewsclient.pages.home.components.HNTopBar
 import it.devddk.hackernewsclient.shared.components.WebViewWithPrefs
-import it.devddk.hackernewsclient.shared.components.comments.CommentItem
-import it.devddk.hackernewsclient.shared.components.news.NewsItem
 import it.devddk.hackernewsclient.shared.components.news.SwipeableItem
 import it.devddk.hackernewsclient.utils.SettingPrefs
 import it.devddk.hackernewsclient.viewmodels.SearchPageViewModel
@@ -88,7 +88,7 @@ import timber.log.Timber
 fun SearchPage(
     navController: NavController,
     query: String? = null,
-    windowSizeClass: WindowSizeClass,
+    windowSizeClass: WindowSizeClass
 ) {
     val context = LocalContext.current
     val dataStore = SettingPrefs(context)
@@ -139,7 +139,7 @@ fun SearchPage(
     if (searchQuery != null) {
         LaunchedEffect(searchQuery) {
             if (searchQuery!!.length >= 3) {
-                viewModel.updateQuery(searchQuery!!)
+                viewModel.updateSimpleQuery(searchQuery!!)
             }
         }
     }
@@ -323,6 +323,7 @@ fun SearchExpandedLayout(
     expanded: Boolean = false,
     onExpandedClick: () -> Unit,
     webViewState: WebViewState,
+    contentOnTop: @Composable () -> Unit = { }
 ) {
     val viewModel: SingleNewsViewModel = viewModel()
 
@@ -339,7 +340,9 @@ fun SearchExpandedLayout(
                 modifier = Modifier
                     .fillMaxWidth(0.45f)
                     .fillMaxHeight()
-            )
+            ) {
+                contentOnTop()
+            }
         }
 
         if (selectedItem != null) {
@@ -377,7 +380,7 @@ fun SearchExpandedLayout(
     }
 }
 
-@OptIn(ExperimentalPagerApi::class)
+@OptIn(ExperimentalPagerApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun SearchCompactLayout(
     modifier: Modifier = Modifier,
@@ -386,6 +389,7 @@ fun SearchCompactLayout(
     onItemClick: (Item) -> Unit,
     onItemClickComments: (Item) -> Unit,
     webViewState: WebViewState,
+    contentOnTop: @Composable () -> Unit = { }
 ) {
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
     val scrollState = rememberLazyListState()
@@ -419,6 +423,9 @@ fun SearchCompactLayout(
                 state = scrollState,
                 modifier = modifier.fillMaxSize()
             ) {
+                stickyHeader {
+                    contentOnTop()
+                }
                 items(resultList.value.size + 1) { index ->
                     LaunchedEffect(index.div(20)) {
                         viewModel.requestItem(index)
