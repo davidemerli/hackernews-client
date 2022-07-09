@@ -65,6 +65,8 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.PagerState
+import com.google.accompanist.pager.rememberPagerState
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.accompanist.web.WebViewState
@@ -85,7 +87,8 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class,
+    ExperimentalPagerApi::class)
 fun SearchPage(
     navController: NavController,
     query: String? = null,
@@ -156,6 +159,8 @@ fun SearchPage(
 
     var openDialog by remember { mutableStateOf(false) }
 
+    val pagerState = rememberPagerState()
+
     Scaffold(
         topBar = {
             HNTopBar(
@@ -194,10 +199,10 @@ fun SearchPage(
             )
         },
         floatingActionButton = {
-            if (selectedItem != null) {
-                FloatingActionButton(onClick = {
-                    openDialog = true
-                }) {
+            if (selectedItem != null && pagerState.currentPage == 0 && pagerState.pageCount == 2) {
+                FloatingActionButton(
+                    onClick = { openDialog = true }
+                ) {
                     Icon(Icons.Filled.Fullscreen, "Expand")
                 }
             }
@@ -214,6 +219,7 @@ fun SearchPage(
                     expanded = expandedArticleView,
                     onExpandedClick = { expandedArticleView = !expandedArticleView },
                     webViewState = webViewState,
+                    pagerState = pagerState,
                 )
             }
             WindowWidthSizeClass.Compact,
@@ -225,6 +231,7 @@ fun SearchPage(
                     onItemClick = { item -> onItemClick(item) },
                     onItemClickComments = { item -> onItemClickComments(item) },
                     webViewState = webViewState,
+                    pagerState = pagerState,
                 )
             }
         }
@@ -274,51 +281,7 @@ fun ResultItem(
 }
 
 @Composable
-fun SearchBar(
-    searchQuery: String,
-    onQueryChange: (String) -> Unit,
-    resetQuery: () -> Unit,
-    onBackClick: () -> Unit,
-) {
-    val focusManager = LocalFocusManager.current
-    val focusRequester = remember { FocusRequester() }
-
-    SmallTopAppBar(
-        title = {
-            TextField(
-                value = searchQuery,
-                onValueChange = onQueryChange,
-                colors = TextFieldDefaults.textFieldColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    unfocusedIndicatorColor = MaterialTheme.colorScheme.background,
-                    focusedIndicatorColor = MaterialTheme.colorScheme.background,
-                    disabledIndicatorColor = MaterialTheme.colorScheme.background,
-                    errorIndicatorColor = MaterialTheme.colorScheme.background,
-                ),
-                singleLine = true,
-                // dismiss keyboard on submit
-                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester),
-            )
-        },
-        navigationIcon = {
-            IconButton(onClick = onBackClick) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-            }
-        },
-        actions = {
-            IconButton(onClick = resetQuery) {
-                Icon(Icons.Filled.Clear, contentDescription = "Clear")
-            }
-        }
-    )
-}
-
 @OptIn(ExperimentalPagerApi::class)
-@Composable
 fun SearchExpandedLayout(
     modifier: Modifier = Modifier,
     navController: NavController,
@@ -328,6 +291,7 @@ fun SearchExpandedLayout(
     expanded: Boolean = false,
     onExpandedClick: () -> Unit,
     webViewState: WebViewState,
+    pagerState: PagerState,
     prefixContent: @Composable () -> Unit = { }
 ) {
 
@@ -342,6 +306,7 @@ fun SearchExpandedLayout(
                 onItemClickComments = onItemClickComments,
                 webViewState = webViewState,
                 prefixContent = prefixContent,
+                pagerState = pagerState,
                 modifier = Modifier
                     .fillMaxWidth(0.45f)
                     .fillMaxHeight()
@@ -371,6 +336,7 @@ fun SearchExpandedLayout(
                 navController = navController,
                 item = selectedItem,
                 webViewState = webViewState,
+                pagerState = pagerState,
             )
         } else {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -392,6 +358,7 @@ fun SearchCompactLayout(
     onItemClick: (Item) -> Unit,
     onItemClickComments: (Item) -> Unit,
     webViewState: WebViewState,
+    pagerState: PagerState,
     prefixContent: @Composable () -> Unit = { }
 ) {
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
@@ -419,6 +386,7 @@ fun SearchCompactLayout(
                 navController = navController,
                 item = selectedItem,
                 webViewState = webViewState,
+                pagerState = pagerState,
                 modifier = modifier
             )
         } else {

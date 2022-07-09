@@ -395,8 +395,7 @@ fun CompactLayout(
                 )
 
                 TallNewsRow(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     itemCollection = bestCollection,
                     onItemClick = onItemClick,
                     onItemClickComments = onItemClickComments,
