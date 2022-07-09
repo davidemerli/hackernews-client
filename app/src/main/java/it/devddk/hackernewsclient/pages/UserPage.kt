@@ -1,9 +1,11 @@
 package it.devddk.hackernewsclient.pages
 
+import android.text.util.Linkify
+import android.widget.TextView
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Badge
@@ -30,14 +32,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.accompanist.web.rememberWebViewState
+import it.devddk.hackernewsclient.domain.model.User
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.search.SearchQuery
 import it.devddk.hackernewsclient.domain.model.search.SearchTags
@@ -114,7 +118,6 @@ fun UserPage(
         )
         userViewModel.requestUser(username)
     }
-
 
     BackHandler(enabled = selectedItem != null, onBack = {
         coroutineScope.launch {
@@ -219,52 +222,79 @@ fun UserPage(
     }
 }
 
+val placeholderUser = User(
+    id = "useruser",
+    karma = 123,
+    about = "aboutabout\n\n\naboutaboutaboutaboutaboutabout\naboutaboutaboutabout"
+)
 
-@OptIn(ExperimentalTextApi::class)
 @Composable
 fun UserDetails() {
-
     val viewModel: UserViewModel = viewModel()
-
     val userState = viewModel.uiState.collectAsState()
+
     when (val theUserState = userState.value) {
         is UserUIState.Error -> {
-
+            Text("Error", modifier = Modifier.padding(16.dp))
         }
         is UserUIState.Loading -> {
-            Text(
-                text = "AAAAAAAAAAAAAAAAAAAAAAAAAA\n\n\n\n\n",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.onSurface,
-                            MaterialTheme.colorScheme.onSurface,
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-                        ),
-                    ),
-                ),
-                maxLines = 5,
-                modifier = Modifier.customPlaceholder(true),
-            )
+            UserDescription(userData = placeholderUser, placeholder = true)
         }
         is UserUIState.UserLoaded -> {
-            Text(
-                text = theUserState.userData.about?.parseHTML() ?: "no_text",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.onSurface,
-                            MaterialTheme.colorScheme.onSurface,
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-                        ),
-                    ),
-                ),
-                maxLines = 5,
-                modifier = Modifier.customPlaceholder(false),
-            )
+            UserDescription(userData = theUserState.userData, placeholder = false)
         }
     }
 }
 
+@Composable
+fun UserDescription(
+    modifier: Modifier = Modifier,
+    userData: User,
+    placeholder: Boolean = true,
+) {
+    val context = LocalContext.current
 
+    Column(
+        modifier = modifier.fillMaxWidth().padding(vertical = 4.dp)
+    ) {
+        val linkColor = MaterialTheme.colorScheme.tertiary
+        val textColor = MaterialTheme.colorScheme.onSurface
+        val highlightColor = MaterialTheme.colorScheme.primary
 
+        val textSize = MaterialTheme.typography.bodyLarge.fontSize
+
+        AndroidView(
+            factory = { TextView(context) },
+            update = {
+                it.setLinkTextColor(linkColor.toArgb())
+                it.setTextColor(textColor.toArgb())
+                it.highlightColor = highlightColor.toArgb()
+
+                it.text = userData.about?.parseHTML() ?: "no_text"
+                it.setTextIsSelectable(true)
+                Linkify.addLinks(it, Linkify.WEB_URLS)
+
+                it.textSize = textSize.value
+            },
+            modifier = Modifier
+                .padding(16.dp)
+                .customPlaceholder(placeholder),
+        )
+
+        Text(
+            text = "account created: ${userData.created}",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 4.dp)
+                .customPlaceholder(placeholder),
+        )
+
+        Text(
+            text = "karma: ${userData.karma}",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 4.dp)
+                .customPlaceholder(placeholder),
+        )
+    }
+}
