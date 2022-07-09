@@ -40,7 +40,10 @@ import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.SvgDecoder
 import it.devddk.hackernewsclient.R
+import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.domain.model.items.Item
+import it.devddk.hackernewsclient.domain.model.items.favorite
+import it.devddk.hackernewsclient.domain.model.items.readLater
 import it.devddk.hackernewsclient.shared.components.customPlaceholder
 import it.devddk.hackernewsclient.shared.components.news.AddToFavorite
 import it.devddk.hackernewsclient.shared.components.news.AddToReadLater
@@ -57,6 +60,7 @@ fun MediumNewsCard(
     item: Item = placeholderItem,
     onClick: () -> Unit = {},
     onCommentClick: () -> Unit = {},
+    toggleCollection: (Item, UserDefinedItemCollection) -> Unit,
     placeholder: Boolean = false,
 ) {
     val context = LocalContext.current
@@ -68,6 +72,9 @@ fun MediumNewsCard(
 
     var shareExpanded by remember { mutableStateOf(false) }
     var moreExpanded by remember { mutableStateOf(false) }
+
+    var favorite by remember { mutableStateOf(item.collections.favorite) }
+    var readLater by remember { mutableStateOf(item.collections.readLater) }
 
     Column(
         modifier = modifier
@@ -223,13 +230,23 @@ fun MediumNewsCard(
                     onDismissRequest = { moreExpanded = false }
                 ) {
                     AddToFavorite(
-                        favorite = false,
-                        onClick = { /*TODO*/ }
+                        favorite = favorite,
+                        onClick = {
+                            favorite = !favorite
+                            moreExpanded = false
+
+                            toggleCollection(item, UserDefinedItemCollection.Favorites)
+                        }
                     )
 
                     AddToReadLater(
-                        readLater = false,
-                        onClick = { /*TODO*/ }
+                        readLater = readLater,
+                        onClick = {
+                            readLater = !readLater
+                            moreExpanded = false
+
+                            toggleCollection(item, UserDefinedItemCollection.ReadLater)
+                        }
                     )
                 }
             }

@@ -21,6 +21,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
+import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
+import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.shared.components.comments.CommentItem
@@ -34,7 +36,8 @@ fun MediumNewsRow(
     modifier: Modifier = Modifier,
     itemCollection: ItemCollectionHolder,
     onItemClick: (Item) -> Unit,
-    onItemClickComments: (Item) -> Unit
+    onItemClickComments: (Item) -> Unit,
+    toggleCollection: (Item, UserDefinedItemCollection) -> Unit,
 ) {
     val pageState by remember { itemCollection.pageState }.collectAsState(NewsPageState.Loading)
     val scrollState = rememberLazyListState()
@@ -66,6 +69,7 @@ fun MediumNewsRow(
                     itemsIndexed(itemListState.subList(0, length), key = { _, itemState -> itemState.itemId }) { index, _ ->
                         MediumNewsCard(
                             modifier = Modifier.width(352.dp),
+                            toggleCollection = toggleCollection,
                             placeholder = true,
                         )
 
@@ -90,6 +94,7 @@ fun MediumNewsRow(
 
                                 MediumNewsCard(
                                     modifier = Modifier.width(352.dp),
+                                    toggleCollection = toggleCollection,
                                     placeholder = true,
                                 )
                             }
@@ -109,7 +114,8 @@ fun MediumNewsRow(
                                         item = item,
                                         modifier = Modifier.width(384.dp),
                                         onClick = { onItemClick(item) },
-                                        onCommentClick = { onItemClickComments(item) }
+                                        onCommentClick = { onItemClickComments(item) },
+                                        toggleCollection = toggleCollection,
                                     )
                                 }
                             }

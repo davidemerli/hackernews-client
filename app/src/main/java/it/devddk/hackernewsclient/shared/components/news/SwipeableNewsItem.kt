@@ -78,8 +78,6 @@ fun SwipeableItem(
         backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.background,
         modifier = modifier,
     ) {
-        Timber.d("${if (item.collections.readLater) "R" else ""} ${if (item.collections.favorite) "F" else ""} ${item.title}")
-
         when (item.type) {
             ItemType.JOB,
             ItemType.POLL,

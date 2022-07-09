@@ -400,6 +400,16 @@ fun CompactLayout(
                     itemCollection = bestCollection,
                     onItemClick = onItemClick,
                     onItemClickComments = onItemClickComments,
+                    toggleCollection = { item, itemCollection ->
+                        coroutineScope.launch {
+                            viewModel.toggleFromCollection(item.id, itemCollection)
+
+                            // reload if item is added to read later in order to update the view
+                            if (itemCollection is UserDefinedItemCollection.ReadLater) {
+                                readLaterCollection.loadAll()
+                            }
+                        }
+                    }
                 )
 
                 Divider(
@@ -422,6 +432,16 @@ fun CompactLayout(
                         itemCollection = readLaterCollection,
                         onItemClickComments = onItemClickComments,
                         onItemClick = onItemClick,
+                        toggleCollection = { item, itemCollection ->
+                            coroutineScope.launch {
+                                viewModel.toggleFromCollection(item.id, itemCollection)
+
+                                // reload if item is added to read later in order to update the view
+                                if (itemCollection is UserDefinedItemCollection.ReadLater) {
+                                    readLaterCollection.loadAll()
+                                }
+                            }
+                        }
                     )
 
                     Divider(

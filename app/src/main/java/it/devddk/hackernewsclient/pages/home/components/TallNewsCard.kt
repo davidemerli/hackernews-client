@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,12 +36,16 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.SvgDecoder
 import com.google.accompanist.placeholder.placeholder
 import it.devddk.hackernewsclient.R
+import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.domain.model.items.Item
+import it.devddk.hackernewsclient.domain.model.items.favorite
+import it.devddk.hackernewsclient.domain.model.items.readLater
 import it.devddk.hackernewsclient.shared.components.customPlaceholder
 import it.devddk.hackernewsclient.shared.components.news.AddToFavorite
 import it.devddk.hackernewsclient.shared.components.news.AddToReadLater
@@ -49,6 +54,8 @@ import it.devddk.hackernewsclient.shared.components.news.ShareHNLink
 import it.devddk.hackernewsclient.shared.components.news.placeholderItem
 import it.devddk.hackernewsclient.shared.components.news.shareStringContent
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
+import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
+import kotlinx.coroutines.launch
 import java.net.URI
 
 @Composable
@@ -57,6 +64,7 @@ fun TallNewsCard(
     item: Item = placeholderItem,
     onClick: () -> Unit = {},
     onClickComments: () -> Unit = {},
+    toggleCollection: (Item, UserDefinedItemCollection) -> Unit,
     placeholder: Boolean = false,
 ) {
     val context = LocalContext.current
@@ -76,6 +84,9 @@ fun TallNewsCard(
 
     var shareExpanded by remember { mutableStateOf(false) }
     var moreExpanded by remember { mutableStateOf(false) }
+
+    var favorite by remember { mutableStateOf(item.collections.favorite) }
+    var readLater by remember { mutableStateOf(item.collections.readLater) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -210,13 +221,23 @@ fun TallNewsCard(
                     onDismissRequest = { moreExpanded = false }
                 ) {
                     AddToFavorite(
-                        favorite = false,
-                        onClick = { /*TODO*/ }
+                        favorite = favorite,
+                        onClick = {
+                            favorite = !favorite
+                            moreExpanded = false
+
+                            toggleCollection(item, UserDefinedItemCollection.Favorites)
+                        }
                     )
 
                     AddToReadLater(
-                        readLater = false,
-                        onClick = { /*TODO*/ }
+                        readLater = readLater,
+                        onClick = {
+                            readLater = !readLater
+                            moreExpanded = false
+
+                            toggleCollection(item, UserDefinedItemCollection.ReadLater)
+                        }
                     )
                 }
             }
