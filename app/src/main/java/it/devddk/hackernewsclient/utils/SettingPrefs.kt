@@ -1,6 +1,7 @@
 package it.devddk.hackernewsclient.utils
 
 import android.content.Context
+import androidx.compose.ui.unit.sp
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -22,8 +23,10 @@ class SettingPrefs(private val context: Context) {
         private val preferredViewKey = stringPreferencesKey("preferred_view")
         // which theme does the user want to use
         private val themeKey = stringPreferencesKey("theme")
-
+        // whether the user wants to see the webview in dark mode
         private val darkModeKey = booleanPreferencesKey("darkMode")
+        // font size when displaying comments in the app
+        private val fontSizeKey = floatPreferencesKey("font_size")
 
         // webview settings
         private val javaScriptEnabledKey = booleanPreferencesKey("javaScriptEnabled")
@@ -47,6 +50,7 @@ class SettingPrefs(private val context: Context) {
         private val supportZoomKey = booleanPreferencesKey("supportZoom")
 
         const val DEFAULT_DEPTH = 10f
+        const val DEFAULT_FONT_SIZE = 16f
         const val DEFAULT_PREFERRED_VIEW = "article"
         const val DEFAULT_THEME = "system"
         const val DEFAULT_DARK_MODE = false
@@ -170,6 +174,11 @@ class SettingPrefs(private val context: Context) {
     val darkMode: Flow<Boolean>
         get() = context.dataStore.data.map {
             it[darkModeKey] ?: DEFAULT_DARK_MODE
+        }
+
+    val fontSize: Flow<Float>
+        get() = context.dataStore.data.map {
+            it[fontSizeKey] ?: DEFAULT_FONT_SIZE
         }
 
     suspend fun setDarkMode(value: Boolean) {

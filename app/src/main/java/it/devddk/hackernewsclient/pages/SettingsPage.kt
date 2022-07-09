@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.TextIncrease
 import androidx.compose.material.icons.filled.Wysiwyg
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -27,6 +29,7 @@ import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.shared.components.topbars.HomePageTopBar
 import it.devddk.hackernewsclient.utils.SettingPrefs
 import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.DEFAULT_DEPTH
+import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.DEFAULT_FONT_SIZE
 import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.DEFAULT_PREFERRED_VIEW
 import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.DEFAULT_THEME
 import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.WEBVIEW_DEFAULTS
@@ -56,6 +59,35 @@ fun depthPreference(): Preference.PreferenceItem.SeekBarPreference {
             )
         },
         request = depthPreferenceRequest,
+        valueRange = min..max,
+        steps = (max - min).toInt(),
+        valueRepresentation = { value ->
+            "${value.toInt()}".padStart(2, '0')
+        },
+    )
+}
+
+fun fontSizePreference(): Preference.PreferenceItem.SeekBarPreference {
+    val fontSizePreferenceRequest = PreferenceRequest(
+        key = floatPreferencesKey("font_size"),
+        defaultValue = DEFAULT_FONT_SIZE,
+    )
+
+    val min = DEFAULT_FONT_SIZE - 4.sp.value
+    val max = DEFAULT_FONT_SIZE + 8.sp.value
+
+    return Preference.PreferenceItem.SeekBarPreference(
+        title = "Font Size",
+        summary = "Controls the text size of comments and stories descriptions",
+        singleLineTitle = true,
+        icon = {
+            Icon(
+                imageVector = Icons.Filled.TextIncrease,
+                contentDescription = null,
+                modifier = Modifier.padding(8.dp)
+            )
+        },
+        request = fontSizePreferenceRequest,
         valueRange = min..max,
         steps = (max - min).toInt(),
         valueRepresentation = { value ->
@@ -135,6 +167,7 @@ fun themePreference(): Preference.PreferenceItem.ListPreference {
         ),
     )
 }
+
 @Composable
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 fun SettingsPage(navController: NavController) {
@@ -159,6 +192,7 @@ fun SettingsPage(navController: NavController) {
             PreferenceScreen(
                 items = listOf(
                     depthPreference(),
+                    fontSizePreference(),
                     preferredViewPreference(),
                     themePreference(),
                     Preference.PreferenceGroup(

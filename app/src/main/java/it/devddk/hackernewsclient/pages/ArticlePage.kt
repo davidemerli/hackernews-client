@@ -60,6 +60,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
+import androidx.compose.ui.unit.sp
 import androidx.core.text.HtmlCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -258,6 +259,8 @@ fun TabbedView(
     pagerState: PagerState = rememberPagerState(),
     selectedView: String? = null
 ) {
+    Timber.d("TabbedView: selectedView: $selectedView")
+
     val tabs = item.url?.let { listOf("Article", "Comments (${item.descendants ?: 0})") } ?: listOf(
         "Comments (${item.descendants ?: 0})"
     )
@@ -396,6 +399,7 @@ fun CommentsView(
     val context = LocalContext.current
     val dataStore = SettingPrefs(context)
     val depthSize = dataStore.depth.collectAsState(initial = SettingPrefs.DEFAULT_DEPTH)
+    val fontSize = dataStore.fontSize.collectAsState(initial = MaterialTheme.typography.bodyLarge.fontSize.value)
 
     val mViewModel: SingleNewsViewModel = viewModel()
     val comments = mViewModel.commentList.collectAsState(emptyList())
@@ -471,6 +475,7 @@ fun CommentsView(
                     comment = comment,
                     rootItem = item,
                     depthSize = depthSize.value.toInt(),
+                    fontSize = fontSize.value.sp,
                     listState = scrollState,
                     navController = navController,
                 )
@@ -494,8 +499,11 @@ fun CommentsView(
 
 @Composable
 fun ArticleDescription(item: Item) {
+    val dataStore = SettingPrefs(LocalContext.current)
+    val fontSize = dataStore.fontSize.collectAsState(initial = MaterialTheme.typography.bodyLarge.fontSize.value)
+
     if (!item.text.isNullOrBlank()) {
-        CommentText(item = item)
+        CommentText(item = item, fontSize = fontSize.value.sp)
     }
 }
 

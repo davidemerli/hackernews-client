@@ -57,6 +57,8 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.PagerState
+import com.google.accompanist.pager.rememberPagerState
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.accompanist.web.WebViewState
@@ -83,7 +85,7 @@ import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class, ExperimentalPagerApi::class)
 fun HomePage(
     navController: NavController,
     windowSizeClass: WindowSizeClass,
@@ -108,6 +110,8 @@ fun HomePage(
         } else null
     }
 
+    var selectedView: String? by remember { mutableStateOf(null) }
+
     var expandedArticleView by rememberSaveable { mutableStateOf(false) }
     var readerMode by remember { mutableStateOf(false) }
     val darkMode by dataStore.darkMode.collectAsState(initial = SettingPrefs.DEFAULT_DARK_MODE)
@@ -116,6 +120,7 @@ fun HomePage(
 
     val onItemClick = { item: Item ->
         coroutineScope.launch {
+            selectedView = "article"
             itemViewModel.setId(item.id)
             readerMode = false
         }
@@ -123,7 +128,8 @@ fun HomePage(
 
     val onItemClickComments = { item: Item ->
         coroutineScope.launch {
-            itemViewModel.setId(item.id) // TODO: go to comments in tabbed
+            selectedView = "comments"
+            itemViewModel.setId(item.id)
             readerMode = false
         }
     }
@@ -151,6 +157,8 @@ fun HomePage(
     })
 
     var openDialog by remember { mutableStateOf(false) }
+
+    val pagerState = rememberPagerState()
 
     HNModalNavigatorPanel(navController = navController, state = drawerState) {
         Scaffold(
@@ -181,7 +189,7 @@ fun HomePage(
                 )
             },
             floatingActionButton = {
-                if (selectedItem != null) {
+                if (selectedItem != null && pagerState.currentPage == 0 && pagerState.pageCount == 2) {
                     FloatingActionButton(
                         onClick = { openDialog = true }
                     ) {
@@ -201,14 +209,15 @@ fun HomePage(
                         onItemClick = { item -> onItemClick(item) },
                         onItemClickComments = { item -> onItemClickComments(item) },
                         selectedItem = selectedItem,
+                        selectedView = selectedView,
                         expanded = expandedArticleView,
                         onExpandedClick = { expandedArticleView = !expandedArticleView },
                         webViewState = webViewState,
+                        pagerState = pagerState,
                     )
                 }
                 WindowWidthSizeClass.Compact,
-                WindowWidthSizeClass.Medium,
-                -> {
+                WindowWidthSizeClass.Medium -> {
                     CompactLayout(
                         modifier = Modifier.padding(top = it.calculateTopPadding()),
                         navController = navController,
@@ -216,9 +225,11 @@ fun HomePage(
                         topCollection = topCollection,
                         readLaterCollection = readLaterCollection,
                         selectedItem = selectedItem,
+                        selectedView = selectedView,
                         onItemClick = { item -> onItemClick(item) },
                         onItemClickComments = { item -> onItemClickComments(item) },
                         webViewState = webViewState,
+                        pagerState = pagerState,
                     )
                 }
             }
@@ -250,12 +261,12 @@ fun ExpandedLayout(
     onItemClick: (Item) -> Unit,
     onItemClickComments: (Item) -> Unit,
     selectedItem: Item?,
+    selectedView: String?,
     expanded: Boolean = false,
     onExpandedClick: () -> Unit,
     webViewState: WebViewState,
+    pagerState: PagerState,
 ) {
-    val viewModel: SingleNewsViewModel = viewModel()
-
     Row(
         modifier = modifier.fillMaxSize()
     ) {
@@ -266,9 +277,11 @@ fun ExpandedLayout(
                 topCollection = topCollection,
                 readLaterCollection = readLaterCollection,
                 selectedItem = null,
+                selectedView = null,
                 onItemClick = onItemClick,
                 onItemClickComments = onItemClickComments,
                 webViewState = webViewState,
+                pagerState = pagerState,
                 modifier = Modifier
                     .fillMaxWidth(0.45f)
                     .fillMaxHeight()
@@ -298,6 +311,8 @@ fun ExpandedLayout(
                 navController = navController,
                 item = selectedItem,
                 webViewState = webViewState,
+                pagerState = pagerState,
+                selectedView = selectedView,
             )
         } else {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -319,9 +334,11 @@ fun CompactLayout(
     topCollection: ItemCollectionHolder,
     readLaterCollection: ItemCollectionHolder,
     selectedItem: Item?,
+    selectedView: String?,
     onItemClick: (Item) -> Unit,
     onItemClickComments: (Item) -> Unit,
-    webViewState: WebViewState
+    webViewState: WebViewState,
+    pagerState: PagerState,
 ) {
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
     val coroutineScope = rememberCoroutineScope()
@@ -358,7 +375,9 @@ fun CompactLayout(
                 navController = navController,
                 item = selectedItem,
                 webViewState = webViewState,
-                modifier = modifier
+                pagerState = pagerState,
+                selectedView = selectedView,
+                modifier = modifier,
             )
         } else {
             Column(
@@ -425,7 +444,8 @@ fun CompactLayout(
 
                 NewsColumn(
                     itemCollection = topCollection,
-                    onItemClick = onItemClick,
+                    onClickItem = onItemClick,
+                    onClickComments = onItemClickComments,
                     onClickAuthor = { item -> navController.navigate("user/${item.by}") },
                     toggleCollection = { item, itemCollection ->
                         coroutineScope.launch {

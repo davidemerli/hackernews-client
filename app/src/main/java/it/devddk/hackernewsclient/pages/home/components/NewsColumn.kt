@@ -25,7 +25,8 @@ import kotlin.math.min
 fun ColumnScope.NewsColumn(
     modifier: Modifier = Modifier,
     itemCollection: ItemCollectionHolder,
-    onItemClick: (Item) -> Unit,
+    onClickItem: (Item) -> Unit,
+    onClickComments: (Item) -> Unit,
     onClickAuthor: (Item) -> Unit = {},
     toggleCollection: (Item, UserDefinedItemCollection) -> Unit,
 ) {
@@ -68,7 +69,8 @@ fun ColumnScope.NewsColumn(
 
                         SwipeableItem(
                             item = item,
-                            onClick = { onItemClick(item) },
+                            onClick = { onClickItem(item) },
+                            onClickComments = { onClickComments(item) },
                             onClickAuthor = { onClickAuthor(item) },
                             toggleCollection = toggleCollection,
                         )

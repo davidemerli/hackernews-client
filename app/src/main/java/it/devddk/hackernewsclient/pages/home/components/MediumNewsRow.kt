@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import it.devddk.hackernewsclient.domain.model.items.Item
+import it.devddk.hackernewsclient.domain.model.items.ItemType
+import it.devddk.hackernewsclient.shared.components.comments.CommentItem
 import it.devddk.hackernewsclient.viewmodels.ItemCollectionHolder
 import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.NewsPageState
@@ -68,7 +70,11 @@ fun MediumNewsRow(
                         )
 
                         if (index != length - 1) {
-                            Divider(modifier = Modifier.alpha(0.1f).height(192.dp).padding(8.dp).width(1.dp))
+                            Divider(modifier = Modifier
+                                .alpha(0.1f)
+                                .height(192.dp)
+                                .padding(8.dp)
+                                .width(1.dp))
                         }
                     }
                 }
@@ -91,12 +97,21 @@ fun MediumNewsRow(
                             is NewsItemState.ItemLoaded -> {
                                 val item = itemState.item
 
-                                MediumNewsCard(
-                                    item = item,
-                                    modifier = Modifier.width(384.dp),
-                                    onClick = { onItemClick(item) },
-                                    onCommentClick = { onItemClickComments(item) }
-                                )
+                                if (item.type == ItemType.COMMENT) {
+                                    CommentItem(
+                                        item = item,
+                                        modifier = Modifier.width(384.dp),
+                                        maxLines = 4,
+                                        onClick = { onItemClick(item) },
+                                    )
+                                } else {
+                                    MediumNewsCard(
+                                        item = item,
+                                        modifier = Modifier.width(384.dp),
+                                        onClick = { onItemClick(item) },
+                                        onCommentClick = { onItemClickComments(item) }
+                                    )
+                                }
                             }
                         }
 
