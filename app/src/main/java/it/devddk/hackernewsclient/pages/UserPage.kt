@@ -186,13 +186,11 @@ fun UserPage(
                         expanded = expandedArticleView,
                         onExpandedClick = { expandedArticleView = !expandedArticleView },
                         webViewState = webViewState,
-                    ) {
-                        UserDetails()
-                    }
+                        prefixContent = { UserDetails() }
+                    )
                 }
                 WindowWidthSizeClass.Compact,
-                WindowWidthSizeClass.Medium,
-                -> {
+                WindowWidthSizeClass.Medium -> {
                     SearchCompactLayout(
                         modifier = Modifier.padding(top = it.calculateTopPadding()),
                         navController = navController,
@@ -200,9 +198,8 @@ fun UserPage(
                         onItemClick = { item -> onItemClick(item) },
                         onItemClickComments = { item -> onItemClickComments(item) },
                         webViewState = webViewState,
-                    ) {
-                        UserDetails()
-                    }
+                        prefixContent = { UserDetails() }
+                    )
                 }
             }
 

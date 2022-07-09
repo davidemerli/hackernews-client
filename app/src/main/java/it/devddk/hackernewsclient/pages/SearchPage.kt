@@ -217,8 +217,7 @@ fun SearchPage(
                 )
             }
             WindowWidthSizeClass.Compact,
-            WindowWidthSizeClass.Medium,
-            -> {
+            WindowWidthSizeClass.Medium -> {
                 SearchCompactLayout(
                     modifier = Modifier.padding(top = it.calculateTopPadding()),
                     navController = navController,
@@ -246,7 +245,11 @@ fun SearchPage(
 }
 
 @Composable
-fun ResultItem(result: SearchResult, onClick: () -> Unit = {}) {
+fun ResultItem(
+    result: SearchResult,
+    onClick: () -> Unit = {},
+    onClickComments: () -> Unit = {},
+) {
     Timber.d("ResultItem: ${result.item.by} - ${result.item.type}")
 
     // TODO: differentiate onClick
@@ -260,6 +263,7 @@ fun ResultItem(result: SearchResult, onClick: () -> Unit = {}) {
                 item = result.item,
                 searchMetaData = result.searchMetaData,
                 onClick = onClick,
+                onClickComments = onClickComments,
                 placeholder = false
             )
         }
@@ -324,9 +328,8 @@ fun SearchExpandedLayout(
     expanded: Boolean = false,
     onExpandedClick: () -> Unit,
     webViewState: WebViewState,
-    contentOnTop: @Composable () -> Unit = { }
+    prefixContent: @Composable () -> Unit = { }
 ) {
-    val viewModel: SingleNewsViewModel = viewModel()
 
     Row(
         modifier = modifier.fillMaxSize()
@@ -338,12 +341,11 @@ fun SearchExpandedLayout(
                 onItemClick = onItemClick,
                 onItemClickComments = onItemClickComments,
                 webViewState = webViewState,
+                prefixContent = prefixContent,
                 modifier = Modifier
                     .fillMaxWidth(0.45f)
                     .fillMaxHeight()
-            ) {
-                contentOnTop()
-            }
+            )
         }
 
         if (selectedItem != null) {
@@ -381,8 +383,8 @@ fun SearchExpandedLayout(
     }
 }
 
-@OptIn(ExperimentalPagerApi::class, ExperimentalFoundationApi::class)
 @Composable
+@OptIn(ExperimentalPagerApi::class)
 fun SearchCompactLayout(
     modifier: Modifier = Modifier,
     navController: NavController,
@@ -390,7 +392,7 @@ fun SearchCompactLayout(
     onItemClick: (Item) -> Unit,
     onItemClickComments: (Item) -> Unit,
     webViewState: WebViewState,
-    contentOnTop: @Composable () -> Unit = { }
+    prefixContent: @Composable () -> Unit = { }
 ) {
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
     val scrollState = rememberLazyListState()
@@ -424,9 +426,7 @@ fun SearchCompactLayout(
                 state = scrollState,
                 modifier = modifier.fillMaxSize()
             ) {
-                item {
-                    UserDetails()
-                }
+                item { prefixContent() }
 
                 items(resultList.value.size + 1) { index ->
                     LaunchedEffect(index.div(20)) {
@@ -437,7 +437,8 @@ fun SearchCompactLayout(
                         is SearchResultUiState.ResultLoaded -> {
                             ResultItem(
                                 result.result,
-                                onClick = { onItemClick(result.result.item) }
+                                onClick = { onItemClick(result.result.item) },
+                                onClickComments = { onItemClickComments(result.result.item) }
                             )
                         }
                         else -> {
