@@ -12,9 +12,9 @@ class UserViewModel : ViewModel(), KoinComponent {
 
     private val _uiState = MutableStateFlow<UserUIState>(UserUIState.Loading(""))
     val uiState = _uiState.asStateFlow()
-    private val getUserByUsername : GetUserByUsernameUseCase by inject()
+    private val getUserByUsername: GetUserByUsernameUseCase by inject()
 
-    suspend fun requestUser(username : String) {
+    suspend fun requestUser(username: String) {
         _uiState.emit(UserUIState.Loading(username))
         getUserByUsername(username).fold(
             onSuccess = {
@@ -29,9 +29,7 @@ class UserViewModel : ViewModel(), KoinComponent {
     suspend fun reloadUser() {
         requestUser(_uiState.value.username)
     }
-
 }
-
 
 sealed class UserUIState(open val username: String) {
     data class Loading(override val username: String) : UserUIState(username)

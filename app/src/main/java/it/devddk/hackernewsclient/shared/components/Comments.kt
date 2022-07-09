@@ -57,6 +57,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -97,6 +98,7 @@ fun ExpandableComment(
     comment: CommentUiState,
     rootItem: Item,
     depthSize: Int,
+    fontSize: TextUnit,
     listState: LazyListState,
     navController: NavController,
 ) {
@@ -121,6 +123,7 @@ fun ExpandableComment(
                 comment.item,
                 comment.depth,
                 depthSize = depthSize,
+                fontSize = fontSize,
                 expanded = expanded,
                 rootItem = rootItem,
                 onClick = onClick,
@@ -140,6 +143,7 @@ fun ExpandableComment(
             placeholderItem,
             comment.depth,
             depthSize = depthSize,
+            fontSize = fontSize,
             expanded = expanded,
             rootItem = rootItem,
             onClick = onClick,
@@ -155,6 +159,7 @@ fun CommentCard(
     item: Item,
     depth: Int = 0,
     depthSize: Int = 6,
+    fontSize: TextUnit,
     rootItem: Item,
     expanded: Boolean,
     listState: LazyListState,
@@ -216,6 +221,7 @@ fun CommentCard(
         CommentText(
             item = item,
             placeholder = placeholder,
+            fontSize = fontSize,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(end = 8.dp)
@@ -306,7 +312,12 @@ fun CommentTitle(
 }
 
 @Composable
-fun CommentText(modifier: Modifier = Modifier, item: Item, placeholder: Boolean = false) {
+fun CommentText(
+    modifier: Modifier = Modifier,
+    item: Item,
+    fontSize: TextUnit,
+    placeholder: Boolean = false
+) {
     val context = LocalContext.current
 
     val linkColor = MaterialTheme.colorScheme.tertiary
@@ -328,6 +339,7 @@ fun CommentText(modifier: Modifier = Modifier, item: Item, placeholder: Boolean 
                 it.setLinkTextColor(linkColor.toArgb())
                 it.setTextColor(textColor.toArgb())
                 it.highlightColor = highlightColor.toArgb()
+                it.textSize = fontSize.value
 
                 it.text = item.text!!.parseHTML()
                 it.setTextIsSelectable(true)
@@ -421,71 +433,71 @@ fun MoreOptions(
             )
         }
 
-        // TODO: move buttons in sub-composables
-        // TODO: better scroll handling (if possible)
+//        // TODO: move buttons in sub-composables
+//        // TODO: better scroll handling (if possible)
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            item.parent?.let {
-                comments.value.map { it.itemId }.indexOf(item.parent!!).let { index ->
-                    if (index != -1) {
-                        DropdownMenuItem(
-                            text = { Text("Go To Parent") },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Filled.SubdirectoryArrowRight,
-                                    contentDescription = "Scroll to parent",
-                                    modifier = Modifier.rotate(180f)
-                                )
-                            },
-                            onClick = {
-                                coroutineScope.launch {
-                                    listState.animateScrollToItem(index)
-                                }
-                                expanded = false
-                            }
-                        )
-                    }
-                }
-            }
-            item.parent?.let {
-                comments.value.map { it.itemId }.indexOf(item.parent!!).let { index ->
-                    if (index != -1) {
-                        DropdownMenuItem(
-                            text = { Text("Go To Root") },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Filled.MoveUp,
-                                    contentDescription = "Scroll to root comment"
-                                )
-                            },
-                            onClick = {
-                                coroutineScope.launch {
-                                    var temp = comments.value.first { it.itemId == item.parent }
-
-                                    while ((temp as CommentUiState.CommentLoaded).item.parent != rootItem.id) {
-                                        temp =
-                                            comments.value.first { it.itemId == (temp as CommentUiState.CommentLoaded).item.parent }
-                                    }
-
-                                    listState.animateScrollToItem(
-                                        comments.value.map { it.itemId }.indexOf(temp.itemId),
-                                        0,
-                                    )
-
-                                    Timber.d(
-                                        "INDEX: ${
-                                        comments.value.map { it.itemId }.indexOf(temp.itemId)
-                                        }"
-                                    )
-
-                                    listState.animateScrollBy(-1f)
-
-                                    expanded = false
-                                }
-                            }
-                        )
-                    }
-                }
-            }
+//            item.parent?.let {
+//                comments.value.map { it.itemId }.indexOf(item.parent!!).let { index ->
+//                    if (index != -1) {
+//                        DropdownMenuItem(
+//                            text = { Text("Go To Parent") },
+//                            leadingIcon = {
+//                                Icon(
+//                                    Icons.Filled.SubdirectoryArrowRight,
+//                                    contentDescription = "Scroll to parent",
+//                                    modifier = Modifier.rotate(180f)
+//                                )
+//                            },
+//                            onClick = {
+//                                coroutineScope.launch {
+//                                    listState.animateScrollToItem(index)
+//                                }
+//                                expanded = false
+//                            }
+//                        )
+//                    }
+//                }
+//            }
+//            item.parent?.let {
+//                comments.value.map { it.itemId }.indexOf(item.parent!!).let { index ->
+//                    if (index != -1) {
+//                        DropdownMenuItem(
+//                            text = { Text("Go To Root") },
+//                            leadingIcon = {
+//                                Icon(
+//                                    Icons.Filled.MoveUp,
+//                                    contentDescription = "Scroll to root comment"
+//                                )
+//                            },
+//                            onClick = {
+//                                coroutineScope.launch {
+//                                    var temp = comments.value.first { it.itemId == item.parent }
+//
+//                                    while ((temp as CommentUiState.CommentLoaded).item.parent != rootItem.id) {
+//                                        temp =
+//                                            comments.value.first { it.itemId == (temp as CommentUiState.CommentLoaded).item.parent }
+//                                    }
+//
+//                                    listState.animateScrollToItem(
+//                                        comments.value.map { it.itemId }.indexOf(temp.itemId),
+//                                        0,
+//                                    )
+//
+//                                    Timber.d(
+//                                        "INDEX: ${
+//                                        comments.value.map { it.itemId }.indexOf(temp.itemId)
+//                                        }"
+//                                    )
+//
+//                                    listState.animateScrollBy(-1f)
+//
+//                                    expanded = false
+//                                }
+//                            }
+//                        )
+//                    }
+//                }
+//            }
 
             DropdownMenuItem(
                 text = { Text(if (!favorite.value) "Add to favorites" else "Remove from favorites") },

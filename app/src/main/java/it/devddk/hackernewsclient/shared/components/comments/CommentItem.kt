@@ -45,6 +45,7 @@ fun CommentItem(
     item: Item,
     searchMetaData: SearchResultMetaData? = null,
     onClick: () -> Unit,
+    maxLines: Int = 5,
     placeholder: Boolean = false,
     favorite: MutableState<Boolean> = remember { mutableStateOf(item.collections.favorite) },
     readLater: MutableState<Boolean> = remember { mutableStateOf(item.collections.readLater) },
@@ -135,7 +136,7 @@ fun CommentItem(
                         ),
                     ),
                 ),
-                maxLines = 5,
+                maxLines = maxLines,
                 modifier = Modifier.customPlaceholder(placeholder),
             )
 
