@@ -40,6 +40,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.rememberPagerState
 import com.google.accompanist.web.rememberWebViewState
 import it.devddk.hackernewsclient.domain.model.User
 import it.devddk.hackernewsclient.domain.model.items.Item
@@ -58,7 +60,8 @@ import it.devddk.hackernewsclient.viewmodels.UserViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class,
+    ExperimentalPagerApi::class)
 fun UserPage(
     navController: NavController,
     windowSizeClass: WindowSizeClass,
@@ -130,6 +133,8 @@ fun UserPage(
 
     var openDialog by remember { mutableStateOf(false) }
 
+    val pagerState = rememberPagerState()
+
     // TODO: make this a bottomSheet with only compact view
 
     HNModalNavigatorPanel(
@@ -166,10 +171,10 @@ fun UserPage(
                 )
             },
             floatingActionButton = {
-                if (selectedItem != null) {
-                    FloatingActionButton(onClick = {
-                        openDialog = true
-                    }) {
+                if (selectedItem != null && pagerState.currentPage == 0 && pagerState.pageCount == 2) {
+                    FloatingActionButton(
+                        onClick = { openDialog = true }
+                    ) {
                         Icon(Icons.Filled.Fullscreen, "Expand")
                     }
                 }
@@ -186,13 +191,12 @@ fun UserPage(
                         expanded = expandedArticleView,
                         onExpandedClick = { expandedArticleView = !expandedArticleView },
                         webViewState = webViewState,
-                    ) {
-                        UserDetails()
-                    }
+                        pagerState = pagerState,
+                        prefixContent = { UserDetails() }
+                    )
                 }
                 WindowWidthSizeClass.Compact,
-                WindowWidthSizeClass.Medium,
-                -> {
+                WindowWidthSizeClass.Medium -> {
                     SearchCompactLayout(
                         modifier = Modifier.padding(top = it.calculateTopPadding()),
                         navController = navController,
@@ -200,9 +204,9 @@ fun UserPage(
                         onItemClick = { item -> onItemClick(item) },
                         onItemClickComments = { item -> onItemClickComments(item) },
                         webViewState = webViewState,
-                    ) {
-                        UserDetails()
-                    }
+                        pagerState = pagerState,
+                        prefixContent = { UserDetails() }
+                    )
                 }
             }
 
@@ -255,7 +259,9 @@ fun UserDescription(
     val context = LocalContext.current
 
     Column(
-        modifier = modifier.fillMaxWidth().padding(vertical = 4.dp)
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
     ) {
         val linkColor = MaterialTheme.colorScheme.tertiary
         val textColor = MaterialTheme.colorScheme.onSurface

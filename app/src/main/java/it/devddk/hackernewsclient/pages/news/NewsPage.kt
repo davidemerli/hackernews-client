@@ -1,7 +1,6 @@
 package it.devddk.hackernewsclient.pages.news
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -111,11 +110,6 @@ fun NewsPage(
     val darkMode by dataStore.darkMode.collectAsState(initial = SettingPrefs.DEFAULT_DARK_MODE)
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val pagerState = rememberPagerState()
-
-    val shouldShowFAB by remember {
-        derivedStateOf { pagerState.currentPage == 0 && pagerState.pageCount == 2 }
-    }
 
     val onItemClick = { item: Item ->
         coroutineScope.launch {
@@ -146,6 +140,8 @@ fun NewsPage(
     })
 
     var openDialog by remember { mutableStateOf(false) }
+
+    val pagerState = rememberPagerState()
 
     HNModalNavigatorPanel(
         navController = navController,
@@ -181,15 +177,11 @@ fun NewsPage(
                 )
             },
             floatingActionButton = {
-                if (selectedItem != null) {
-                    AnimatedVisibility(
-                        visible = shouldShowFAB
+                if (selectedItem != null && pagerState.currentPage == 0 && pagerState.pageCount == 2) {
+                    FloatingActionButton(
+                        onClick = { openDialog = true }
                     ) {
-                        FloatingActionButton(onClick = {
-                            openDialog = true
-                        }) {
-                            Icon(Icons.Filled.Fullscreen, "Expand")
-                        }
+                        Icon(Icons.Filled.Fullscreen, "Expand")
                     }
                 }
             }
@@ -219,6 +211,7 @@ fun NewsPage(
                         onItemClick = { item -> onItemClick(item) },
                         onItemClickComments = { item -> onItemClickComments(item) },
                         webViewState = webViewState,
+                        pagerState = pagerState,
                     )
                 }
             }
@@ -264,6 +257,7 @@ fun NewsExpandedLayout(
                 onItemClick = onItemClick,
                 onItemClickComments = onItemClickComments,
                 webViewState = webViewState,
+                pagerState = pagerState,
                 modifier = Modifier
                     .fillMaxWidth(0.45f)
                     .fillMaxHeight()
@@ -315,7 +309,8 @@ fun NewsCompactLayout(
     selectedItem: Item?,
     onItemClick: (Item) -> Unit,
     onItemClickComments: (Item) -> Unit,
-    webViewState: WebViewState
+    webViewState: WebViewState,
+    pagerState: PagerState,
 ) {
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
     val coroutineScope = rememberCoroutineScope()
@@ -352,6 +347,7 @@ fun NewsCompactLayout(
                 navController = navController,
                 item = selectedItem,
                 webViewState = webViewState,
+                pagerState = pagerState,
                 modifier = modifier
             )
         } else {
