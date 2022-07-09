@@ -58,6 +58,7 @@ data class SearchResponse(
             kids = emptyList(),
             storyId = hit.storyId,
             title = hit.title,
+            storyTitle = hit.storyTitle,
             descendants = hit.numComments,
             // Parent poll not provided
             parts = emptyList(),
