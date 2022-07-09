@@ -13,8 +13,12 @@ val databaseModule = module {
             .fallbackToDestructiveMigration().build()
     }
 
-    factory<ItemCollectionEntityDao> {
+    factory {
         get<LocalDatabase>().itemCollectionDao()
+    }
+
+    factory {
+        get<LocalDatabase>().saveItemDao()
     }
 
     factory {
