@@ -101,8 +101,6 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
                 item
             }
         }.mapCatching { item ->
-            // Save item in cache
-            print("cache $item")
             cache.put(itemId, item)
             item
         }
@@ -279,8 +277,7 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
     }
 
     private val fetchFromCache: suspend (Int) -> Item = { id: Int ->
-        val item = cache!!.get(id)
-        println("get cache $item")
+        val item = cache.get(id)
         item ?: throw ItemNotFoundException(id, ItemRepository.Cache)
     }
 
