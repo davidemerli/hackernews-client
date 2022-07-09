@@ -72,6 +72,7 @@ data class ItemResponse(
             text?.fixLinks() ?: "",
             kids,
             title,
+            null,
             descendants,
             parts,
             poll,

@@ -10,7 +10,7 @@ import it.devddk.hackernewsclient.data.database.dao.SaveItemDao
 import it.devddk.hackernewsclient.data.database.entities.ItemCollectionEntity
 import it.devddk.hackernewsclient.data.database.entities.ItemEntity
 
-@Database(entities = [ItemEntity::class, ItemCollectionEntity::class], version = 5)
+@Database(entities = [ItemEntity::class, ItemCollectionEntity::class], version = 6)
 @TypeConverters(ItemConverter::class)
 abstract class LocalDatabase : RoomDatabase() {
 

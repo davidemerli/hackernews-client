@@ -58,6 +58,10 @@ data class Item(
      */
     val title: String? = null,
     /**
+     * Title of the story related to this comment, null if not a comment or not available
+     */
+    val storyTitle : String? = null,
+    /**
      * Number of not cancelled and not dead descentants (comments)
      */
     val descendants: Int? = 0,

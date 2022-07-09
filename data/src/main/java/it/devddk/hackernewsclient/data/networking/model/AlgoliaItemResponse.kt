@@ -24,19 +24,23 @@ data class AlgoliaItemResponse(
     val options: List<AlgoliaItemResponse>
     ) : DomainMapper<ItemTree> {
     override fun mapToDomainModel(): ItemTree {
-        val childrenTree = children.map {
-            it.mapToDomainModel()
-        }
-        val optionsTree = options.map {
-            it.mapToDomainModel()
-        }
-        val descendants = childrenTree.fold(0) {
-            acc, subTree -> acc + subTree.comments.size + 1
-        }
-        return ItemTree(storyId ?: id.toInt(), mapToItem(descendants), childrenTree, optionsTree)
+        return mapToDomainModel(title)
     }
 
-    private fun mapToItem(descendants: Int) = Item(
+    private fun mapToDomainModel(storyTitle : String?) : ItemTree {
+        val childrenTree = children.map {
+            it.mapToDomainModel(storyTitle)
+        }
+        val optionsTree = options.map {
+            it.mapToDomainModel(storyTitle)
+        }
+        val descendants = childrenTree.fold(0) {
+                acc, subTree -> acc + subTree.comments.size + 1
+        }
+        return ItemTree(storyId ?: id.toInt(), mapToItem(storyTitle, descendants), childrenTree, optionsTree)
+    }
+
+    private fun mapToItem(storyTitle : String?, descendants: Int) = Item(
         id = id.toInt(),
         type = type.toItemType()!!,
         deleted = false,
@@ -44,6 +48,7 @@ data class AlgoliaItemResponse(
         time = createdAtInstant?.toLocalDateTime(),
         parent = parentId,
         storyId = storyId ?: id.toInt(),
+        storyTitle = title ?: storyTitle,
         downloaded = LocalDateTime.now(),
         dead = false,
         text = text,

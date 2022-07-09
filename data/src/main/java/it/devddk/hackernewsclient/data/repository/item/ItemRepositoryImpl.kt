@@ -191,7 +191,7 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
 
                 val root = rootItemResponse.mapToDomainModel()
                 val linearizedCommentTree = root.dfsWalkComments().map { item ->
-                    item.toItemEntity()
+                    item.toItemEntity().copy()
                 }
 
                 db.withTransaction {
