@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import it.devddk.hackernewsclient.data.BuildConfig
 import it.devddk.hackernewsclient.data.di.databaseModule
+import it.devddk.hackernewsclient.data.di.dispatcherModule
 import it.devddk.hackernewsclient.data.di.networkingModule
 import it.devddk.hackernewsclient.data.di.repositoryModule
 import it.devddk.hackernewsclient.domain.di.interactionModule
@@ -23,7 +24,8 @@ class HNReaderApplication : Application() {
                 interactionModule,
                 networkingModule,
                 repositoryModule,
-                databaseModule
+                databaseModule,
+                dispatcherModule
             )
         }
 
