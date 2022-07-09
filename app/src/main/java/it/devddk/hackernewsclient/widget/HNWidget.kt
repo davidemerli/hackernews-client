@@ -3,6 +3,8 @@ package it.devddk.hackernewsclient.widget
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.Icon
+import android.os.Build
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -12,7 +14,10 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.IconImageProvider
+import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
 import androidx.glance.action.actionStartActivity
@@ -22,12 +27,15 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.ActionCallback
+import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.appwidget.updateAll
 import androidx.glance.background
 import androidx.glance.currentState
+import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
+import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
@@ -39,6 +47,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.google.accompanist.pager.ExperimentalPagerApi
+import it.devddk.hackernewsclient.MainActivity
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.activities.ArticleActivity
 import it.devddk.hackernewsclient.activities.ItemIdKey
@@ -47,8 +56,8 @@ import it.devddk.hackernewsclient.domain.interaction.item.GetNewStoriesUseCase
 import it.devddk.hackernewsclient.domain.model.collection.TopStories
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.shared.components.news.getDomainName
-import it.devddk.hackernewsclient.shared.components.topbars.openInBrowser
 import it.devddk.hackernewsclient.ui.theme.md_theme_dark_onBackground
+import it.devddk.hackernewsclient.ui.theme.md_theme_dark_onSurface
 import it.devddk.hackernewsclient.ui.theme.md_theme_dark_secondary
 import it.devddk.hackernewsclient.ui.theme.md_theme_dark_tertiary
 import it.devddk.hackernewsclient.utils.decodeJson
@@ -67,6 +76,8 @@ class ExactAppWidget : GlanceAppWidget() {
     @Composable
     @OptIn(ExperimentalPagerApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
     override fun Content() {
+        val context = LocalContext.current
+
         val prefs = currentState<Preferences>()
         val items = prefs[ExactAppWidgetReceiver.itemList]?.map {
             it.decodeJson(Result::class.java)
@@ -79,13 +90,33 @@ class ExactAppWidget : GlanceAppWidget() {
                 .fillMaxSize()
                 .background(ImageProvider(R.drawable.widget_background))
         ) {
-            Text(
-                text = "HackerNews",
-                style = TextStyle(
-                    fontSize = MaterialTheme.typography.titleMedium.fontSize
-                ),
-                modifier = GlanceModifier.fillMaxWidth().padding(top = 16.dp, start = 12.dp, bottom = 12.dp)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = GlanceModifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "HackerNews",
+                    style = TextStyle(
+                        fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                        color = ColorProvider(md_theme_dark_onSurface)
+                    ),
+                    modifier = GlanceModifier
+                        .padding(top = 16.dp, start = 16.dp, bottom = 12.dp)
+                        .clickable(onClick = actionStartActivity<MainActivity>())
+                )
+
+                Spacer(modifier = GlanceModifier.defaultWeight())
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    Image(
+                        provider = IconImageProvider(Icon.createWithResource(context, R.drawable.ic_baseline_refresh_24)),
+                        contentDescription = "Refresh",
+                        modifier = GlanceModifier.clickable(
+                            onClick = actionRunCallback<RefreshNewsCallback>()
+                        ).padding(end = 16.dp)
+                    )
+                }
+            }
 
             LazyColumn(
                 modifier = GlanceModifier
@@ -95,6 +126,10 @@ class ExactAppWidget : GlanceAppWidget() {
                 item {
                     Text(
                         "Top Stories",
+                        style = TextStyle(
+                            fontSize = MaterialTheme.typography.titleSmall.fontSize,
+                            color = ColorProvider(md_theme_dark_onSurface)
+                        ),
                         modifier = GlanceModifier.fillMaxWidth().padding(8.dp)
                     )
                 }
@@ -113,14 +148,12 @@ class ExactAppWidget : GlanceAppWidget() {
                                     .background(ImageProvider(R.drawable.widget_background2))
                                     .clickable(
                                         onClick = actionStartActivity<ArticleActivity>(
-                                            actionParametersOf(
-                                                ItemIdKey to itemId
-                                            )
+                                            actionParametersOf(ItemIdKey to itemId)
                                         )
-                                    ) // TODO: navigate to item
+                                    )
                             ) {
                                 Text(
-                                    text = "${itemMap["by"]}" + itemMap["url"]?.let { "@ ${getDomainName(it.toString())}" },
+                                    text = "${itemMap["by"]}" + itemMap["url"]?.let { " @ ${getDomainName(it.toString())}" },
                                     style = TextStyle(
                                         color = ColorProvider(color = md_theme_dark_secondary),
                                         fontSize = MaterialTheme.typography.titleSmall.fontSize
@@ -179,6 +212,8 @@ class ExactAppWidgetReceiver : GlanceAppWidgetReceiver(), KoinComponent {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
 
+        Timber.d("Intent Action ${intent.action}")
+
         when (intent.action) {
             RefreshNewsCallback.UPDATE_ACTION -> observeData(context)
         }
@@ -213,9 +248,6 @@ class ExactAppWidgetReceiver : GlanceAppWidgetReceiver(), KoinComponent {
         }
     }
 
-    private fun openArticle(context: Context) {
-    }
-
     companion object {
         val itemList = stringSetPreferencesKey("itemList")
     }
@@ -231,25 +263,13 @@ class RefreshNewsCallback : ActionCallback {
             action = UPDATE_ACTION
         }
 
+        Timber.d("RefreshNewsCallback")
+
         context.sendBroadcast(intent)
     }
 
     companion object {
         const val UPDATE_ACTION = "updateAction"
-    }
-}
-
-class OpenArticleCallback : ActionCallback {
-    override suspend fun onRun(
-        context: Context,
-        glanceId: GlanceId,
-        parameters: ActionParameters,
-    ) {
-        openInBrowser(context, "https://news.ycombinator.com/item?id=${parameters[actionWidgetKey]}")
-
-        Intent()
-
-        // start actiity
     }
 }
 
