@@ -22,6 +22,6 @@ class SimpleSearchItemByRelevanceUseCaseImpl : SimpleSearchItemByRelevanceUseCas
         query: String,
         page: Int,
     ): Result<SearchResultsSlice> {
-        return searchRepository.searchByRelevance(SearchQuery(query=query, tags=SearchTags.NoPolls), page)
+        return searchRepository.searchByRelevance(SearchQuery(query=query, tags=SearchTags.NoPollOpts), page)
     }
 }

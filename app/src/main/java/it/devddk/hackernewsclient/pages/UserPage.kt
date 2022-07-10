@@ -114,7 +114,7 @@ fun UserPage(
         viewModel.updateAdvancedQuery(
             SearchQuery(
                 tags = SearchTags.andOf(
-                    SearchTags.NoPolls,
+                    SearchTags.NoPollOpts,
                     SearchTags.Author(username)
                 )
             )

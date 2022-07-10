@@ -1,8 +1,5 @@
-package it.devddk.hackernewsclient.domain.items
+package it.devddk.hackernewsclient.domain.model.items
 
-import it.devddk.hackernewsclient.domain.model.items.Item
-import it.devddk.hackernewsclient.domain.model.items.ItemTree
-import it.devddk.hackernewsclient.domain.model.items.ItemType
 import junit.framework.Assert.assertEquals
 import org.junit.Test
 import java.time.LocalDateTime
@@ -37,7 +34,7 @@ class ItemTreeDfsTest {
                         11,
                         item2,
                         listOf(ItemTree(12, item3, emptyList(), emptyList())),
-                        listOf(item4)
+                        listOf(ItemTree(13, item4, emptyList(), emptyList()))
                     ),
                     ItemTree(14, item5, listOf(
                         ItemTree(15, item6, emptyList(), emptyList())

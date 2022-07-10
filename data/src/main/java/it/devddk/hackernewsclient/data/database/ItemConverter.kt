@@ -26,13 +26,13 @@ class ItemConverter {
     }
 
     @TypeConverter
-    fun toLocalDateTime(value: Long): LocalDateTime {
-        return value.toLocalDateTime()
+    fun toLocalDateTime(value: Long?): LocalDateTime? {
+        return value?.toLocalDateTime()
     }
 
     @TypeConverter
-    fun fromLocalDateTime(value: LocalDateTime) : Long {
-        return value.atZone(ZoneId.systemDefault()).toEpochSecond()
+    fun fromLocalDateTime(value: LocalDateTime?) : Long? {
+        return value?.atZone(ZoneId.systemDefault())?.toEpochSecond()
     }
 
     @TypeConverter

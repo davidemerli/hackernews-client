@@ -8,6 +8,7 @@ import it.devddk.hackernewsclient.data.networking.utils.toItemType
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 @Keep
 @Entity(tableName = "items", primaryKeys = ["id"])
@@ -80,7 +81,7 @@ fun Item.toItemEntity() : ItemEntity {
         score = score,
         url = url,
         htmlPage = htmlPage,
-        saved = LocalDateTime.now(),
+        saved = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS),
         storyId = storyId
     )
 }
