@@ -449,7 +449,7 @@ fun CommentsView(
                 ) {
                     Text(text = "Posted on: ", modifier = Modifier.padding(start = 8.dp))
                     Text(
-                        text = "${item.storyTitle}", // TODO: story title
+                        text = "${item.storyTitle ?: item.storyId}", // TODO: story title
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
                         style = MaterialTheme.typography.bodyLarge.copy(
