@@ -97,7 +97,8 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
                         it.collection
                     }
                 val storyId = item.storyId ?: itemDao.getRootStoryId(itemId)
-                item.copy(collections = collections, storyId = storyId)
+                val storyTitle = item.storyTitle ?: itemDao.getRootStoryTitle(itemId)
+                item.copy(collections = collections, storyId = storyId, storyTitle = storyTitle)
             } catch (e: Exception) {
                 item
             }

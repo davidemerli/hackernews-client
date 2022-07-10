@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.data.database
 
+import android.database.Cursor
 import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken

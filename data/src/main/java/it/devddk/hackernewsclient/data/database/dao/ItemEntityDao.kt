@@ -31,8 +31,12 @@ abstract class ItemEntityDao {
     abstract suspend fun getDownloadedTime(itemId: ItemId): LocalDateTime?
 
     @Query("SELECT storyId " +
-            "FROM items WHERE :itemId = items.id LIMIT 1")
+            "FROM items WHERE :itemId = id LIMIT 1")
     abstract suspend fun getRootStoryId(itemId: ItemId): Int?
+
+    @Query("SELECT storyTitle " +
+            "FROM items WHERE :itemId = id LIMIT 1")
+    abstract suspend fun getRootStoryTitle(itemId: ItemId): String?
 
     @Query("UPDATE items SET htmlPage = :htmlPage WHERE :itemId = items.id")
     abstract suspend fun saveHtml(itemId: ItemId, htmlPage: String)
