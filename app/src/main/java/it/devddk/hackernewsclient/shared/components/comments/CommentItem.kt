@@ -116,7 +116,7 @@ fun CommentItem(
                 )
             }
             Text(
-                text = "${searchMetaData?.storyTitle ?: item.storyId}" + " ".repeat(30),
+                text = "${item.storyTitle ?: searchMetaData?.storyTitle ?: item.storyId}" + " ".repeat(30),
                 style = MaterialTheme.typography.bodyLarge.copy(fontStyle = FontStyle.Italic, color = MaterialTheme.colorScheme.primary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

@@ -84,8 +84,8 @@ fun TallNewsCard(
     var shareExpanded by remember { mutableStateOf(false) }
     var moreExpanded by remember { mutableStateOf(false) }
 
-    var favorite by rememberSaveable { mutableStateOf(item.collections.favorite) }
-    var readLater by rememberSaveable { mutableStateOf(item.collections.readLater) }
+    var favorite by rememberSaveable(item.id) { mutableStateOf(item.collections.favorite) }
+    var readLater by rememberSaveable(item.id) { mutableStateOf(item.collections.readLater) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,

@@ -39,8 +39,8 @@ fun SwipeableItem(
     onClickAuthor: () -> Unit = {},
     toggleCollection: (Item, UserDefinedItemCollection) -> Unit = { _, _ -> },
 ) {
-    val readLater = rememberSaveable { mutableStateOf(item.collections.readLater) }
-    val favorite = rememberSaveable { mutableStateOf(item.collections.favorite) }
+    val readLater = rememberSaveable(item.id) { mutableStateOf(item.collections.readLater) }
+    val favorite = rememberSaveable(item.id) { mutableStateOf(item.collections.favorite) }
 
     val swipeState = rememberSwipeableActionsState()
 
