@@ -37,6 +37,7 @@ import it.devddk.hackernewsclient.pages.parseHTML
 import it.devddk.hackernewsclient.shared.components.customPlaceholder
 import it.devddk.hackernewsclient.shared.components.news.ItemColorHint
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
+import timber.log.Timber
 
 @Composable
 @OptIn(ExperimentalTextApi::class)
@@ -53,6 +54,8 @@ fun CommentItem(
     val context = LocalContext.current
 
     val timeString = remember(item) { TimeDisplayUtils(context).toDateTimeAgoInterval(item.time) }
+
+    Timber.d("CommentItem: ${item}")
 
     val storyTitle = item.storyTitle ?: searchMetaData?.storyTitle ?: item.storyId?.toString()
 
