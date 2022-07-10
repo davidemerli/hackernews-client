@@ -32,7 +32,7 @@ abstract class ItemEntityDao {
 
     @Query("SELECT storyId " +
             "FROM items WHERE :itemId = items.id LIMIT 1")
-    abstract suspend fun getParentStoryId(itemId: ItemId): Int?
+    abstract suspend fun getRootStoryId(itemId: ItemId): Int?
 
     @Query("UPDATE items SET htmlPage = :htmlPage WHERE :itemId = items.id")
     abstract suspend fun saveHtml(itemId: ItemId, htmlPage: String)

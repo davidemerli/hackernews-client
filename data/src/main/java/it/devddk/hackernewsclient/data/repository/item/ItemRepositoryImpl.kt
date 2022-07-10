@@ -95,7 +95,7 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
                     .map { it.mapToDomainModel() }.associateBy {
                         it.collection
                     }
-                val storyId = item.storyId ?: itemDao.getParentStoryId(itemId)
+                val storyId = item.storyId ?: itemDao.getRootStoryId(itemId)
                 item.copy(collections = collections, storyId = storyId)
             } catch (e: Exception) {
                 item
