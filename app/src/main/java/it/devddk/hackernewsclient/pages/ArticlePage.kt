@@ -444,7 +444,7 @@ fun CommentsView(
                 ) {
                     Text(text = "Posted on: ", modifier = Modifier.padding(start = 8.dp))
                     Text(
-                        text = "${item.storyId}", // TODO: story title
+                        text = "${item.storyTitle}", // TODO: story title
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
                         style = MaterialTheme.typography.bodyLarge.copy(
@@ -454,7 +454,9 @@ fun CommentsView(
 
                     Spacer(Modifier.weight(1f))
 
-                    TextButton(onClick = { /*TODO*/ }) {
+                    TextButton(onClick = {
+                        navController.navigate("items/${item.storyId}")
+                    }) {
                         Text("Go to story")
 
                         Icon(Icons.Filled.KeyboardArrowRight, "Arrow Right")
