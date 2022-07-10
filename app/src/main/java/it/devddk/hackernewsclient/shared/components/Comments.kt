@@ -3,7 +3,6 @@ package it.devddk.hackernewsclient.shared.components
 import android.text.util.Linkify
 import android.widget.TextView
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -20,11 +19,9 @@ import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.MoveUp
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
-import androidx.compose.material.icons.filled.SubdirectoryArrowRight
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.DropdownMenu
@@ -47,7 +44,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -78,7 +74,6 @@ import it.devddk.hackernewsclient.viewmodels.CommentUiState
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 fun Item.isExpandable() = kids.isNotEmpty()
 fun CommentUiState.isExpandable() = this is CommentUiState.CommentLoaded && this.item.isExpandable()

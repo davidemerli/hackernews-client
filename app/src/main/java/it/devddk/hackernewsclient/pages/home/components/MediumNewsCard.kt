@@ -2,6 +2,7 @@ package it.devddk.hackernewsclient.pages.home.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +49,7 @@ import it.devddk.hackernewsclient.domain.model.items.readLater
 import it.devddk.hackernewsclient.shared.components.customPlaceholder
 import it.devddk.hackernewsclient.shared.components.news.AddToFavorite
 import it.devddk.hackernewsclient.shared.components.news.AddToReadLater
+import it.devddk.hackernewsclient.shared.components.news.NewsStatusIcons
 import it.devddk.hackernewsclient.shared.components.news.ShareArticle
 import it.devddk.hackernewsclient.shared.components.news.ShareHNLink
 import it.devddk.hackernewsclient.shared.components.news.placeholderItem
@@ -73,8 +76,8 @@ fun MediumNewsCard(
     var shareExpanded by remember { mutableStateOf(false) }
     var moreExpanded by remember { mutableStateOf(false) }
 
-    var favorite by remember { mutableStateOf(item.collections.favorite) }
-    var readLater by remember { mutableStateOf(item.collections.readLater) }
+    var favorite by rememberSaveable { mutableStateOf(item.collections.favorite) }
+    var readLater by rememberSaveable { mutableStateOf(item.collections.readLater) }
 
     Column(
         modifier = modifier
@@ -113,17 +116,29 @@ fun MediumNewsCard(
                     .padding(start = 2.dp)
                     .offset(y = (-4).dp)
             ) {
-                domain?.let { domain ->
-                    Text(
-                        text = domain,
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            color = MaterialTheme.colorScheme.secondary
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 8.dp, bottom = 2.dp)
-                            .customPlaceholder(visible = placeholder)
+                Row(
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    NewsStatusIcons(
+                        favorite = favorite,
+                        readLater = readLater,
+                        modifier = Modifier.padding(end = if (favorite or readLater) 8.dp else 0.dp)
                     )
+
+                    domain?.let { domain ->
+                        Text(
+                            text = domain,
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                color = MaterialTheme.colorScheme.secondary
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 2.dp)
+                                .customPlaceholder(visible = placeholder)
+                        )
+                    }
                 }
 
                 Text(

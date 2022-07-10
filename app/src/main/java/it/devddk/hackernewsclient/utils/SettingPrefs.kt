@@ -1,7 +1,6 @@
 package it.devddk.hackernewsclient.utils
 
 import android.content.Context
-import androidx.compose.ui.unit.sp
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey

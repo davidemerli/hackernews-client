@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -26,7 +27,6 @@ import it.devddk.hackernewsclient.shared.components.comments.CommentItem
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
 import me.saket.swipe.rememberSwipeableActionsState
-import timber.log.Timber
 
 @Composable
 fun SwipeableItem(
@@ -39,8 +39,8 @@ fun SwipeableItem(
     onClickAuthor: () -> Unit = {},
     toggleCollection: (Item, UserDefinedItemCollection) -> Unit = { _, _ -> },
 ) {
-    val readLater = remember { mutableStateOf(item.collections.readLater) }
-    val favorite = remember { mutableStateOf(item.collections.favorite) }
+    val readLater = rememberSaveable { mutableStateOf(item.collections.readLater) }
+    val favorite = rememberSaveable { mutableStateOf(item.collections.favorite) }
 
     val swipeState = rememberSwipeableActionsState()
 
