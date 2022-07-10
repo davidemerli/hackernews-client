@@ -426,7 +426,12 @@ fun CommentsView(
                 }
                 item.title?.let { NewsItemTitle(title = it) }
                 Row {
-                    NewsItemAuthor(author = item.by)
+                    NewsItemAuthor(
+                        author = item.by,
+                        onClick = {
+                            navController.navigate("user/${item.by}")
+                        }
+                    )
 
                     Text(text = " - ")
 

@@ -54,6 +54,8 @@ fun CommentItem(
 
     val timeString = remember(item) { TimeDisplayUtils(context).toDateTimeAgoInterval(item.time) }
 
+    val storyTitle = item.storyTitle ?: searchMetaData?.storyTitle ?: item.storyId?.toString()
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -104,26 +106,30 @@ fun CommentItem(
                             append("${item.by}")
                         }
 
-                        withStyle(
-                            MaterialTheme.typography.titleMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurface
-                            ).toSpanStyle()
-                        ) {
-                            append(" on ")
+                        storyTitle?.let {
+                            withStyle(
+                                MaterialTheme.typography.titleMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurface
+                                ).toSpanStyle()
+                            ) {
+                                append(" on ")
+                            }
                         }
                     },
                     modifier = Modifier.customPlaceholder(placeholder)
                 )
             }
-            Text(
-                text = "${item.storyTitle ?: searchMetaData?.storyTitle ?: item.storyId}" + " ".repeat(30),
-                style = MaterialTheme.typography.bodyLarge.copy(fontStyle = FontStyle.Italic, color = MaterialTheme.colorScheme.primary),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .padding(bottom = 6.dp)
-                    .customPlaceholder(placeholder),
-            )
+            storyTitle?.let {
+                Text(
+                    text = storyTitle + " ".repeat(30),
+                    style = MaterialTheme.typography.bodyLarge.copy(fontStyle = FontStyle.Italic, color = MaterialTheme.colorScheme.primary),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .padding(bottom = 6.dp)
+                        .customPlaceholder(placeholder),
+                )
+            }
 
             Text(
                 text = "${item.text?.parseHTML() ?: "no_text"}\n\n\n\n\n",

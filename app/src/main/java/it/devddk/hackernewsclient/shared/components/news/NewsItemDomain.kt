@@ -22,7 +22,7 @@ fun NewsItemDomain(
         text = AnnotatedString(domain),
         style = MaterialTheme.typography.bodyMedium.copy(
             color = MaterialTheme.colorScheme.secondary,
-            textDecoration = TextDecoration.Underline,
+//            textDecoration = TextDecoration.Underline, //TODO: add from domain section
         ),
         maxLines = 1,
         modifier = modifier

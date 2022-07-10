@@ -90,7 +90,7 @@ fun NewsItemDetails(
                 withStyle(
                     MaterialTheme.typography.titleSmall.copy(
                         color = MaterialTheme.colorScheme.secondary,
-                        textDecoration = TextDecoration.Underline,
+//                        textDecoration = TextDecoration.Underline, //TODO: add from domain section
                     ).toSpanStyle()
                 ) {
                     append(it)
@@ -108,6 +108,7 @@ fun NewsItemDetails(
                 append("\n")
             }
 
+            //TODO: add clickable author
             withStyle(
                 MaterialTheme.typography.titleSmall.copy(
                     color = MaterialTheme.colorScheme.tertiary,
