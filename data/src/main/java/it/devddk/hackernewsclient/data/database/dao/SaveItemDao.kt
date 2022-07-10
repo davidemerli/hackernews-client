@@ -17,13 +17,14 @@ abstract class SaveItemDao(val database: LocalDatabase) {
     private val collectionDao: ItemCollectionEntityDao = database.itemCollectionDao()
     private val itemDao: ItemEntityDao = database.itemEntityDao()
 
+
     @Transaction
+    @Deprecated("Don't use this method, check needsToBeSaved")
     open suspend fun saveWholeStory(
         collection: UserDefinedItemCollection,
         mainStory: ItemEntity,
         subStories: List<ItemEntity>,
-        minTimeFromLastSaveMillis: Int,
-        increaseRefCount: Boolean
+        minTimeFromLastSaveMillis: Int
     ): Int {
         val queryResult = collectionDao.addItemToCollection(ItemCollectionEntity(mainStory.id,
             collection,
@@ -53,6 +54,12 @@ abstract class SaveItemDao(val database: LocalDatabase) {
     abstract suspend fun computeRefCount(itemId: Int) : Int
 
 
+    /**
+     * Download if
+     * * Main item is not downloaded
+     * * Main item was downloaded a long time ago
+     * * Item was added a long time ago
+     */
     @Transaction
     open suspend fun needsToBeSaved(
         collection: UserDefinedItemCollection,

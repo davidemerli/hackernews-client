@@ -1,9 +1,10 @@
-package hackernewsclient
+package hackernewsclient.database.dao
 
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import hackernewsclient.generateRandomItem
 import it.devddk.hackernewsclient.data.database.LocalDatabase
 import it.devddk.hackernewsclient.data.database.dao.ItemEntityDao
 import it.devddk.hackernewsclient.data.database.entities.toItemEntity
@@ -22,7 +23,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 @RunWith(AndroidJUnit4::class)
-class SimpleEntityReadWriteTest {
+class ItemEntityDaoUnitTest {
     private lateinit var itemDao: ItemEntityDao
     private lateinit var db: LocalDatabase
 

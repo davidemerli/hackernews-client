@@ -164,15 +164,18 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
                         id,
                         ItemRepository.MIN_TIME_FOR_REFRESH_SECS)
 
-                if (needsSaveItem) {
-                    saveItem(id)
-                }
-
-                Timber.d("Added item $id. Operations: Save item? $needsSaveItem.  Current refCount: ${
+                Timber.d("Adding item $id. Operations: Save item? $needsSaveItem.  Current refCount: ${
                     saveItemDao.computeRefCount(id)
                 }")
+
+                if (needsSaveItem) {
+                    saveItem(id)
+                    Timber.d("Save item completed")
+                }
+
+
             }
-            Timber.d("Saving transaction finished")
+            Timber.d("Item transaction completed")
         }
     }
 

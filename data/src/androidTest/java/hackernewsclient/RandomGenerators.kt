@@ -1,6 +1,7 @@
 package hackernewsclient
 
 
+import it.devddk.hackernewsclient.data.database.entities.ItemCollectionEntity
 import it.devddk.hackernewsclient.domain.model.collection.ItemCollectionEntry
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection.Companion.ALL_USER_QUERIES
@@ -60,4 +61,12 @@ fun generateRandomItem(
     previewUrl,
     collections,
     htmlPage
+)
+
+fun generateRandomItemCollectionEntity(
+    id : Int = Random.nextInt(1000000),
+    collection : UserDefinedItemCollection = ALL_USER_QUERIES.random(),
+    timeAdded : LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+) = ItemCollectionEntity(
+    id, collection, timeAdded
 )
