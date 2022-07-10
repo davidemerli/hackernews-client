@@ -15,7 +15,7 @@ import it.devddk.hackernewsclient.shared.components.customPlaceholder
 @Composable
 fun NewsItemAuthor(
     modifier: Modifier = Modifier,
-    onClick: () -> Unit = {},
+    onClick: () -> Unit,
     author: String?,
     placeholder: Boolean = false,
 ) {

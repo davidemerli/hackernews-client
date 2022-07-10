@@ -61,6 +61,7 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.accompanist.web.WebViewState
 import com.google.accompanist.web.rememberWebViewState
 import it.devddk.hackernewsclient.R
+import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import it.devddk.hackernewsclient.domain.model.search.SearchResult
@@ -68,10 +69,12 @@ import it.devddk.hackernewsclient.pages.home.components.HNTopBar
 import it.devddk.hackernewsclient.shared.components.WebViewWithPrefs
 import it.devddk.hackernewsclient.shared.components.news.SwipeableItem
 import it.devddk.hackernewsclient.utils.SettingPrefs
+import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.SearchPageViewModel
 import it.devddk.hackernewsclient.viewmodels.SearchResultUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -152,6 +155,10 @@ fun SearchPage(
 
     val pagerState = rememberPagerState()
 
+    val isOnArticle by derivedStateOf {
+        expandedArticleView || (pagerState.currentPage == 0 && pagerState.pageCount == 2)
+    }
+
     Scaffold(
         topBar = {
             HNTopBar(
@@ -160,6 +167,7 @@ fun SearchPage(
                 focusable = true,
                 navController = navController,
                 drawerState = drawerState,
+                isOnArticle = isOnArticle,
                 selectedItem = selectedItem,
                 readerMode = readerMode,
                 darkMode = darkMode,
@@ -247,6 +255,7 @@ fun ResultItem(
     result: SearchResult,
     onClick: () -> Unit = {},
     onClickComments: () -> Unit = {},
+    toggleCollection: (Item, UserDefinedItemCollection) -> Unit = { _, _ -> },
 ) {
     Timber.d("ResultItem: ${result.item.by} - ${result.item.type}")
 
@@ -262,6 +271,7 @@ fun ResultItem(
                 searchMetaData = result.searchMetaData,
                 onClick = onClick,
                 onClickComments = onClickComments,
+                toggleCollection = toggleCollection,
                 placeholder = false
             )
         }
@@ -352,8 +362,12 @@ fun SearchCompactLayout(
     pagerState: PagerState,
     prefixContent: @Composable () -> Unit = { }
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
     val scrollState = rememberLazyListState()
+
+    val homePageViewModel: HomePageViewModel = viewModel()
 
     val itemViewModel: SingleNewsViewModel = viewModel()
     val webViewInstance by itemViewModel.webView.collectAsState(initial = null)
@@ -397,12 +411,19 @@ fun SearchCompactLayout(
                             ResultItem(
                                 result.result,
                                 onClick = { onItemClick(result.result.item) },
-                                onClickComments = { onItemClickComments(result.result.item) }
+                                onClickComments = { onItemClickComments(result.result.item) },
+                                toggleCollection = { item, collection ->
+                                    coroutineScope.launch {
+                                        homePageViewModel.toggleFromCollection(item.id, collection)
+                                    }
+                                }
                             )
                         }
                         else -> {
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {

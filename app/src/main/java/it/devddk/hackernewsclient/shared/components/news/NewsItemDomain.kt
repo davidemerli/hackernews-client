@@ -6,7 +6,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.placeholder.material.color
 import com.google.accompanist.placeholder.material.placeholder
@@ -22,7 +21,7 @@ fun NewsItemDomain(
         text = AnnotatedString(domain),
         style = MaterialTheme.typography.bodyMedium.copy(
             color = MaterialTheme.colorScheme.secondary,
-            textDecoration = TextDecoration.Underline,
+//            textDecoration = TextDecoration.Underline, //TODO: add from domain section
         ),
         maxLines = 1,
         modifier = modifier

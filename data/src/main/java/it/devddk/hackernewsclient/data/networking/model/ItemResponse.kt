@@ -77,7 +77,7 @@ data class ItemResponse(
             parts,
             poll,
             score,
-            url,
+            url?.let { if (!url.endsWith(".pdf")) url else "http://docs.google.com/gview?embedded=true&url=$url" },
             getPreview(url, id)
         )
     }

@@ -45,10 +45,12 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -145,12 +147,24 @@ fun ArticlePage(
     selectedView: String? = null,
     viewModelSetupDone: Boolean = false,
 ) {
+    val context = LocalContext.current
+    val dataStore = SettingPrefs(context)
+
+    val darkMode by dataStore.darkMode.collectAsState(initial = SettingPrefs.DEFAULT_DARK_MODE)
+    var readerMode by rememberSaveable { mutableStateOf(false) }
+
     val viewModel: SingleNewsViewModel = viewModel()
+
     val webViewState = rememberWebViewState(item.url ?: "")
+    val webViewInstance by viewModel.webView.collectAsState(initial = null)
+
+    val pagerState = rememberPagerState()
 
     val scrollState = rememberLazyListState()
 
     val activity = LocalContext.current as? Activity
+
+    val coroutineScope = rememberCoroutineScope()
 
     if (!viewModelSetupDone) {
         LaunchedEffect(item.id) {
@@ -158,14 +172,35 @@ fun ArticlePage(
         }
     }
 
+    val readabilityUrl = "https://readability.davidemerli.com?convert=${item.url ?: ""}"
+
+    val isOnArticle by derivedStateOf {
+        WindowWidthSizeClass.Expanded == windowWidthSizeClass || (pagerState.currentPage == 0 && pagerState.pageCount == 2)
+    }
+
     Scaffold(
         topBar = {
             HNTopBar(
                 navController = navController,
                 selectedItem = item,
+                isOnArticle = isOnArticle,
+                readerMode = readerMode,
+                darkMode = darkMode,
                 onClose = {
                     if (!navController.popBackStack()) {
                         activity?.finish()
+                    }
+                },
+                onDarkModeClick = {
+                    coroutineScope.launch { dataStore.setDarkMode(!darkMode) }
+                },
+                onReaderModeClick = {
+                    readerMode = !readerMode
+
+                    if (readerMode) {
+                        webViewInstance?.loadUrl(readabilityUrl)
+                    } else {
+                        webViewInstance?.loadUrl(item.url ?: "")
                     }
                 }
             )
@@ -177,6 +212,7 @@ fun ArticlePage(
                 TabbedView(
                     item = item,
                     navController = navController,
+                    pagerState = pagerState,
                     webViewState = webViewState,
                     selectedView = selectedView,
                     modifier = Modifier.padding(top = it.calculateTopPadding())
@@ -426,7 +462,12 @@ fun CommentsView(
                 }
                 item.title?.let { NewsItemTitle(title = it) }
                 Row {
-                    NewsItemAuthor(author = item.by)
+                    NewsItemAuthor(
+                        author = item.by,
+                        onClick = {
+                            navController.navigate("user/${item.by}")
+                        }
+                    )
 
                     Text(text = " - ")
 
@@ -444,7 +485,7 @@ fun CommentsView(
                 ) {
                     Text(text = "Posted on: ", modifier = Modifier.padding(start = 8.dp))
                     Text(
-                        text = "${item.storyId}", // TODO: story title
+                        text = "${item.storyTitle ?: item.storyId}", // TODO: story title
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
                         style = MaterialTheme.typography.bodyLarge.copy(
@@ -454,7 +495,9 @@ fun CommentsView(
 
                     Spacer(Modifier.weight(1f))
 
-                    TextButton(onClick = { /*TODO*/ }) {
+                    TextButton(onClick = {
+                        navController.navigate("items/${item.storyId}")
+                    }) {
                         Text("Go to story")
 
                         Icon(Icons.Filled.KeyboardArrowRight, "Arrow Right")
@@ -503,7 +546,7 @@ fun ArticleDescription(item: Item) {
     val fontSize = dataStore.fontSize.collectAsState(initial = MaterialTheme.typography.bodyLarge.fontSize.value)
 
     if (!item.text.isNullOrBlank()) {
-        CommentText(item = item, fontSize = fontSize.value.sp)
+        CommentText(item = item, fontSize = fontSize.value.sp, modifier = Modifier.fillMaxWidth())
     }
 }
 

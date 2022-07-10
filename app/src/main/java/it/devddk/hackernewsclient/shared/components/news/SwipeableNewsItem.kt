@@ -9,7 +9,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,8 +38,8 @@ fun SwipeableItem(
     onClickAuthor: () -> Unit = {},
     toggleCollection: (Item, UserDefinedItemCollection) -> Unit = { _, _ -> },
 ) {
-    val readLater = rememberSaveable { mutableStateOf(item.collections.readLater) }
-    val favorite = rememberSaveable { mutableStateOf(item.collections.favorite) }
+    val readLater = rememberSaveable(item.id) { mutableStateOf(item.collections.readLater) }
+    val favorite = rememberSaveable(item.id) { mutableStateOf(item.collections.favorite) }
 
     val swipeState = rememberSwipeableActionsState()
 
