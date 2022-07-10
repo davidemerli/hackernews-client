@@ -48,16 +48,18 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.webkit.WebViewFeature
+import com.google.accompanist.pager.ExperimentalPagerApi
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.shared.components.topbars.OpenInBrowserButton
 import it.devddk.hackernewsclient.shared.components.topbars.ShareButton
 import kotlinx.coroutines.launch
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPagerApi::class)
 fun HNTopBar(
     navController: NavController,
     drawerState: DrawerState? = null,
+    isOnArticle: Boolean = true,
     title: String = "Hacker News",
     query: String? = "",
     focusable: Boolean = false,
@@ -131,18 +133,25 @@ fun HNTopBar(
                     hnUrl = "https://news.ycombinator.com/item?id=${selectedItem.id}"
                 )
 
-                IconButton(
-                    onClick = onReaderModeClick,
-                ) {
-                    Icon(
-                        Icons.Filled.ChromeReaderMode,
-                        contentDescription = "Reader Mode",
-                        tint = buttonForeground(readerMode),
-                        modifier = Modifier.background(buttonBackground(readerMode), CircleShape).padding(6.dp)
-                    )
+                if (isOnArticle) {
+                    IconButton(
+                        onClick = onReaderModeClick,
+                    ) {
+                        Icon(
+                            Icons.Filled.ChromeReaderMode,
+                            contentDescription = "Reader Mode",
+                            tint = buttonForeground(readerMode),
+                            modifier = Modifier
+                                .background(
+                                    buttonBackground(readerMode),
+                                    CircleShape
+                                )
+                                .padding(6.dp)
+                        )
+                    }
                 }
 
-                if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+                if (isOnArticle && WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
                     IconButton(
                         onClick = onDarkModeClick,
                     ) {
@@ -150,7 +159,9 @@ fun HNTopBar(
                             Icons.Filled.DarkMode,
                             contentDescription = "Dark Mode",
                             tint = buttonForeground(darkMode),
-                            modifier = Modifier.background(buttonBackground(darkMode), CircleShape).padding(6.dp)
+                            modifier = Modifier
+                                .background(buttonBackground(darkMode), CircleShape)
+                                .padding(6.dp)
                         )
                     }
                 }

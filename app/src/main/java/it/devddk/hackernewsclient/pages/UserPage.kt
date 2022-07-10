@@ -137,6 +137,9 @@ fun UserPage(
 
     val pagerState = rememberPagerState()
 
+    val isOnArticle by derivedStateOf {
+        expandedArticleView || (pagerState.currentPage == 0 && pagerState.pageCount == 2)
+    }
     // TODO: make this a bottomSheet with only compact view
 
     HNModalNavigatorPanel(
@@ -150,6 +153,7 @@ fun UserPage(
                     leadingIcon = Icons.Filled.Badge,
                     navController = navController,
                     drawerState = drawerState,
+                    isOnArticle = isOnArticle,
                     selectedItem = selectedItem,
                     readerMode = readerMode,
                     darkMode = darkMode,

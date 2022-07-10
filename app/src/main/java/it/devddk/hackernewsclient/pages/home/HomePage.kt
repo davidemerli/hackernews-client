@@ -160,12 +160,17 @@ fun HomePage(
 
     val pagerState = rememberPagerState()
 
+    val isOnArticle by derivedStateOf {
+        expandedArticleView || (pagerState.currentPage == 0 && pagerState.pageCount == 2)
+    }
+
     HNModalNavigatorPanel(navController = navController, state = drawerState) {
         Scaffold(
             topBar = {
                 HNTopBar(
                     navController = navController,
                     drawerState = drawerState,
+                    isOnArticle = isOnArticle,
                     selectedItem = selectedItem,
                     readerMode = readerMode,
                     darkMode = darkMode,
