@@ -21,6 +21,7 @@ import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollect
 import it.devddk.hackernewsclient.domain.model.items.ItemTree
 import it.devddk.hackernewsclient.domain.repository.ItemRepository
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -138,7 +139,7 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
     ): Result<Unit> {
         return runCatching {
             // Inside the IO thread
-            withContext(dispatchers.IO) {
+            withContext(dispatchers.IO + NonCancellable) {
                 val itemEntityToPut = ItemCollectionEntity(id, collection, LocalDateTime.now())
                 db.withTransaction {
                     val collectionName = collection::class.simpleName!!

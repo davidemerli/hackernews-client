@@ -16,11 +16,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.core.context.stopKoin
 import org.koin.core.logger.Level
 import org.koin.test.KoinTest
 import org.koin.test.KoinTestRule
@@ -84,6 +86,11 @@ class ItemRepositoryTestDatabase : KoinTest {
         runBlocking {
             dut.invalidateCache()
         }
+    }
+
+    @After
+    fun tearDown() {
+        stopKoin()
     }
 
 

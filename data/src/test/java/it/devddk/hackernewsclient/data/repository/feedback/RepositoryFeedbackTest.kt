@@ -18,8 +18,10 @@ import it.devddk.hackernewsclient.data.utils.MockTask
 import it.devddk.hackernewsclient.domain.model.feedback.Feedback
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
+import org.koin.core.context.stopKoin
 import org.koin.core.logger.Level
 import org.koin.core.qualifier.named
 import org.koin.test.KoinTest
@@ -104,5 +106,10 @@ class RepositoryFeedbackTest : KoinTest {
             result.isFailure
         }
 
+    }
+
+    @After
+    fun tearDown() {
+        stopKoin()
     }
 }
