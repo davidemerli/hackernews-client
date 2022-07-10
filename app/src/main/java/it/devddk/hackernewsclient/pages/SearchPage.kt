@@ -131,8 +131,8 @@ fun SearchPage(
 
     var searchQuery by rememberSaveable { mutableStateOf(query) }
     val viewModel: SearchPageViewModel = viewModel()
-    val lazyListState = rememberLazyListState()
-    val resultList = viewModel.resultListFlow.collectAsState(initial = emptyList())
+
+    val homePageViewModel: HomePageViewModel = viewModel()
 
     if (searchQuery != null) {
         LaunchedEffect(searchQuery) {
@@ -181,6 +181,11 @@ fun SearchPage(
                 onClose = {
                     coroutineScope.launch {
                         itemViewModel.setId(null)
+                    }
+                },
+                toggleCollection = {item, itemCollection ->
+                    coroutineScope.launch {
+                        homePageViewModel.toggleFromCollection(item.id, itemCollection)
                     }
                 },
                 onDarkModeClick = {

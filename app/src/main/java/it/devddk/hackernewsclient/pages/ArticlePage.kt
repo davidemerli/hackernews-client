@@ -85,6 +85,7 @@ import it.devddk.hackernewsclient.shared.components.news.getDomainName
 import it.devddk.hackernewsclient.utils.SettingPrefs
 import it.devddk.hackernewsclient.utils.SettingPrefs.Companion.DEFAULT_PREFERRED_VIEW
 import it.devddk.hackernewsclient.viewmodels.CommentUiState
+import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
 import kotlinx.coroutines.launch
@@ -153,6 +154,7 @@ fun ArticlePage(
     val darkMode by dataStore.darkMode.collectAsState(initial = SettingPrefs.DEFAULT_DARK_MODE)
     var readerMode by rememberSaveable { mutableStateOf(false) }
 
+    val homePageViewModel: HomePageViewModel = viewModel()
     val viewModel: SingleNewsViewModel = viewModel()
 
     val webViewState = rememberWebViewState(item.url ?: "")
@@ -189,6 +191,11 @@ fun ArticlePage(
                 onClose = {
                     if (!navController.popBackStack()) {
                         activity?.finish()
+                    }
+                },
+                toggleCollection = {item, itemCollection ->
+                    coroutineScope.launch {
+                        homePageViewModel.toggleFromCollection(item.id, itemCollection)
                     }
                 },
                 onDarkModeClick = {
@@ -480,12 +487,10 @@ fun CommentsView(
         // if the item is a comment we display a button to go to its root story
         if (item.storyId != null && item.storyId != item.id) {
             item {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
                 ) {
-                    Text(text = "Posted on: ", modifier = Modifier.padding(start = 8.dp))
-                    Text(
-                        text = "${item.storyTitle ?: item.storyId}", // TODO: story title
+                    Text(text = "Posted on: ${item.storyTitle ?: item.storyId}",
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
                         style = MaterialTheme.typography.bodyLarge.copy(
@@ -493,14 +498,16 @@ fun CommentsView(
                         ),
                     )
 
-                    Spacer(Modifier.weight(1f))
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Spacer(Modifier.weight(1f))
 
-                    TextButton(onClick = {
-                        navController.navigate("items/${item.storyId}")
-                    }) {
-                        Text("Go to story")
+                        TextButton(onClick = {
+                            navController.navigate("items/${item.storyId}")
+                        }) {
+                            Text("Go to story")
 
-                        Icon(Icons.Filled.KeyboardArrowRight, "Arrow Right")
+                            Icon(Icons.Filled.KeyboardArrowRight, "Arrow Right")
+                        }
                     }
                 }
             }

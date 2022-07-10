@@ -178,7 +178,12 @@ fun NewsPage(
                         } else {
                             webViewInstance?.loadUrl(selectedItem?.url ?: "")
                         }
-                    }
+                    },
+                    toggleCollection = {item, itemCollection ->
+                        coroutineScope.launch {
+                            viewModel.toggleFromCollection(item.id, itemCollection)
+                        }
+                    },
                 )
             },
             floatingActionButton = {

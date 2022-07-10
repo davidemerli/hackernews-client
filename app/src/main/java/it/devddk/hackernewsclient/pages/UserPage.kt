@@ -52,6 +52,7 @@ import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.shared.components.WebViewWithPrefs
 import it.devddk.hackernewsclient.shared.components.customPlaceholder
 import it.devddk.hackernewsclient.utils.SettingPrefs
+import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.SearchPageViewModel
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
@@ -77,6 +78,7 @@ fun UserPage(
     val viewModel: SearchPageViewModel = viewModel()
     val itemViewModel: SingleNewsViewModel = viewModel()
     val userViewModel: UserViewModel = viewModel()
+    val homePageViewModel: HomePageViewModel = viewModel()
 
     val itemUiState by itemViewModel.uiState.collectAsState(initial = SingleNewsUiState.Loading)
 
@@ -173,7 +175,12 @@ fun UserPage(
                         } else {
                             webViewInstance?.loadUrl(selectedItem?.url ?: "")
                         }
-                    }
+                    },
+                    toggleCollection = {item, itemCollection ->
+                        coroutineScope.launch {
+                            homePageViewModel.toggleFromCollection(item.id, itemCollection)
+                        }
+                    },
                 )
             },
             floatingActionButton = {
