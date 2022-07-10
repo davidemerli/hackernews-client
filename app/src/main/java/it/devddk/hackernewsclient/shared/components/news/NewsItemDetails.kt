@@ -108,7 +108,7 @@ fun NewsItemDetails(
                 append("\n")
             }
 
-            //TODO: add clickable author
+            // TODO: add clickable author
             withStyle(
                 MaterialTheme.typography.titleSmall.copy(
                     color = MaterialTheme.colorScheme.tertiary,
