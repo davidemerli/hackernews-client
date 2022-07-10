@@ -60,8 +60,10 @@ import it.devddk.hackernewsclient.viewmodels.UserViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class,
-    ExperimentalPagerApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class,
+    ExperimentalPagerApi::class
+)
 fun UserPage(
     navController: NavController,
     windowSizeClass: WindowSizeClass,

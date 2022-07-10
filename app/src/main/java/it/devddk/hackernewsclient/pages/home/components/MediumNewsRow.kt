@@ -21,7 +21,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
-import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemType
@@ -74,11 +73,13 @@ fun MediumNewsRow(
                         )
 
                         if (index != length - 1) {
-                            Divider(modifier = Modifier
-                                .alpha(0.1f)
-                                .height(192.dp)
-                                .padding(8.dp)
-                                .width(1.dp))
+                            Divider(
+                                modifier = Modifier
+                                    .alpha(0.1f)
+                                    .height(192.dp)
+                                    .padding(8.dp)
+                                    .width(1.dp)
+                            )
                         }
                     }
                 }
