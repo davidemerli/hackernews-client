@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.data.database.dao
 
+import androidx.annotation.Keep
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
@@ -11,6 +12,7 @@ import java.lang.Exception
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
+@Keep
 @Dao
 abstract class SaveItemDao(val database: LocalDatabase) {
 

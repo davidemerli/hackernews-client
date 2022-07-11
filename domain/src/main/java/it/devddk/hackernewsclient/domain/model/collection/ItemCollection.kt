@@ -47,9 +47,9 @@ sealed class UserDefinedItemCollection(
     companion object {
         fun valueOf(name: String): UserDefinedItemCollection? {
             return when (name) {
-                Favorites::class.simpleName -> Favorites
-                ReadLater::class.simpleName -> ReadLater
-                VisitedItem::class.simpleName -> VisitedItem
+                Favorites.entryName -> Favorites
+                ReadLater.entryName -> ReadLater
+                VisitedItem.entryName -> VisitedItem
                 else -> null
             }
         }
@@ -64,6 +64,10 @@ sealed class UserDefinedItemCollection(
     @Keep
     object ReadLater : UserDefinedItemCollection("ReadLater", true, false,{ true })
     @Keep
-    object VisitedItem : UserDefinedItemCollection("ReadItem", false, true, { it.type != ItemType.COMMENT })
+    object VisitedItem : UserDefinedItemCollection("VisitedItem", false, true, { it.type != ItemType.COMMENT })
+
+    override fun toString(): String {
+        return entryName
+    }
 
 }

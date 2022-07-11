@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.data.database.dao
 
+import androidx.annotation.Keep
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -7,6 +8,7 @@ import androidx.room.Query
 import it.devddk.hackernewsclient.data.database.entities.ItemCollectionEntity
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 
+@Keep
 @Dao
 abstract class ItemCollectionEntityDao {
 

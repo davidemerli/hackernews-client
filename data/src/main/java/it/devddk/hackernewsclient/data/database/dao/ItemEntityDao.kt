@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.data.database.dao
 
+import androidx.annotation.Keep
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -10,6 +11,7 @@ import it.devddk.hackernewsclient.data.database.entities.ItemEntity
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import java.time.LocalDateTime
 
+@Keep
 @Dao
 abstract class ItemEntityDao {
 

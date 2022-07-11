@@ -1,20 +1,18 @@
 package it.devddk.hackernewsclient.data.networking.utils
 
-import it.devddk.hackernewsclient.data.common.utils.ResponseConversionException
 import it.devddk.hackernewsclient.domain.model.items.ItemType
 import org.jsoup.Jsoup
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.ZoneOffset
 
 fun String?.toItemType(): ItemType? {
     return when (this) {
-        "story" -> ItemType.STORY
-        "poll" -> ItemType.POLL
-        "pollopt" -> ItemType.POLL_OPT
-        "job" -> ItemType.JOB
-        "comment" -> ItemType.COMMENT
+        "story","STORY" -> ItemType.STORY
+        "poll","POLL" -> ItemType.POLL
+        "pollopt","POLL_OPT" -> ItemType.POLL_OPT
+        "job","JOB" -> ItemType.JOB
+        "comment","COMMENT" -> ItemType.COMMENT
         else -> null
     }
 }

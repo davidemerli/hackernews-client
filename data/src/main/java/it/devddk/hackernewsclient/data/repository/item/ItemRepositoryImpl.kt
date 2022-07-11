@@ -39,9 +39,9 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
 
     private val items: DatabaseReference by inject(named("item"))
     private val db: LocalDatabase by inject()
-    private val saveItemDao : SaveItemDao by inject()
-    private val collectionDao : ItemCollectionEntityDao by inject()
-    private val itemDao : ItemEntityDao by inject()
+    private val saveItemDao: SaveItemDao by inject()
+    private val collectionDao: ItemCollectionEntityDao by inject()
+    private val itemDao: ItemEntityDao by inject()
     private val algoliaApi: AlgoliaSearchApi by inject()
     private val connectivity: Connectivity by inject()
     private val okHttpClient: OkHttpClient by inject()
@@ -323,6 +323,5 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
     ) : Exception(message)
 
     private class IllegalFetchStrategy : Exception("Illegal fetch strategy")
-
 
 }

@@ -1,5 +1,6 @@
 package it.devddk.hackernewsclient.data.networking.model
 
+import androidx.annotation.Keep
 import com.google.gson.annotations.SerializedName
 import it.devddk.hackernewsclient.data.networking.DomainMapper
 import it.devddk.hackernewsclient.data.networking.utils.toLocalDateTime
@@ -8,6 +9,7 @@ import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.items.ItemTree
 import java.time.LocalDateTime
 
+@Keep
 data class AlgoliaItemResponse(
     @SerializedName("id") val id: String,
     @SerializedName("created_at") val createdAt: String?,

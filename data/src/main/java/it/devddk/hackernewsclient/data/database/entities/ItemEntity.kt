@@ -15,7 +15,7 @@ import java.time.temporal.ChronoUnit
 data class ItemEntity(
     val id: Int,
     val deleted: Boolean,
-    @ColumnInfo(name= "author") val by: String?,
+    @ColumnInfo(name = "author") val by: String?,
     val storyId: Int?,
     val type: String,
     val time: LocalDateTime?,
@@ -32,7 +32,7 @@ data class ItemEntity(
     val poll: Int?,
     val score: Int?,
     val url: String?,
-    val htmlPage: String?
+    val htmlPage: String?,
 ) : DomainMapper<Item> {
 
     override fun mapToDomainModel(): Item {
@@ -58,10 +58,33 @@ data class ItemEntity(
             htmlPage = htmlPage
         )
     }
+
+    override fun toString(): String {
+        return "ItemEntity(\n" +
+                "id=$id\n" +
+                "deleted=$deleted\n," +
+                "author=$by\n" +
+                "storyId=$storyId\n" +
+                "type=$type\n" +
+                "time=$time\n" +
+                "saved=$saved\n" +
+                "downloaded=$downloaded\n" +
+                "dead=$dead\n" +
+                "parent=$parent\n" +
+                "text=$text\n" +
+                "kids=$kids\n" +
+                "storyTitle=$storyTitle\n" +
+                "descendants=$descendants\n" +
+                "parts=$parts\n" +
+                "poll=$poll\n" +
+                "score=$score\n" +
+                "url=$url\n" +
+                "htmlPage=$htmlPage\n)"
+    }
 }
 
 
-fun Item.toItemEntity() : ItemEntity {
+fun Item.toItemEntity(): ItemEntity {
     return ItemEntity(
         id = id,
         deleted = deleted,
