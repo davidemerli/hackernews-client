@@ -24,3 +24,5 @@
 
 # Add this global rule
 -keepattributes Signature
+
+

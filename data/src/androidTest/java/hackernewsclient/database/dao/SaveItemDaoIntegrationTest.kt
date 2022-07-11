@@ -11,25 +11,18 @@ import it.devddk.hackernewsclient.data.database.LocalDatabase
 import it.devddk.hackernewsclient.data.database.dao.ItemCollectionEntityDao
 import it.devddk.hackernewsclient.data.database.dao.ItemEntityDao
 import it.devddk.hackernewsclient.data.database.dao.SaveItemDao
-import it.devddk.hackernewsclient.data.database.entities.ItemCollectionEntity
 import it.devddk.hackernewsclient.data.database.entities.toItemEntity
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
-import it.devddk.hackernewsclient.domain.model.items.Item
-import it.devddk.hackernewsclient.domain.model.items.ItemType
 import junit.framework.Assert.assertEquals
 import junit.framework.Assert.assertFalse
-import junit.framework.Assert.assertNull
 import junit.framework.Assert.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.IOException
 import kotlinx.coroutines.test.runTest
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 
 @RunWith(AndroidJUnit4::class)
 class SaveItemDaoIntegrationTest {

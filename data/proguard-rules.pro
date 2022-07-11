@@ -21,6 +21,9 @@
 #-renamesourcefileattribute SourceFile
 
 -keepclassmembers class * { public <init>(...); }
+-keep class * extends androidx.room.RoomDatabase
+-keep @androidx.room.Entity class *
+-dontwarn androidx.room.paging.**
 
 # Add this global rule
 -keepattributes Signature
