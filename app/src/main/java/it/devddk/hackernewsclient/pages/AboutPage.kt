@@ -76,10 +76,22 @@ fun AboutPage(navController: NavController) {
                             append("app version: $versionName ($versionCode)\n\n")
                         }
 
+                        append("All news are sourced from ")
+                        clickableUrl(
+                            text = "https://news.ycombinator.com",
+                            url = "https://news.ycombinator.com"
+                        )
+                        append(" and we are not affiliated with Y Combinator in any way.\n\n")
+
                         withStyle(MaterialTheme.typography.titleLarge.toSpanStyle()) {
 
                             append("Contacts:\n")
                         }
+
+                        append("Y Combinator (News Provider): ")
+                        clickableUrl(text = "hn@ycombinator.com\n\n", url = "mailto:hn@ycombinator.com")
+
+                        append("Developer contacts:\n")
 
                         contactInfo(
                             name = "Davide Merli",
@@ -160,16 +172,6 @@ fun AboutPage(navController: NavController) {
                         )
                         append(" to improve user experience. User feedback collected in the apposite app section is anonymous and stored on our Firebase Database.\n\n")
 
-                        append("All news are sourced from ")
-                        clickableUrl(
-                            text = "https://news.ycombinator.com",
-                            url = "https://news.ycombinator.com"
-                        )
-                        append(" and we are not responsible for the content, nor we are affiliated with Y Combinator in any way.\n\n")
-
-                        append("Contact ycombinator at ")
-
-                        clickableUrl(text = "hn@ycombinator.com", url = "mailto:hn@ycombinator.com")
                         append("\n\n")
                     }
 

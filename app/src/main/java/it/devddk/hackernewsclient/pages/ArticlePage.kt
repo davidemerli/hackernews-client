@@ -193,7 +193,7 @@ fun ArticlePage(
                         activity?.finish()
                     }
                 },
-                toggleCollection = {item, itemCollection ->
+                toggleCollection = { item, itemCollection ->
                     coroutineScope.launch {
                         homePageViewModel.toggleFromCollection(item.id, itemCollection)
                     }
@@ -462,6 +462,7 @@ fun CommentsView(
             Column(
                 modifier = Modifier
                     .padding(8.dp)
+                    .fillMaxWidth()
                     .fillMaxHeight()
             ) {
                 if (domain != null) {
@@ -490,7 +491,8 @@ fun CommentsView(
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
                 ) {
-                    Text(text = "Posted on: ${item.storyTitle ?: item.storyId}",
+                    Text(
+                        text = "Posted on: ${item.storyTitle ?: item.storyId}",
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
                         style = MaterialTheme.typography.bodyLarge.copy(

@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package it.devddk.hackernewsclient.pages.home
 
 import androidx.activity.compose.BackHandler
@@ -26,6 +28,7 @@ import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -51,6 +54,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -77,11 +81,14 @@ import it.devddk.hackernewsclient.pages.home.components.NewsColumn
 import it.devddk.hackernewsclient.pages.home.components.TallNewsRow
 import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.shared.components.WebViewWithPrefs
+import it.devddk.hackernewsclient.utils.ConnectionState
 import it.devddk.hackernewsclient.utils.SettingPrefs
+import it.devddk.hackernewsclient.utils.connectivityState
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.ItemCollectionHolder
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 
 @Composable
@@ -177,6 +184,8 @@ fun HomePage(
                     onClose = {
                         coroutineScope.launch {
                             itemViewModel.setId(null)
+                            readerMode = false
+                            expandedArticleView = false
                         }
                     },
                     onDarkModeClick = {
@@ -191,13 +200,14 @@ fun HomePage(
                             webViewInstance?.loadUrl(selectedItem?.url ?: "")
                         }
                     },
-                    toggleCollection = {item, itemCollection ->
+                    toggleCollection = { item, itemCollection ->
                         coroutineScope.launch {
                             viewModel.toggleFromCollection(item.id, itemCollection)
                         }
                     },
                 )
             },
+            floatingActionButtonPosition = if (expandedArticleView) FabPosition.Center else FabPosition.End,
             floatingActionButton = {
                 if (selectedItem != null && pagerState.currentPage == 0 && pagerState.pageCount == 2) {
                     FloatingActionButton(
@@ -350,6 +360,9 @@ fun CompactLayout(
     webViewState: WebViewState,
     pagerState: PagerState,
 ) {
+    val connection by connectivityState(LocalContext.current)
+    val isInternetAvailable = connection == ConnectionState.Available
+
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
@@ -395,38 +408,39 @@ fun CompactLayout(
                     .fillMaxWidth()
                     .verticalScroll(scrollState),
             ) {
-                GoToLocationRow(
-                    leadingIcon = Icons.Filled.AutoAwesome,
-                    location = "Best Stories",
-                    buttonText = "See more",
-                    onClick = {
-                        navController.navigate("BestStories")
-                    }
-                )
+                if (isInternetAvailable) {
+                    GoToLocationRow(
+                        leadingIcon = Icons.Filled.AutoAwesome,
+                        location = "Best Stories",
+                        buttonText = "See more",
+                        onClick = {
+                            navController.navigate("BestStories")
+                        }
+                    )
 
-                TallNewsRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    itemCollection = bestCollection,
-                    onItemClick = onItemClick,
-                    onItemClickComments = onItemClickComments,
-                    toggleCollection = { item, itemCollection ->
-                        coroutineScope.launch {
-                            viewModel.toggleFromCollection(item.id, itemCollection)
+                    TallNewsRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        itemCollection = bestCollection,
+                        onItemClick = onItemClick,
+                        onItemClickComments = onItemClickComments,
+                        toggleCollection = { item, itemCollection ->
+                            coroutineScope.launch {
+                                viewModel.toggleFromCollection(item.id, itemCollection)
 
-                            // reload if item is added to read later in order to update the view
-                            if (itemCollection is UserDefinedItemCollection.ReadLater) {
-                                readLaterCollection.loadAll()
+                                // reload if item is added to read later in order to update the view
+                                if (itemCollection is UserDefinedItemCollection.ReadLater) {
+                                    readLaterCollection.loadAll()
+                                }
                             }
                         }
-                    }
-                )
-
-                Divider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .alpha(0.1f)
-                        .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
-                )
+                    )
+                    Divider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .alpha(0.1f)
+                            .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                    )
+                }
 
                 if (showReadLater) {
                     GoToLocationRow(
@@ -461,46 +475,62 @@ fun CompactLayout(
                     )
                 }
 
-                GoToLocationRow(
-                    leadingIcon = Icons.Filled.TrendingUp,
-                    location = "Top Stories",
-                    buttonText = "See more",
-                    onClick = {
-                        navController.navigate("TopStories")
-                    },
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
+                if (isInternetAvailable) {
+                    GoToLocationRow(
+                        leadingIcon = Icons.Filled.TrendingUp,
+                        location = "Top Stories",
+                        buttonText = "See more",
+                        onClick = {
+                            navController.navigate("TopStories")
+                        },
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
 
-                NewsColumn(
-                    itemCollection = topCollection,
-                    onClickItem = onItemClick,
-                    onClickComments = onItemClickComments,
-                    onClickAuthor = { item -> navController.navigate("user/${item.by}") },
-                    toggleCollection = { item, itemCollection ->
-                        coroutineScope.launch {
-                            viewModel.toggleFromCollection(item.id, itemCollection)
+                    NewsColumn(
+                        itemCollection = topCollection,
+                        onClickItem = onItemClick,
+                        onClickComments = onItemClickComments,
+                        onClickAuthor = { item -> navController.navigate("user/${item.by}") },
+                        toggleCollection = { item, itemCollection ->
+                            coroutineScope.launch {
+                                viewModel.toggleFromCollection(item.id, itemCollection)
 
-                            // reload if item is added to read later in order to update the view
-                            if (itemCollection is UserDefinedItemCollection.ReadLater) {
-                                readLaterCollection.loadAll()
+                                // reload if item is added to read later in order to update the view
+                                if (itemCollection is UserDefinedItemCollection.ReadLater) {
+                                    readLaterCollection.loadAll()
+                                }
                             }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 384.dp),
-                )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = 384.dp),
+                    )
 
-                GoToLocationRow(
-                    buttonText = "Back to top",
-                    actionIcon = Icons.Filled.ArrowUpward,
-                    onClick = {
-                        coroutineScope.launch {
-                            scrollState.animateScrollTo(0)
-                        }
-                    },
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
+                    GoToLocationRow(
+                        buttonText = "Back to top",
+                        actionIcon = Icons.Filled.ArrowUpward,
+                        onClick = {
+                            coroutineScope.launch {
+                                scrollState.animateScrollTo(0)
+                            }
+                        },
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+
+                if (!isInternetAvailable) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "You are not connected to the internet.\n\nOnly saved favorite and read later\nstories are available.",
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
             }
         }
     }

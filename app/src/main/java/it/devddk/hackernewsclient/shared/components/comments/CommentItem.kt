@@ -55,7 +55,7 @@ fun CommentItem(
 
     val timeString = remember(item) { TimeDisplayUtils(context).toDateTimeAgoInterval(item.time) }
 
-    Timber.d("CommentItem: ${item}")
+    Timber.d("CommentItem: $item")
 
     val storyTitle = item.storyTitle ?: searchMetaData?.storyTitle ?: item.storyId?.toString()
 

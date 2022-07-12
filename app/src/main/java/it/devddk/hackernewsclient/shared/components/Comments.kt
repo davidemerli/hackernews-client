@@ -1,6 +1,7 @@
 package it.devddk.hackernewsclient.shared.components
 
 import android.text.util.Linkify
+import android.view.ViewGroup
 import android.widget.TextView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -325,12 +326,17 @@ fun CommentText(
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.Thin
             ),
-            modifier = Modifier.padding(4.dp)
+            modifier = modifier.padding(4.dp)
         )
     } else {
         AndroidView(
             factory = { TextView(context) },
             update = {
+                it.layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+
                 it.setLinkTextColor(linkColor.toArgb())
                 it.setTextColor(textColor.toArgb())
                 it.highlightColor = highlightColor.toArgb()

@@ -234,7 +234,7 @@ fun MoreButton(
                     expanded = !expanded
 
                     toggleCollection(item, UserDefinedItemCollection.Favorites)
-                  },
+                },
                 leadingIcon = {
                     Icon(
                         if (!favorite) Icons.Filled.Star else Icons.Filled.StarOutline,
@@ -243,7 +243,6 @@ fun MoreButton(
                     )
                 },
             )
-
         }
     }
 }

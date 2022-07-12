@@ -1,6 +1,5 @@
 package it.devddk.hackernewsclient.pages
 
-import android.net.ConnectivityManager
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,16 +30,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import it.devddk.hackernewsclient.domain.model.feedback.Feedback
 import it.devddk.hackernewsclient.shared.components.HNModalNavigatorPanel
 import it.devddk.hackernewsclient.shared.components.SegmentedButtons
 import it.devddk.hackernewsclient.shared.components.topbars.HomePageTopBar
+import it.devddk.hackernewsclient.utils.ConnectionState
+import it.devddk.hackernewsclient.utils.connectivityState
 import it.devddk.hackernewsclient.viewmodels.FeedbackViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 
+@ExperimentalCoroutinesApi
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun FeedbackPage(navController: NavController, itemId: Int? = null) {
@@ -54,14 +56,14 @@ fun FeedbackPage(navController: NavController, itemId: Int? = null) {
 
     val scrollState = rememberScrollState()
 
+    val connection by connectivityState(LocalContext.current)
+    val isInternetAvailable = connection == ConnectionState.Available
+
     val submitFeedback: () -> Unit = {
         coroutineScope.launch {
             val feedback = Feedback(itemId, feedbackMessage, uxValueState.value ?: -1)
 
-            val connectivityManager = getSystemService(context, ConnectivityManager::class.java)
-            val text = if (connectivityManager?.isDefaultNetworkActive == true) {
-                "Thanks! Your feedback will be sent when you go back online."
-            } else "Thanks for the feedback!"
+            val text = if (!isInternetAvailable) "Thanks! Your feedback will be sent when you go back online." else "Thanks for the feedback!"
 
             viewModel.postFeedback(feedback).fold(
                 onSuccess = {
