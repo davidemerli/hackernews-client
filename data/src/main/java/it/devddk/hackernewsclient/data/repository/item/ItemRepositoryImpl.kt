@@ -1,5 +1,7 @@
 package it.devddk.hackernewsclient.data.repository.item
 
+import android.content.Context
+import android.content.ContextWrapper
 import android.util.LruCache
 import androidx.room.withTransaction
 import com.google.firebase.database.DatabaseReference
@@ -15,6 +17,7 @@ import it.devddk.hackernewsclient.data.di.DispatcherProvider
 import it.devddk.hackernewsclient.data.networking.base.asResult
 import it.devddk.hackernewsclient.data.networking.model.ItemResponse
 import it.devddk.hackernewsclient.data.networking.utils.getBody
+import it.devddk.hackernewsclient.data.networking.utils.getUrl
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
@@ -22,6 +25,7 @@ import it.devddk.hackernewsclient.domain.model.items.ItemTree
 import it.devddk.hackernewsclient.domain.repository.ItemRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -30,8 +34,16 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import timber.log.Timber
+import java.io.BufferedReader
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileReader
+import java.io.FileWriter
+import java.io.InputStream
 import java.lang.Exception
 import java.lang.IllegalStateException
+import java.nio.file.Files
+import java.nio.file.Path
 import java.time.LocalDateTime
 
 class ItemRepositoryImpl : ItemRepository, KoinComponent {
@@ -46,6 +58,7 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
     private val connectivity: Connectivity by inject()
     private val okHttpClient: OkHttpClient by inject()
     private val dispatchers: DispatcherProvider by inject()
+    private val context: Context by inject()
 
     private val cache: LruCache<ItemId, Item> by inject()
 
@@ -100,6 +113,18 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
                 val storyTitle = item.storyTitle ?: itemDao.getRootStoryTitle(itemId)
                 item.copy(collections = collections, storyId = storyId, storyTitle = storyTitle)
             } catch (e: Exception) {
+                item
+            }
+        }.mapCatching { item ->
+            if (!connectivity.hasNetworkAccess() && item.url != null) {
+                retrieveWebPage(itemId).fold(
+                    onSuccess = { page ->
+                        Timber.d("Fallback webpage found in cache")
+                        item.copy(htmlPage = page)
+                    },
+                    onFailure = { item }
+                )
+            } else {
                 item
             }
         }.mapCatching { item ->
@@ -206,19 +231,17 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
                         throw IllegalStateException("Failed to save sub items in database")
                     }
                 }
-                /*
+
                 if (root.item.url != null) {
                     launch {
                         Timber.d("Downloading $item url: ${root.item.url}")
-                        saveUrl(url = root.item.url!!).mapCatching { html ->
-                            itemDao.saveHtml(item, html)
-                        }.fold(onSuccess = {
+                        saveWebPage(root.item.id, url = root.item.url!!).fold(onSuccess = {
                             Timber.i("Saved $item url: ${root.item.url} with success")
                         }, onFailure = {
-                            Timber.i("Failed to save $item url: ${root.item.url}. ${it::class.java.simpleName} ${it.message}")
+                            Timber.i("Failed to save $item url: ${root.item.url}\n${it.stackTraceToString()}")
                         })
                     }
-                }*/
+                }
 
 
             }.onFailure {
@@ -227,10 +250,43 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
         }
     }
 
-    private suspend fun saveUrl(url: String): Result<String> {
+    private suspend fun saveWebPage(itemId: Int, url: String): Result<Unit> {
         return runCatching {
             val request = Request.Builder().url(url).build()
-            getBody(okHttpClient, request)
+            getUrl(okHttpClient, request)
+        }.mapCatching { response ->
+            val filePath = "${context.filesDir.path}/page_$itemId"
+            val newFile = File(filePath)
+            if (newFile.exists()) {
+                newFile.delete()
+            }
+            newFile.createNewFile()
+            val body = response.body!!.string()
+            BufferedWriter(FileWriter(newFile)).use { writer ->
+                print(body)
+                writer.write(body)
+            }
+        }
+    }
+
+    private fun deleteSavedWebpage(itemId: Int): Result<Unit> {
+        return runCatching {
+            val filePath = "${context.filesDir.path}/page_$itemId"
+            val oldFile = File(filePath)
+            if (oldFile.exists()) {
+                oldFile.delete()
+            }
+        }
+    }
+
+    private fun retrieveWebPage(itemId: Int): Result<String> {
+        return runCatching {
+            val filePath = "${context.filesDir.path}/page_$itemId"
+            val webPageFile = File(filePath)
+            BufferedReader(FileReader(webPageFile)).use { reader ->
+                reader.readText()
+            }
+
         }
     }
 
@@ -250,6 +306,7 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
                 if (refCount == 0) {
                     Timber.d("Removing item $id from database")
                     itemDao.deleteItem(id)
+                    deleteSavedWebpage(id)
                 }
             }
             cache.remove(id)
@@ -298,9 +355,7 @@ class ItemRepositoryImpl : ItemRepository, KoinComponent {
     }
 
     private val fetchFromOffline: suspend (Int) -> Item = { itemId: Int ->
-        val item =
-            checkNotNull(itemDao.getItem(itemId)) { "Item $itemId not available offline" }.mapToDomainModel()
-        item
+        checkNotNull(itemDao.getItem(itemId)) { "Item $itemId not available offline" }.mapToDomainModel()
     }
 
     override suspend fun getCommentTree(id: ItemId): Result<ItemTree> {

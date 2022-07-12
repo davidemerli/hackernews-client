@@ -23,10 +23,7 @@ val networkingModule = module {
     single { GsonConverterFactory.create() as Converter.Factory }
     single { HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY) }
     single {
-        OkHttpClient.Builder().apply {
-            if (BuildConfig.DEBUG) addInterceptor(get<HttpLoggingInterceptor>())
-                .callTimeout(10, TimeUnit.SECONDS)
-        }.build()
+        OkHttpClient.Builder().build()
     }
     single {
         Retrofit.Builder()

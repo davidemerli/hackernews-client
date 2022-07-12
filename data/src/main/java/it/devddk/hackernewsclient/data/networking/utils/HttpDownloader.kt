@@ -17,12 +17,10 @@ suspend fun getUrl(httpClient: OkHttpClient, request: Request): Response {
             }
 
             override fun onResponse(call: Call, response: Response) {
-                response.use {
-                    if (response.isSuccessful.not()) {
-                        cont.resumeWith(Result.failure(IOException("Unexpected code $response")))
-                    } else {
-                        cont.resumeWith(Result.success(response))
-                    }
+                if (response.isSuccessful.not()) {
+                    cont.resumeWith(Result.failure(IOException("Unexpected code $response")))
+                } else {
+                    cont.resumeWith(Result.success(response))
                 }
             }
         })
