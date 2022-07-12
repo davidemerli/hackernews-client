@@ -46,6 +46,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -60,6 +61,7 @@ import com.google.accompanist.web.WebViewState
 import com.google.accompanist.web.rememberWebViewState
 import it.devddk.hackernewsclient.R
 import it.devddk.hackernewsclient.domain.model.collection.ItemCollection
+import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.pages.TabbedView
 import it.devddk.hackernewsclient.pages.home.components.HNTopBar
@@ -69,12 +71,15 @@ import it.devddk.hackernewsclient.shared.components.news.NewsItem
 import it.devddk.hackernewsclient.shared.components.news.SwipeableItem
 import it.devddk.hackernewsclient.shared.components.topbars.ROUTE_ICONS
 import it.devddk.hackernewsclient.shared.components.topbars.ROUTE_TITLES
+import it.devddk.hackernewsclient.utils.ConnectionState
 import it.devddk.hackernewsclient.utils.SettingPrefs
+import it.devddk.hackernewsclient.utils.connectivityState
 import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
 import it.devddk.hackernewsclient.viewmodels.ItemCollectionHolder
 import it.devddk.hackernewsclient.viewmodels.NewsItemState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsUiState
 import it.devddk.hackernewsclient.viewmodels.SingleNewsViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 
 @Composable
@@ -179,7 +184,7 @@ fun NewsPage(
                             webViewInstance?.loadUrl(selectedItem?.url ?: "")
                         }
                     },
-                    toggleCollection = {item, itemCollection ->
+                    toggleCollection = { item, itemCollection ->
                         coroutineScope.launch {
                             viewModel.toggleFromCollection(item.id, itemCollection)
                         }
@@ -310,6 +315,7 @@ fun NewsExpandedLayout(
     }
 }
 
+@ExperimentalCoroutinesApi
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun NewsCompactLayout(
@@ -322,6 +328,9 @@ fun NewsCompactLayout(
     webViewState: WebViewState,
     pagerState: PagerState,
 ) {
+    val connection by connectivityState(LocalContext.current)
+    val isInternetAvailable = connection == ConnectionState.Available
+
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberLazyListState()
@@ -365,36 +374,52 @@ fun NewsCompactLayout(
                 state = scrollState,
                 modifier = modifier.fillMaxSize()
             ) {
-                itemsIndexed(itemListState.value, key = { _, item -> item.itemId }) { index, itemState ->
-                    when (itemState) {
-                        is NewsItemState.Loading, is NewsItemState.ItemError -> {
-                            LaunchedEffect(index) {
-                                itemCollection.requestItem(itemState.itemId)
-                            }
-
-                            NewsItem(placeholder = true)
-                        }
-                        is NewsItemState.ItemLoaded -> {
-                            SwipeableItem(
-                                item = itemState.item,
-                                onClick = { onItemClick(itemState.item) },
-                                onClickComments = { onItemClickComments(itemState.item) },
-                                onClickAuthor = { navController.navigate("user/${itemState.item.by}") },
-                                toggleCollection = { item, itemCollection ->
-                                    coroutineScope.launch {
-                                        viewModel.toggleFromCollection(item.id, itemCollection)
-                                    }
-                                },
-                                placeholder = false
+                if (!isInternetAvailable && itemCollection.collection !is UserDefinedItemCollection) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "You are not connected to the internet.\n\nOnly saved favorite and read later\nstories are available.",
+                                textAlign = TextAlign.Center,
                             )
                         }
                     }
+                } else {
+                    itemsIndexed(itemListState.value, key = { _, item -> item.itemId }) { index, itemState ->
+                        when (itemState) {
+                            is NewsItemState.Loading, is NewsItemState.ItemError -> {
+                                LaunchedEffect(index) {
+                                    itemCollection.requestItem(itemState.itemId)
+                                }
 
-                    Divider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
-                        thickness = 0.5.dp
-                    )
+                                NewsItem(placeholder = true)
+                            }
+                            is NewsItemState.ItemLoaded -> {
+                                SwipeableItem(
+                                    item = itemState.item,
+                                    onClick = { onItemClick(itemState.item) },
+                                    onClickComments = { onItemClickComments(itemState.item) },
+                                    onClickAuthor = { navController.navigate("user/${itemState.item.by}") },
+                                    toggleCollection = { item, itemCollection ->
+                                        coroutineScope.launch {
+                                            viewModel.toggleFromCollection(item.id, itemCollection)
+                                        }
+                                    },
+                                    placeholder = false
+                                )
+                            }
+                        }
+
+                        Divider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
+                            thickness = 0.5.dp
+                        )
+                    }
                 }
             }
         }

@@ -183,7 +183,7 @@ fun SearchPage(
                         itemViewModel.setId(null)
                     }
                 },
-                toggleCollection = {item, itemCollection ->
+                toggleCollection = { item, itemCollection ->
                     coroutineScope.launch {
                         homePageViewModel.toggleFromCollection(item.id, itemCollection)
                     }

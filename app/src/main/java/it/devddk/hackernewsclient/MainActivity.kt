@@ -3,7 +3,6 @@ package it.devddk.hackernewsclient
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -13,7 +12,6 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -23,9 +21,6 @@ import androidx.navigation.navDeepLink
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import it.devddk.hackernewsclient.domain.model.collection.ALL_QUERIES
-import it.devddk.hackernewsclient.domain.model.collection.BestStories
-import it.devddk.hackernewsclient.domain.model.collection.TopStories
-import it.devddk.hackernewsclient.domain.model.collection.UserDefinedItemCollection
 import it.devddk.hackernewsclient.pages.AboutPage
 import it.devddk.hackernewsclient.pages.ArticlePage
 import it.devddk.hackernewsclient.pages.FeedbackPage
@@ -36,11 +31,6 @@ import it.devddk.hackernewsclient.pages.home.HomePage
 import it.devddk.hackernewsclient.pages.news.HackerNewsView
 import it.devddk.hackernewsclient.pages.news.NewsPage
 import it.devddk.hackernewsclient.ui.theme.HackerNewsClientTheme
-import it.devddk.hackernewsclient.viewmodels.HomePageViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @ExperimentalPagerApi
 @ExperimentalMaterial3Api
