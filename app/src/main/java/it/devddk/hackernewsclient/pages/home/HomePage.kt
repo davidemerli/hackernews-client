@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -183,6 +184,8 @@ fun HomePage(
                     onClose = {
                         coroutineScope.launch {
                             itemViewModel.setId(null)
+                            readerMode = false
+                            expandedArticleView = false
                         }
                     },
                     onDarkModeClick = {
@@ -204,6 +207,7 @@ fun HomePage(
                     },
                 )
             },
+            floatingActionButtonPosition = if (expandedArticleView) FabPosition.Center else FabPosition.End,
             floatingActionButton = {
                 if (selectedItem != null && pagerState.currentPage == 0 && pagerState.pageCount == 2) {
                     FloatingActionButton(

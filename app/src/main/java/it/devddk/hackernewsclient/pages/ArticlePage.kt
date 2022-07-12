@@ -462,6 +462,7 @@ fun CommentsView(
             Column(
                 modifier = Modifier
                     .padding(8.dp)
+                    .fillMaxWidth()
                     .fillMaxHeight()
             ) {
                 if (domain != null) {
