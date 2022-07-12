@@ -19,7 +19,7 @@ class CommentItemUITest {
     @Test
     fun onClickAction_works() {
         var clickCount = 0
-        val randomItem = Item(1, ItemType.COMMENT, by = "user", time= LocalDateTime.now())
+        val randomItem = Item(1, ItemType.COMMENT, by = "user", time = LocalDateTime.now())
         composeTestRule.setContent {
 
             MaterialTheme {
