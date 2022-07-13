@@ -5,7 +5,7 @@
     android:minHeight="100dp"
     android:minResizeWidth="40dp"
     android:minResizeHeight="40dp"
-    android:previewImage="@drawable/compose"
+    android:previewImage="@drawable/widget"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     tools:ignore="MissingDefaultResource" />
