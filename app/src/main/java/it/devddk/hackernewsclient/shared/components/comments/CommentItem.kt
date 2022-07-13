@@ -35,7 +35,7 @@ import it.devddk.hackernewsclient.domain.model.items.readLater
 import it.devddk.hackernewsclient.domain.model.search.SearchResultMetaData
 import it.devddk.hackernewsclient.pages.parseHTML
 import it.devddk.hackernewsclient.shared.components.customPlaceholder
-import it.devddk.hackernewsclient.shared.components.news.ItemColorHint
+import it.devddk.hackernewsclient.shared.components.ItemColorHint
 import it.devddk.hackernewsclient.utils.TimeDisplayUtils
 import timber.log.Timber
 

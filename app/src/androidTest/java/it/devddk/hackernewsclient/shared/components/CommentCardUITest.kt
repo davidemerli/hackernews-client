@@ -26,6 +26,14 @@ class CommentCardUITest {
     @Before
     fun mockTheNavController() {
         mockNavController.apply {
+            every { navigate("") }
+            every { navigate(any<String>()) } just runs
+        }
+    }
+
+    @Before
+    fun mockTheViewModel() {
+        mockNavController.apply {
             every { navigate(any<String>()) } just runs
         }
     }
@@ -33,8 +41,8 @@ class CommentCardUITest {
     @Test
     fun author_displayOP() {
 
-        val rootItem = Item(1, ItemType.STORY, by = "user", time = LocalDateTime.now())
-        val item = Item(4, ItemType.COMMENT, by = "user", time = LocalDateTime.now())
+        val rootItem = Item(1, ItemType.STORY, by = "user", time = LocalDateTime.now().minusDays(3).minusHours(1))
+        val item = Item(4, ItemType.COMMENT, by = "user", time = LocalDateTime.now().minusDays(3).minusHours(1))
         val otherItem = Item(4, ItemType.COMMENT, by = "anotherUser", time = LocalDateTime.now())
         composeTestRule.setContent {
 
@@ -43,14 +51,42 @@ class CommentCardUITest {
                 CommentCard(
                     item = item,
                     fontSize = 16.sp,
-                    rootItem = rootItem,
+                    rootItem = item,
                     expanded = false,
                     listState = lazy,
                     navController = mockNavController
                 )
             }
         }
-        composeTestRule.onNodeWithText("${item.by} (OP)").assertExists()
-        composeTestRule.onNodeWithText("${item.by}").assertDoesNotExist()
+        composeTestRule.onNodeWithText("3d", substring = true).assertExists()
+        composeTestRule.onNodeWithText(item.by!!, substring = true).assertExists()
+        composeTestRule.onNodeWithText("(OP)", substring = true).assertExists()
     }
+
+    @Test
+    fun author_notDisplaysOP() {
+
+        val rootItem = Item(1, ItemType.STORY, by = "user", time = LocalDateTime.now().minusDays(3).minusHours(1))
+        val item = Item(4, ItemType.COMMENT, by = "user", time = LocalDateTime.now().minusDays(3).minusHours(1))
+        val otherItem = Item(4, ItemType.COMMENT, by = "anotherUser", time = LocalDateTime.now())
+        composeTestRule.setContent {
+
+            MaterialTheme {
+                val lazy = rememberLazyListState()
+                CommentCard(
+                    item = otherItem,
+                    fontSize = 16.sp,
+                    rootItem = item,
+                    expanded = false,
+                    listState = lazy,
+                    navController = mockNavController
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("now", substring = true).assertExists()
+        composeTestRule.onNodeWithText(otherItem.by!!, substring = true).assertExists()
+        composeTestRule.onNodeWithText("(OP)", substring = true).assertDoesNotExist()
+    }
+
+
 }

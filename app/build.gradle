@@ -132,7 +132,7 @@ dependencies {
     // Optional -- Mockk framework
     testImplementation "io.mockk:mockk:$mockkVersion"
     // Optional -- Mockk framework
-    androidTestImplementation "io.mockk:mockk:$mockkVersion"
+    androidTestImplementation "io.mockk:mockk-android:$mockkVersion"
 
     // Logging
     implementation 'com.jakewharton.timber:timber:5.0.1'
