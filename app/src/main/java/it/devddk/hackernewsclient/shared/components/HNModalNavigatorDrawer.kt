@@ -49,7 +49,7 @@ fun HNModalNavigatorPanel(
                 Text(text = stringResource(R.string.app_name), modifier = Modifier.padding(28.dp))
 
                 NavigationDrawerItem(
-                    icon = { Icon(Icons.Filled.Home, contentDescription = query) },
+                    icon = { Icon(Icons.Filled.Home, contentDescription = "homepage") },
                     label = { Text("Homepage") },
                     selected = query == "homepage",
                     onClick = { navController.navigate("homepage") },
@@ -61,7 +61,7 @@ fun HNModalNavigatorPanel(
                         icon = {
                             Icon(
                                 imageVector = ROUTE_ICONS[HackerNewsView(itemCollection).route]!!,
-                                contentDescription = query
+                                contentDescription = itemCollection.entryName
                             )
                         },
                         label = { Text(ROUTE_TITLES[HackerNewsView(itemCollection).route]!!) },

@@ -68,9 +68,6 @@ class SaveItemDaoIntegrationTest {
         collectionDao.addItemToCollection(ic2)
         assertFalse(saveItemDao.needsToBeSaved(UserDefinedItemCollection.ReadLater, 1, timeoutMs))
         assertEquals(2, saveItemDao.computeRefCount(1))
-        Thread.sleep(2000)
-        //assertTrue(saveItemDao.needsToBeSaved(UserDefinedItemCollection.ReadLater, 1, timeoutMs))
-
     }
 
 }

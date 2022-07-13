@@ -1,4 +1,4 @@
-package it.devddk.hackernewsclient.shared.components.news
+package it.devddk.hackernewsclient.shared.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
