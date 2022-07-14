@@ -46,7 +46,7 @@ class ItemEntityDaoUnitTest {
     @Throws(Exception::class)
     fun itemEntityDAO_CRUDWorks() = runTest {
         //Create
-        val item1 = generateRandomItem(id = 1, by="author1").toItemEntity()
+        val item1 = generateRandomItem(id = 1, by="author1", collections = emptyMap()).toItemEntity()
         itemDao.insertItem(item1)
 
         //Read
@@ -54,7 +54,7 @@ class ItemEntityDaoUnitTest {
         assertEquals(item1, item1FromDb)
 
         // Update
-        val item1Edited = generateRandomItem(id = 1, by="author2").toItemEntity()
+        val item1Edited = generateRandomItem(id = 1, by="author2", collections = emptyMap()).toItemEntity()
         itemDao.insertItem(item1Edited)
         val item1EditedFromDb = itemDao.getItem(1)
         assertEquals(item1Edited, item1EditedFromDb)
@@ -70,9 +70,9 @@ class ItemEntityDaoUnitTest {
     @Test
     @Throws(Exception::class)
     fun itemEntityDAO_multipleInserts() = runTest {
-        val item1 = generateRandomItem(id = 1, by="author_different").toItemEntity()
+        val item1 = generateRandomItem(id = 1, by="author_different", collections = emptyMap()).toItemEntity()
         itemDao.insertItem(item1)
-        val items = (0 until 50).map { i -> generateRandomItem(id = i, by = "author_$i").toItemEntity() }
+        val items = (0 until 50).map { i -> generateRandomItem(id = i, by = "author_$i", collections = emptyMap()).toItemEntity() }
         itemDao.insertItems(items)
         (0 until 50).forEach {
            assertEquals("item $it should match from db", items[it], itemDao.getItem(it))
@@ -90,6 +90,7 @@ class ItemEntityDaoUnitTest {
             storyId = 0,
             downloaded = yesterday,
             htmlPage = html,
+            collections = emptyMap()
         ).toItemEntity()
         val savedWhen = item1.saved
         itemDao.insertItem(item1)

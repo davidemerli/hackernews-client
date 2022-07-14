@@ -53,7 +53,7 @@ class SaveItemDaoIntegrationTest {
 
         val timeoutMs = 2000
         val items = (1..30).map {
-            generateRandomItem(id = it, by = "user$it", storyId =1).toItemEntity()
+            generateRandomItem(id = it, by = "user$it", storyId =1, collections = emptyMap()).toItemEntity()
         }
         val ic1 = generateRandomItemCollectionEntity(1, UserDefinedItemCollection.ReadLater)
         val ic2 = generateRandomItemCollectionEntity(4, UserDefinedItemCollection.Favorites)
