@@ -71,7 +71,7 @@ fun NewsItem(
             .padding(horizontal = 6.dp, vertical = 4.dp)
     ) {
         val (statusIcons, colorHint, domain, title) = createRefs()
-        val (comments, more) = createRefs()
+        val (more, comments) = createRefs()
 
         val (pt, by, time) = createRefs()
 
@@ -168,11 +168,7 @@ fun NewsItem(
             onShareHNLink = {
                 shareStringContent(context, "https://news.ycombinator.com/item?id=${item.id}")
             },
-            onShareUrl = {
-                item.url?.let { url ->
-                    shareStringContent(context, url)
-                }
-            },
+            onShareUrl = item.url?.let { url -> { shareStringContent(context, url) } },
             onFavoriteClick = {
                 onCollectionToggle(
                     itemId = item.id,
@@ -191,7 +187,7 @@ fun NewsItem(
                     viewModel = viewModel,
                 )
             },
-            modifier = Modifier.constrainAs(comments) {
+            modifier = Modifier.constrainAs(more) {
                 top.linkTo(parent.top)
                 end.linkTo(parent.end)
             }
@@ -202,7 +198,7 @@ fun NewsItem(
                 commentsNumber = it,
                 onClick = onClickComments,
                 placeholder = placeholder,
-                modifier = Modifier.constrainAs(more) {
+                modifier = Modifier.constrainAs(comments) {
                     bottom.linkTo(parent.bottom)
                     end.linkTo(parent.end)
                 },

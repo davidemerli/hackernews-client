@@ -3,6 +3,7 @@ package it.devddk.hackernewsclient.activities
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.Keep
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +19,7 @@ import it.devddk.hackernewsclient.ui.theme.HackerNewsClientTheme
 
 val ItemIdKey = ActionParameters.Key<Int>("itemIdKey")
 
+@Keep
 @ExperimentalPagerApi
 @ExperimentalMaterial3Api
 @ExperimentalMaterial3WindowSizeClassApi

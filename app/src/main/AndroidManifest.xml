@@ -51,7 +51,7 @@
         </activity>
 
         <receiver
-            android:name="it.devddk.hackernewsclient.widget.ExactAppWidgetReceiver"
+            android:name="it.devddk.hackernewsclient.widget.HNAppWidgetReceiver"
             android:exported="true">
 
             <intent-filter>

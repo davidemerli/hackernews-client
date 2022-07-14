@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Icon
 import android.os.Build
+import androidx.annotation.Keep
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -54,6 +55,7 @@ import it.devddk.hackernewsclient.activities.ItemIdKey
 import it.devddk.hackernewsclient.domain.interaction.item.GetItemUseCase
 import it.devddk.hackernewsclient.domain.interaction.item.GetNewStoriesUseCase
 import it.devddk.hackernewsclient.domain.model.collection.TopStories
+import it.devddk.hackernewsclient.domain.model.items.Item
 import it.devddk.hackernewsclient.domain.model.utils.ItemId
 import it.devddk.hackernewsclient.shared.components.news.getDomainName
 import it.devddk.hackernewsclient.ui.theme.md_theme_dark_onBackground
@@ -68,7 +70,8 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import timber.log.Timber
 
-class ExactAppWidget : GlanceAppWidget() {
+@Keep
+class HNAppWidget : GlanceAppWidget() {
     override val sizeMode: SizeMode = SizeMode.Exact
 
     override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
@@ -79,8 +82,8 @@ class ExactAppWidget : GlanceAppWidget() {
         val context = LocalContext.current
 
         val prefs = currentState<Preferences>()
-        val items = prefs[ExactAppWidgetReceiver.itemList]?.map {
-            it.decodeJson(Result::class.java)
+        val items = prefs[HNAppWidgetReceiver.itemList]?.map {
+            it.decodeJson(Item::class.java)
         }
 
         Timber.d("itemList: $items")
@@ -134,56 +137,47 @@ class ExactAppWidget : GlanceAppWidget() {
                     )
                 }
 
-                items?.map { it ->
-                    it.getOrNull()?.let { item ->
-
-                        val itemMap = item as Map<*, *>
-                        val itemId = (itemMap["id"] as Double).toInt()
-
-                        item {
-                            Column(
-                                modifier = GlanceModifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp)
-                                    .background(ImageProvider(R.drawable.widget_background2))
-                                    .clickable(
-                                        onClick = actionStartActivity<ArticleActivity>(
-                                            actionParametersOf(ItemIdKey to itemId)
-                                        )
-                                    )
-                            ) {
-                                Text(
-                                    text = "${itemMap["by"]}" + itemMap["url"]?.let { " @ ${getDomainName(it.toString())}" },
-                                    style = TextStyle(
-                                        color = ColorProvider(color = md_theme_dark_secondary),
-                                        fontSize = MaterialTheme.typography.titleSmall.fontSize
+                items?.map { item ->
+                    item {
+                        Column(
+                            modifier = GlanceModifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                                .background(ImageProvider(R.drawable.widget_background2))
+                                .clickable(
+                                    onClick = actionStartActivity<ArticleActivity>(
+                                        actionParametersOf(ItemIdKey to item.id)
                                     )
                                 )
-
-                                Text(
-                                    text = itemMap["title"].toString(),
-                                    style = TextStyle(
-                                        color = ColorProvider(color = md_theme_dark_onBackground),
-                                        fontSize = MaterialTheme.typography.titleMedium.fontSize
-                                    )
+                        ) {
+                            Text(
+                                text = "${item.by}" + item.url?.let { " @ ${getDomainName(it)}" },
+                                style = TextStyle(
+                                    color = ColorProvider(color = md_theme_dark_secondary),
+                                    fontSize = MaterialTheme.typography.titleSmall.fontSize
                                 )
+                            )
 
-                                val points = itemMap["score"].toString().removeSuffix(".0")
-                                val comments = (itemMap["descendants"] ?: "0").toString().removeSuffix(".0")
-
-                                Text(
-                                    text = "$points pt - $comments comments",
-                                    style = TextStyle(
-                                        color = ColorProvider(color = md_theme_dark_tertiary),
-                                        fontSize = MaterialTheme.typography.titleSmall.fontSize
-                                    )
+                            Text(
+                                text = item.title ?: "title_not_found",
+                                style = TextStyle(
+                                    color = ColorProvider(color = md_theme_dark_onBackground),
+                                    fontSize = MaterialTheme.typography.titleMedium.fontSize
                                 )
-                            }
+                            )
+
+                            Text(
+                                text = "${item.score} pt - ${item.descendants} comments",
+                                style = TextStyle(
+                                    color = ColorProvider(color = md_theme_dark_tertiary),
+                                    fontSize = MaterialTheme.typography.titleSmall.fontSize
+                                )
+                            )
                         }
+                    }
 
-                        item {
-                            Spacer(modifier = GlanceModifier.height(8.dp))
-                        }
+                    item {
+                        Spacer(modifier = GlanceModifier.height(8.dp))
                     }
                 }
             }
@@ -191,8 +185,9 @@ class ExactAppWidget : GlanceAppWidget() {
     }
 }
 
-class ExactAppWidgetReceiver : GlanceAppWidgetReceiver(), KoinComponent {
-    override val glanceAppWidget = ExactAppWidget()
+@Keep
+class HNAppWidgetReceiver : GlanceAppWidgetReceiver(), KoinComponent {
+    override val glanceAppWidget = HNAppWidget()
 
     private val coroutineScope = MainScope()
 
@@ -223,7 +218,7 @@ class ExactAppWidgetReceiver : GlanceAppWidgetReceiver(), KoinComponent {
         coroutineScope.launch {
 
             getNewStoriesUseCase(TopStories).getOrNull()?.let {
-                val glanceId = GlanceAppWidgetManager(context).getGlanceIds(ExactAppWidget::class.java)
+                val glanceId = GlanceAppWidgetManager(context).getGlanceIds(HNAppWidget::class.java)
                     .firstOrNull()
 
                 Timber.d("items $it")
@@ -231,8 +226,11 @@ class ExactAppWidgetReceiver : GlanceAppWidgetReceiver(), KoinComponent {
                 val items = it.subList(0, 10).map { item ->
                     Timber.d("item $item - ${getItemUseCase(item).encodeJson()}")
 
-                    getItemUseCase(item).encodeJson()
-                }.toSet()
+                     getItemUseCase(item).fold(
+                        onSuccess = { res -> res.encodeJson() },
+                        onFailure = { null }
+                     )
+                }.filterNotNull().toSet()
 
                 glanceId?.let { id ->
                     updateAppWidgetState(context, PreferencesGlanceStateDefinition, id) { pref ->
@@ -253,13 +251,14 @@ class ExactAppWidgetReceiver : GlanceAppWidgetReceiver(), KoinComponent {
     }
 }
 
+@Keep
 class RefreshNewsCallback : ActionCallback {
     override suspend fun onRun(
         context: Context,
         glanceId: GlanceId,
         parameters: ActionParameters,
     ) {
-        val intent = Intent(context, ExactAppWidgetReceiver::class.java).apply {
+        val intent = Intent(context, HNAppWidgetReceiver::class.java).apply {
             action = UPDATE_ACTION
         }
 
@@ -272,5 +271,3 @@ class RefreshNewsCallback : ActionCallback {
         const val UPDATE_ACTION = "updateAction"
     }
 }
-
-val actionWidgetKey = ActionParameters.Key<ItemId>("action-widget-itemid")
