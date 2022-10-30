@@ -176,8 +176,10 @@ fun ArticlePage(
 
     val readabilityUrl = "https://readability.davidemerli.com?convert=${item.url ?: ""}"
 
-    val isOnArticle by derivedStateOf {
-        WindowWidthSizeClass.Expanded == windowWidthSizeClass || (pagerState.currentPage == 0 && pagerState.pageCount == 2)
+    val isOnArticle by remember {
+        derivedStateOf {
+            WindowWidthSizeClass.Expanded == windowWidthSizeClass || (pagerState.currentPage == 0 && pagerState.pageCount == 2)
+        }
     }
 
     Scaffold(
@@ -215,7 +217,8 @@ fun ArticlePage(
     ) {
         when (windowWidthSizeClass) {
             WindowWidthSizeClass.Compact,
-            WindowWidthSizeClass.Medium -> {
+            WindowWidthSizeClass.Medium,
+            -> {
                 TabbedView(
                     item = item,
                     navController = navController,
@@ -248,10 +251,11 @@ fun ArticlePage(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Error(
     throwable: Throwable,
-    onFeedbackClick: () -> (Unit) = {}
+    onFeedbackClick: () -> (Unit) = {},
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -300,7 +304,7 @@ fun TabbedView(
     navController: NavController,
     webViewState: WebViewState,
     pagerState: PagerState = rememberPagerState(),
-    selectedView: String? = null
+    selectedView: String? = null,
 ) {
     Timber.d("TabbedView: selectedView: $selectedView")
 
@@ -343,7 +347,7 @@ fun TabbedView(
 
                 AnimatedVisibility(visible = !fullScreenWebView && !showAdjacent) {
                     val tabSizePx = this@BoxWithConstraints.maxWidth.value *
-                        LocalContext.current.resources.displayMetrics.density
+                            LocalContext.current.resources.displayMetrics.density
 
                     BoxWithConstraints {
                         TabRow(
@@ -442,7 +446,8 @@ fun CommentsView(
     val context = LocalContext.current
     val dataStore = SettingPrefs(context)
     val depthSize = dataStore.depth.collectAsState(initial = SettingPrefs.DEFAULT_DEPTH)
-    val fontSize = dataStore.fontSize.collectAsState(initial = MaterialTheme.typography.bodyLarge.fontSize.value)
+    val fontSize =
+        dataStore.fontSize.collectAsState(initial = MaterialTheme.typography.bodyLarge.fontSize.value)
 
     val mViewModel: SingleNewsViewModel = viewModel()
     val comments = mViewModel.commentList.collectAsState(emptyList())
@@ -489,7 +494,9 @@ fun CommentsView(
         if (item.storyId != null && item.storyId != item.id) {
             item {
                 Column(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                 ) {
                     Text(
                         text = "Posted on: ${item.storyTitle ?: item.storyId}",
@@ -552,7 +559,8 @@ fun CommentsView(
 @Composable
 fun ArticleDescription(item: Item) {
     val dataStore = SettingPrefs(LocalContext.current)
-    val fontSize = dataStore.fontSize.collectAsState(initial = MaterialTheme.typography.bodyLarge.fontSize.value)
+    val fontSize =
+        dataStore.fontSize.collectAsState(initial = MaterialTheme.typography.bodyLarge.fontSize.value)
 
     if (!item.text.isNullOrBlank()) {
         CommentText(item = item, fontSize = fontSize.value.sp, modifier = Modifier.fillMaxWidth())

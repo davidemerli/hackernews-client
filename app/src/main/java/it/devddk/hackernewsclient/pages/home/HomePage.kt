@@ -123,7 +123,7 @@ fun HomePage(
     var readerMode by remember { mutableStateOf(false) }
     val darkMode by dataStore.darkMode.collectAsState(initial = SettingPrefs.DEFAULT_DARK_MODE)
 
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
 
     val onItemClick = { item: Item ->
         coroutineScope.launch {
@@ -167,8 +167,10 @@ fun HomePage(
 
     val pagerState = rememberPagerState()
 
-    val isOnArticle by derivedStateOf {
-        expandedArticleView || (pagerState.currentPage == 0 && pagerState.pageCount == 2)
+    val isOnArticle by remember {
+        derivedStateOf {
+            expandedArticleView || (pagerState.currentPage == 0 && pagerState.pageCount == 2)
+        }
     }
 
     HNModalNavigatorPanel(navController = navController, state = drawerState) {

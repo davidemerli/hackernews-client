@@ -11,14 +11,14 @@
         android:largeHeap="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.App.Starting"
         android:usesCleartextTraffic="true">
 
         <activity
             android:name="it.devddk.hackernewsclient.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.App.Starting"
-            android:windowSoftInputMode="adjustResize">
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            >
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

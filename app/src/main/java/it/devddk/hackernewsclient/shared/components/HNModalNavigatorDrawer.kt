@@ -1,6 +1,6 @@
 package it.devddk.hackernewsclient.shared.components
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -14,6 +14,7 @@ import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
@@ -43,8 +44,8 @@ fun HNModalNavigatorPanel(
         drawerState = state,
         gesturesEnabled = state.isOpen,
         drawerContent = {
-            Column(
-                modifier = Modifier.verticalScroll(scrollState),
+            ModalDrawerSheet(
+                modifier = Modifier.fillMaxHeight().verticalScroll(scrollState),
             ) {
                 Text(text = stringResource(R.string.app_name), modifier = Modifier.padding(28.dp))
 

@@ -33,6 +33,7 @@ import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -97,7 +98,7 @@ fun HNTopBar(
         return if (value) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant
     }
 
-    SmallTopAppBar(
+    TopAppBar(
         title = {
             TopBarTitle(
                 title = title,
@@ -260,6 +261,7 @@ fun SearchButton(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBarTitle(
     title: String = "Hacker News",

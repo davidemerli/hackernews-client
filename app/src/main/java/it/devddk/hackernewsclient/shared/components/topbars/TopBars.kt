@@ -61,6 +61,7 @@ fun HomePageTopBar(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SingleNewsPageTopBar(modifier: Modifier = Modifier, item: Item, navController: NavController) {
     val context = LocalContext.current

@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "680480244417",
+    "firebase_url": "https://hackernews-client-82b42-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "hackernews-client-82b42",
     "storage_bucket": "hackernews-client-82b42.appspot.com"
   },
