@@ -10,6 +10,7 @@ The app provides different features:
 * Home screen widget showing Best stories of the day
 * Save articles in Favorites or Read Later list. 
 * Read saved articles offline (including the web page)
+* Responsive UI for tablets: View Articles and comments in the same screen
 * Dynamic comment tree loading for fast performance
 
 You can check some screenshot [below](#gallery) 
